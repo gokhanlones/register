@@ -196,3 +196,16 @@ body {
 .register-footer a:hover {
     text-decoration: underline;
 }
+
+
+/* Kayıt Ol Linki - Daha Belirgin */
+.register-link {
+    color: #d4af37;
+    text-decoration: none;
+    font-weight: 700;
+    transition: opacity 0.2s;
+}
+.register-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
