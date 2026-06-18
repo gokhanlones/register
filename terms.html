@@ -198,7 +198,8 @@
                 })
                 .then((user) => {
                     // ADIM 2: Kullanıcı başarıyla oluştu, şimdi ek verileri Firestore'a kaydet
-                    return db.collection("users").doc(user.uid).set({
+                    // "users" olan koleksiyon adını kurallarınıza uygun olarak "user_profiles" yapıyoruz
+                    return db.collection("user_profiles").doc(user.uid).set({
                         uid: user.uid,
                         fullname: fullname,
                         email: email,
