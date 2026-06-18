@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kayıt Ol | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -24,14 +27,14 @@
                     <div class="input-wrapper">
                         <input type="text" id="fullname" name="fullname" placeholder="İsim Soyisim">
                     </div>
-                    <div class="error-message">Lütfen geçerli bir isim ve soyisim girin.</div>
+                    <div class="error-message" id="err-fullname">Lütfen geçerli bir isim ve soyisim girin.</div>
                 </div>
 
                 <div class="form-group" id="group-email">
                     <div class="input-wrapper">
                         <input type="email" id="email" name="email" placeholder="E-posta">
                     </div>
-                    <div class="error-message">E-posta adresi hatalı veya boş bırakılamaz.</div>
+                    <div class="error-message" id="err-email">E-posta adresi hatalı veya boş bırakılamaz.</div>
                 </div>
 
                 <div class="form-group" id="group-password">
@@ -44,7 +47,7 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="error-message">Şifre en az 6 karakterden oluşmalıdır.</div>
+                    <div class="error-message" id="err-password">Şifre en az 6 karakterden oluşmalıdır.</div>
                 </div>
 
                 <div class="form-group" id="group-password-confirm">
@@ -57,10 +60,10 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="error-message">Girdiğiniz şifreler birbiriyle eşleşmiyor.</div>
+                    <div class="error-message" id="err-password-confirm">Girdiğiniz şifreler birbiriyle eşleşmiyor.</div>
                 </div>
 
-                <button type="submit" class="btn-submit">Kaydet</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Kaydet</button>
 
             </form>
 
@@ -72,6 +75,21 @@
     </div>
 
     <script>
+        // Projenize Ait Gerçek Firebase Yapılandırma Bilgileri
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+
+        // Firebase Başlatıcı
+        firebase.initializeApp(firebaseConfig);
+
+        // Göz İkonuna Tıklandığında Şifreyi Göster/Gizle Fonksiyonu
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
@@ -83,48 +101,92 @@
             }
         }
 
-        // Form Denetleyicisi ve Sayfa Geçiş Motoru
+        // Form Gönderildiğinde Çalışacak Ana Algoritma
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Önce mevcut tüm hataları temizle
+            const submitBtn = document.getElementById('submitBtn');
+
+            // Hata sınıflarını ve özel Firebase uyarı metinlerini temizle temizle
             document.querySelectorAll('.form-group').forEach(function(element) {
                 element.classList.remove('has-error');
             });
+            document.getElementById('err-email').textContent = "E-posta adresi hatalı veya boş bırakılamaz.";
+            document.getElementById('err-password').textContent = "Şifre en az 6 karakterden oluşmalıdır.";
 
             let isValid = true;
 
-            // 1. İsim Soyisim Kontrolü
+            // 1. Doğrulama: İsim Soyisim Kontrolü
             const fullname = document.getElementById('fullname');
             if (fullname.value.trim().length < 3) {
                 document.getElementById('group-fullname').classList.add('has-error');
                 isValid = false;
             }
 
-            // 2. E-posta Kontrolü
+            // 2. Doğrulama: E-posta Kontrolü
             const email = document.getElementById('email');
             if (!email.value.includes('@') || email.value.trim() === "") {
                 document.getElementById('group-email').classList.add('has-error');
                 isValid = false;
             }
 
-            // 3. Şifre Kontrolü
+            // 3. Doğrulama: Şifre Kontrolü
             const password = document.getElementById('password');
             if (password.value.length < 6) {
                 document.getElementById('group-password').classList.add('has-error');
                 isValid = false;
             }
 
-            // 4. Şifre Tekrar Kontrolü
+            // 4. Doğrulama: Şifre Eşleşme Kontrolü
             const passwordConfirm = document.getElementById('password-confirm');
             if (passwordConfirm.value !== password.value || passwordConfirm.value === "") {
                 document.getElementById('group-password-confirm').classList.add('has-error');
                 isValid = false;
             }
 
-            // KONTROLLERDEN GEÇTİYSE TERMS SAYFASINA YÖNLENDİR
+            // TÜM KONTROLLERDEN GEÇTİYSE FIREBASE KAYIT İŞLEMİNİ BAŞLAT
             if (isValid) {
-                window.location.href = "terms.html";
+                // Arayüzün kilitlenmemesi ve çift istek gitmemesi için butonu pasif yap
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Kaydediliyor...";
+
+                // Firebase Auth Hesabı Oluşturma
+                firebase.auth().createUserWithEmailAndPassword(email.value.trim(), password.value)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // Başarılı kayıttan sonra kullanıcının Adını Firebase profiline işle
+                        return user.updateProfile({
+                            displayName: fullname.value.trim()
+                        });
+                    })
+                    .then(() => {
+                        // İşlem tamam, sözleşme (yasal onay) sayfasına akıcı geçiş yap
+                        window.location.href = "terms.html";
+                    })
+                    .catch((error) => {
+                        // Hata gelirse butonu tekrar aktif et
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Kaydet";
+
+                        const errorCode = error.code;
+                        console.error("Firebase Hata Kodu:", errorCode);
+
+                        // Gelen hatayı ilgili kutunun altına dinamik olarak yerleştirme
+                        if (errorCode === 'auth/email-already-in-use') {
+                            document.getElementById('err-email').textContent = "Bu e-posta adresi zaten kullanımda.";
+                            document.getElementById('group-email').classList.add('has-error');
+                        } else if (errorCode === 'auth/invalid-email') {
+                            document.getElementById('err-email').textContent = "Lütfen geçerli bir e-posta formatı girin.";
+                            document.getElementById('group-email').classList.add('has-error');
+                        } else if (errorCode === 'auth/weak-password') {
+                            document.getElementById('err-password').textContent = "Şifre zayıf. Lütfen daha güçlü bir şifre seçin.";
+                            document.getElementById('group-password').classList.add('has-error');
+                        } else {
+                            document.getElementById('err-email').textContent = "Hata oluştu: " + error.message;
+                            document.getElementById('group-email').classList.add('has-error');
+                        }
+                    });
             }
         });
     </script>
