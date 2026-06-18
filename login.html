@@ -8,6 +8,15 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <style>
+        .btn-google { background-color: #ffffff; border: 1px solid #d1d5db; color: #374151; margin-top: 10px; width: 100%; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-google:hover { background-color: #f9fafb; }
+        .forgot-password { text-align: right; margin-top: 8px; margin-bottom: 20px; }
+        .forgot-password a { font-size: 0.85rem; color: #6b7280; text-decoration: none; }
+        .forgot-password a:hover { text-decoration: underline; }
+    </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -39,15 +48,16 @@
                     <div class="error-message">Şifre alanı boş bırakılamaz.</div>
                 </div>
 
-                <div class="forgot-password" style="text-align: right; margin-bottom: 20px;">
-                    <a href="#" onclick="handleForgotPassword()" style="font-size: 0.85rem; color: #6b7280; text-decoration: none;">Şifremi unuttum</a>
+                <div class="forgot-password">
+                    <a href="#" onclick="handleForgotPassword()">Şifremi unuttum</a>
                 </div>
 
                 <button type="button" class="btn-submit" id="loginBtn" onclick="handleLogin()">Giriş Yap</button>
+                <button type="button" class="btn-google" onclick="handleGoogleLogin()">Google ile Devam Et</button>
             </form>
 
             <footer class="register-footer">
-                <p>Üye değil misin? <a href="register.html">Kayıt ol</a></p>
+                <p>Üye değil misin? <a href="register.html" style="color:#d4af37;font-weight:700;text-decoration:none;">Kayıt ol</a></p>
             </footer>
         </main>
     </div>
@@ -70,21 +80,21 @@
             button.classList.toggle("visible");
         }
 
-        // Email Format Doğrulama
+        // Email Format Kontrolü
         function validateEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
 
         function handleLogin() {
-            // Hataları temizle
+            // Hata temizleme
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             let isValid = true;
 
-            // Kontrol
+            // Kontroller
             if (!validateEmail(email)) {
                 document.getElementById('group-email').classList.add('has-error');
                 isValid = false;
@@ -109,6 +119,13 @@
                 });
         }
 
+        function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider)
+                .then(() => window.location.href = "dashboard.html")
+                .catch(err => alert("Google girişi başarısız: " + err.message));
+        }
+
         function handleForgotPassword() {
             const email = document.getElementById('email').value.trim();
             if (!validateEmail(email)) { 
@@ -116,7 +133,7 @@
                 return; 
             }
             firebase.auth().sendPasswordResetEmail(email)
-                .then(() => alert("Şifre sıfırlama bağlantısı gönderildi."))
+                .then(() => alert("Şifre sıfırlama bağlantısı " + email + " adresine gönderildi."))
                 .catch(err => alert(err.message));
         }
     </script>
