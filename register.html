@@ -72,7 +72,6 @@
     </div>
 
     <script>
-        // Şifre Göster/Gizle fonksiyonu
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
@@ -84,12 +83,11 @@
             }
         }
 
-        // Form Gönderildiğinde Çalışacak Akıllı Hata Denetleyicisi
+        // Form Denetleyicisi ve Sayfa Geçiş Motoru
         document.getElementById('registerForm').addEventListener('submit', function(e) {
-            // Formun sayfayı yenileyerek doğrudan gönderilmesini engelle
             e.preventDefault();
 
-            // Önce mevcut tüm hata sınıflarını temizle
+            // Önce mevcut tüm hataları temizle
             document.querySelectorAll('.form-group').forEach(function(element) {
                 element.classList.remove('has-error');
             });
@@ -110,26 +108,23 @@
                 isValid = false;
             }
 
-            // 3. Şifre Kontrolü (En az 6 karakter)
+            // 3. Şifre Kontrolü
             const password = document.getElementById('password');
             if (password.value.length < 6) {
                 document.getElementById('group-password').classList.add('has-error');
                 isValid = false;
             }
 
-            // 4. Şifre Tekrar Kontrolü (Eşleşme kontrolü)
+            // 4. Şifre Tekrar Kontrolü
             const passwordConfirm = document.getElementById('password-confirm');
             if (passwordConfirm.value !== password.value || passwordConfirm.value === "") {
                 document.getElementById('group-password-confirm').classList.add('has-error');
                 isValid = false;
             }
 
-            // Eğer hiçbir hata yoksa form başarıyla gönderilebilir
+            // KONTROLLERDEN GEÇTİYSE TERMS SAYFASINA YÖNLENDİR
             if (isValid) {
-                console.log("Form hatasız, veriler gönderiliyor...");
-                // Projenizin ilerleyen aşamalarında buraya veritabanı (Firebase vb.) kodlarını ekleyebilirsiniz.
-                // Örnek gerçek gönderim için alt satırı aktif edebilirsiniz:
-                // this.submit(); 
+                window.location.href = "terms.html";
             }
         });
     </script>
