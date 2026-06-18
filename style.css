@@ -169,3 +169,10 @@ body {
 .register-footer a:hover {
     text-decoration: underline;
 }
+/* Kendi yüklediğimiz logonun çerçeveye düzgünce sığmasını sağlar */
+.logo-img {
+    width: 80%; /* Çerçevenin içini tamamen kaplamasın, kenarlardan hafif boşluk kalsın */
+    height: 80%;
+    object-fit: contain; /* Logonun en-boy oranını bozmadan kutuya sığdırır */
+    border-radius: 50%; /* Eğer logonuz kareyse yuvarlak çerçeveye uyum sağlasın */
+}
