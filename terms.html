@@ -219,30 +219,30 @@
                 }).catch((err) => console.log("Otomatik kontrol sorgu hatası:", err));
             }
         }, 3000); // 3 saniye aralık
-
+        
         // ONAY BUTONUNA TIKLANDIĞINDA FIRESTORE KAYDI YAPILIR
         function handleApprove() {
             const user = firebase.auth().currentUser;
-
+        
             if (!user) {
                 alert("Oturum süresi dolmuş veya bulunamadı. Lütfen kayıt formunu tekrar doldurun.");
                 window.location.href = "register.html";
                 return;
             }
-
+        
             const approveBtn = document.getElementById('approveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
-
+        
             // Arayüzü Geçici Olarak Kilitle
             approveBtn.disabled = true;
             approveBtn.textContent = "Profiliniz Oluşturuluyor...";
             cancelBtn.disabled = true;
-
+        
             // Güvenlik amaçlı son bir kez daha durum kontrolü
             user.reload()
                 .then(() => {
                     const updatedUser = firebase.auth().currentUser;
-
+        
                     if (!updatedUser.emailVerified) {
                         alert("E-posta adresiniz henüz doğrulanmamış.");
                         approveBtn.disabled = false;
@@ -255,7 +255,7 @@
                     const email = sessionStorage.getItem('temp_email') || updatedUser.email;
                     const rawDeviceInfo = sessionStorage.getItem('temp_device_info');
                     const deviceInfo = rawDeviceInfo ? JSON.parse(rawDeviceInfo) : {};
-
+        
                     // Firestore Veritabanına Yazma İşlemi
                     return db.collection("user_profiles").doc(updatedUser.uid).set({
                         uid: updatedUser.uid,
@@ -269,10 +269,15 @@
                 })
                 .then(() => {
                     if (firebase.auth().currentUser && firebase.auth().currentUser.emailVerified) {
-                        clearInterval(verificationCheckInterval); // Güvenlik önlemi olarak sayacı temizle
+                        clearInterval(verificationCheckInterval); 
                         sessionStorage.clear();
-                        alert("E-posta doğrulamanız ve yasal onayınız başarıyla tamamlandı! Sisteme yönlendiriliyorsunuz.");
-                        window.location.href = "dashboard.html";
+                        
+                        alert("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
+        
+                        // GÜNCELLEME: Oturumu kapatıp login sayfasına yönlendir
+                        firebase.auth().signOut().then(() => {
+                            window.location.href = "login.html";
+                        });
                     }
                 })
                 .catch((error) => {
