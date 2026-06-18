@@ -18,25 +18,25 @@
         </header>
 
         <main class="scrollable-form-section">
-            <form action="#" method="POST" class="register-form" novalidate>
+            <form action="#" method="POST" class="register-form" id="registerForm" novalidate>
                 
-                <div class="form-group">
+                <div class="form-group" id="group-fullname">
                     <div class="input-wrapper">
-                        <input type="text" id="fullname" name="fullname" placeholder="İsim Soyisim" required>
+                        <input type="text" id="fullname" name="fullname" placeholder="İsim Soyisim">
                     </div>
                     <div class="error-message">Lütfen geçerli bir isim ve soyisim girin.</div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="group-email">
                     <div class="input-wrapper">
-                        <input type="email" id="email" name="email" placeholder="E-posta" required>
+                        <input type="email" id="email" name="email" placeholder="E-posta">
                     </div>
-                    <div class="error-message">E-posta adresi hatalı veya zaten kullanımda.</div>
+                    <div class="error-message">E-posta adresi hatalı veya boş bırakılamaz.</div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="group-password">
                     <div class="input-wrapper">
-                        <input type="password" id="password" name="password" class="password-input" placeholder="Şifre" required>
+                        <input type="password" id="password" name="password" class="password-input" placeholder="Şifre">
                         <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -47,9 +47,9 @@
                     <div class="error-message">Şifre en az 6 karakterden oluşmalıdır.</div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="group-password-confirm">
                     <div class="input-wrapper">
-                        <input type="password" id="password-confirm" name="password-confirm" class="password-input" placeholder="Şifreyi doğrula" required>
+                        <input type="password" id="password-confirm" name="password-confirm" class="password-input" placeholder="Şifreyi doğrula">
                         <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password-confirm', this)">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
@@ -72,6 +72,7 @@
     </div>
 
     <script>
+        // Şifre Göster/Gizle fonksiyonu
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
@@ -82,6 +83,55 @@
                 button.classList.remove("visible");
             }
         }
+
+        // Form Gönderildiğinde Çalışacak Akıllı Hata Denetleyicisi
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            // Formun sayfayı yenileyerek doğrudan gönderilmesini engelle
+            e.preventDefault();
+
+            // Önce mevcut tüm hata sınıflarını temizle
+            document.querySelectorAll('.form-group').forEach(function(element) {
+                element.classList.remove('has-error');
+            });
+
+            let isValid = true;
+
+            // 1. İsim Soyisim Kontrolü
+            const fullname = document.getElementById('fullname');
+            if (fullname.value.trim().length < 3) {
+                document.getElementById('group-fullname').classList.add('has-error');
+                isValid = false;
+            }
+
+            // 2. E-posta Kontrolü
+            const email = document.getElementById('email');
+            if (!email.value.includes('@') || email.value.trim() === "") {
+                document.getElementById('group-email').classList.add('has-error');
+                isValid = false;
+            }
+
+            // 3. Şifre Kontrolü (En az 6 karakter)
+            const password = document.getElementById('password');
+            if (password.value.length < 6) {
+                document.getElementById('group-password').classList.add('has-error');
+                isValid = false;
+            }
+
+            // 4. Şifre Tekrar Kontrolü (Eşleşme kontrolü)
+            const passwordConfirm = document.getElementById('password-confirm');
+            if (passwordConfirm.value !== password.value || passwordConfirm.value === "") {
+                document.getElementById('group-password-confirm').classList.add('has-error');
+                isValid = false;
+            }
+
+            // Eğer hiçbir hata yoksa form başarıyla gönderilebilir
+            if (isValid) {
+                console.log("Form hatasız, veriler gönderiliyor...");
+                // Projenizin ilerleyen aşamalarında buraya veritabanı (Firebase vb.) kodlarını ekleyebilirsiniz.
+                // Örnek gerçek gönderim için alt satırı aktif edebilirsiniz:
+                // this.submit(); 
+            }
+        });
     </script>
 
 </body>
