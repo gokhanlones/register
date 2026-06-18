@@ -300,22 +300,49 @@
         }
 
         // İptal durumunda açılan geçici hesabı temizleyip geri gönderme
+        // ... üstteki tüm kodlar aynı kalsın (firebaseConfig, db vs.) ...
+
+        // İptal fonksiyonunun tek ve güncel hali:
         function handleCancel() {
-            clearInterval(verificationCheckInterval); // Sayacı durdur
+            // Sayacı durdur
+            if (typeof verificationCheckInterval !== 'undefined') {
+                clearInterval(verificationCheckInterval);
+            }
+        
+            const approveBtn = document.getElementById('approveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+        
+            // Butonları kilitle ve metni değiştir
+            if(approveBtn) approveBtn.disabled = true;
+            if(cancelBtn) {
+                cancelBtn.disabled = true;
+                cancelBtn.textContent = "İptal ediliyor...";
+            }
+        
             const user = firebase.auth().currentUser;
+        
             if (user) {
                 user.delete().then(() => {
-                    sessionStorage.clear();
-                    window.location.href = "register.html";
-                }).catch(() => {
-                    sessionStorage.clear();
-                    window.location.href = "register.html";
+                    finalizeCancel();
+                }).catch((error) => {
+                    console.error("Silme hatası:", error);
+                    finalizeCancel();
                 });
             } else {
-                sessionStorage.clear();
-                window.location.href = "register.html";
+                finalizeCancel();
             }
         }
+        
+        function finalizeCancel() {
+            sessionStorage.clear();
+            window.location.href = "register.html";
+        }
+
+// Temizlik ve yönlendirme işlemini ortak bir yere aldık
+function finalizeCancel() {
+    sessionStorage.clear();
+    window.location.href = "register.html";
+}
     </script>
 
 </body>
