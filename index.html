@@ -75,21 +75,29 @@
     </div>
 
     <script>
+        <script>
         function checkAppConnection() {
             // Tarayıcının internet durumunu kontrol et
             if (navigator.onLine) {
-                // İnternet VARSA: Doğrudan register.html sayfasına yönlendir
-                window.location.href = "register.html";
+                // İnternet VARSA: Artık login.html sayfasına yönlendirir
+                window.location.href = "login.html";
             } else {
                 // İnternet YOKSA: Sayfa sabit kalır ve kullanıcıya kırmızı uyarı metni gösterilir
                 document.getElementById('statusText').style.display = 'block';
                 
-                // Arka planda internetin geri gelmesini dinle (Geri geldiği an otomatik yönlendirir)
+                // Arka planda internetin geri gelmesini dinle (Geri geldiği an otomatik login'e yönlendirir)
                 window.addEventListener('online', function() {
-                    window.location.href = "register.html";
+                    window.location.href = "login.html";
                 });
             }
         }
+
+        // Sayfa tamamen yüklendiğinde kontrolü başlat
+        window.addEventListener('DOMContentLoaded', () => {
+            // 800ms kurumsal bekleme süresi
+            setTimeout(checkAppConnection, 800);
+        });
+    </script>
 
         // Sayfa tamamen yüklendiğinde kontrolü başlat
         window.addEventListener('DOMContentLoaded', () => {
