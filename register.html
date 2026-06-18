@@ -3,31 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş Yap | Astro Notlarım</title>
+    <title>Kayıt Ol | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    
+
     <style>
-        /* Google Butonu için ekstra stil (style.css dosyanıza ekleyebilirsiniz) */
-        .btn-google {
-            background-color: #ffffff;
-            border: 1px solid #d1d5db;
-            color: #374151;
-            margin-top: 10px;
-            width: 100%;
-            padding: 14px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
+        .btn-google { 
+            background-color: #ffffff; 
+            border: 1px solid #d1d5db; 
+            color: #374151; 
+            margin-top: 10px; 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: background 0.2s; 
         }
         .btn-google:hover { background-color: #f9fafb; }
-        .forgot-password { text-align: right; margin-top: 8px; margin-bottom: 20px; }
-        .forgot-password a { font-size: 0.85rem; color: #6b7280; text-decoration: none; }
-        .forgot-password a:hover { text-decoration: underline; }
+        .terms-checkbox { 
+            display: flex; 
+            align-items: flex-start; 
+            gap: 10px; 
+            margin: 16px 0; 
+            font-size: 0.85rem; 
+            color: #4b5563; 
+        }
+        .terms-checkbox input { 
+            width: 18px; 
+            height: 18px; 
+            accent-color: #d4af37; 
+            flex-shrink: 0; 
+            margin-top: 2px; 
+        }
+        .terms-checkbox a { 
+            color: #d4af37; 
+            text-decoration: none; 
+            font-weight: 600; 
+        }
+        .terms-checkbox a:hover { text-decoration: underline; }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -36,16 +54,24 @@
             <div class="logo-wrapper">
                 <img src="logo.png" alt="Astro Notlarım Logo" class="logo-img">
             </div>
-            <h1>Giriş Yap</h1>
+            <h1>Kayıt Ol</h1>
         </header>
 
         <main class="scrollable-form-section">
-            <form class="register-form" id="loginForm" onsubmit="return false;">
-                
+            <form class="register-form" id="registerForm" onsubmit="return false;">
+
+                <div class="form-group" id="group-fullname">
+                    <div class="input-wrapper">
+                        <input type="text" id="fullname" placeholder="Ad Soyad">
+                    </div>
+                    <div class="error-message">Lütfen ad soyad girin.</div>
+                </div>
+
                 <div class="form-group" id="group-email">
                     <div class="input-wrapper">
                         <input type="email" id="email" placeholder="E-posta">
                     </div>
+                    <div class="error-message">Lütfen geçerli bir e-posta adresi girin.</div>
                 </div>
 
                 <div class="form-group" id="group-password">
@@ -55,19 +81,33 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         </button>
                     </div>
+                    <div class="error-message">Şifre en az 6 karakter olmalıdır.</div>
                 </div>
 
-                <div class="forgot-password">
-                    <a href="#" onclick="handleForgotPassword()">Şifremi unuttum</a>
+                <div class="form-group" id="group-confirm-password">
+                    <div class="input-wrapper">
+                        <input type="password" id="confirmPassword" class="password-input" placeholder="Şifre Tekrar">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                        </button>
+                    </div>
+                    <div class="error-message">Şifreler eşleşmiyor.</div>
                 </div>
 
-                <button type="button" class="btn-submit" id="loginBtn" onclick="handleLogin()">Giriş Yap</button>
-                <button type="button" class="btn-google" onclick="handleGoogleLogin()">Google ile Devam Et</button>
+                <div class="terms-checkbox">
+                    <input type="checkbox" id="termsCheck">
+                    <label for="termsCheck">
+                        <a href="terms.html" target="_blank">Kullanım Şartları</a> ve 
+                        <a href="terms.html" target="_blank">Gizlilik Politikası</a>'nı okudum ve kabul ediyorum.
+                    </label>
+                </div>
 
+                <button type="button" class="btn-submit" id="registerBtn" onclick="handleRegister()">Kayıt Ol</button>
+                <button type="button" class="btn-google" onclick="handleGoogleRegister()">Google ile Kayıt Ol</button>
             </form>
 
             <footer class="register-footer">
-                <p>Üye değil misin? <a href="register.html">Kayıt ol</a></p>
+                <p>Zaten üye misin? <a href="login.html">Giriş yap</a></p>
             </footer>
         </main>
     </div>
@@ -90,39 +130,95 @@
             button.classList.toggle("visible");
         }
 
-        // 1. Giriş Yapma
-        function handleLogin() {
-            const email = document.getElementById('email').value;
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function handleRegister() {
+            document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
+
+            const fullname = document.getElementById('fullname').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const btn = document.getElementById('loginBtn');
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsChecked = document.getElementById('termsCheck').checked;
+            let isValid = true;
 
+            if (fullname === "") {
+                document.getElementById('group-fullname').classList.add('has-error');
+                isValid = false;
+            }
+            if (!validateEmail(email)) {
+                document.getElementById('group-email').classList.add('has-error');
+                isValid = false;
+            }
+            if (password.length < 6) {
+                document.getElementById('group-password').classList.add('has-error');
+                isValid = false;
+            }
+            if (password !== confirmPassword || confirmPassword === "") {
+                document.getElementById('group-confirm-password').classList.add('has-error');
+                isValid = false;
+            }
+            if (!termsChecked) {
+                alert("Devam etmek için kullanım şartlarını kabul etmelisiniz.");
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            const btn = document.getElementById('registerBtn');
             btn.disabled = true;
-            btn.textContent = "Giriş yapılıyor...";
+            btn.textContent = "Kayıt oluşturuluyor...";
 
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(() => window.location.href = "dashboard.html")
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+
+                    return user.updateProfile({ displayName: fullname })
+                        .then(() => user.sendEmailVerification())
+                        .then(() => {
+                            sessionStorage.setItem('temp_fullname', fullname);
+                            sessionStorage.setItem('temp_email', email);
+                            sessionStorage.setItem('temp_device_info', JSON.stringify({
+                                userAgent: navigator.userAgent,
+                                platform: navigator.platform,
+                                language: navigator.language
+                            }));
+                            window.location.href = "terms.html";
+                        });
+                })
                 .catch(err => {
                     alert("Hata: " + err.message);
                     btn.disabled = false;
-                    btn.textContent = "Giriş Yap";
+                    btn.textContent = "Kayıt Ol";
                 });
         }
 
-        // 2. Google ile Giriş
-        function handleGoogleLogin() {
+        function handleGoogleRegister() {
             const provider = new firebase.auth.GoogleAuthProvider();
             firebase.auth().signInWithPopup(provider)
-                .then(() => window.location.href = "dashboard.html")
-                .catch(err => alert("Google girişi başarısız: " + err.message));
-        }
+                .then((result) => {
+                    const user = result.user;
+                    const isNewUser = result.additionalUserInfo.isNewUser;
 
-        // 3. Şifremi Unuttum
-        function handleForgotPassword() {
-            const email = document.getElementById('email').value;
-            if (!email) { alert("Lütfen önce e-posta adresinizi girin."); return; }
-            firebase.auth().sendPasswordResetEmail(email)
-                .then(() => alert("Şifre sıfırlama bağlantısı e-postanıza gönderildi."))
-                .catch(err => alert(err.message));
+                    if (!isNewUser) {
+                        alert("Bu Google hesabı zaten kayıtlı. Giriş yapılıyor...");
+                        window.location.href = "dashboard.html";
+                        return;
+                    }
+
+                    sessionStorage.setItem('temp_fullname', user.displayName || "");
+                    sessionStorage.setItem('temp_email', user.email || "");
+                    sessionStorage.setItem('temp_device_info', JSON.stringify({
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        language: navigator.language
+                    }));
+                    window.location.href = "terms.html";
+                })
+                .catch(err => alert("Google kaydı başarısız: " + err.message));
         }
     </script>
 </body>
