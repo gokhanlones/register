@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kayıt Ol | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -60,7 +63,7 @@
                     <div class="error-message">Girdiğiniz şifreler birbiriyle eşleşmiyor.</div>
                 </div>
 
-                <button type="submit" class="btn-submit">Devam Et</button>
+                <button type="submit" class="btn-submit" id="submitBtn">Devam Et</button>
 
             </form>
 
@@ -72,6 +75,20 @@
     </div>
 
     <script>
+        // Astro Notlarım Orijinal Firebase Yapılandırması
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+
+        // Firebase Başlat
+        firebase.initializeApp(firebaseConfig);
+
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
@@ -86,6 +103,7 @@
         document.getElementById('registerForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Önceki hata sınıflarını temizle
             document.querySelectorAll('.form-group').forEach(function(element) {
                 element.classList.remove('has-error');
             });
@@ -116,13 +134,49 @@
                 isValid = false;
             }
 
-            // KONTROLLER TAMAMSA VERİLERİ GEÇİCİ HAFIZAYA AL VE TERMS'E GÖNDER
+            // FORM KONTROLLERİ GEÇERLİYSE FIREBASE KONTROLÜ BAŞLAR
             if (isValid) {
-                sessionStorage.setItem('temp_fullname', fullname.value.trim());
-                sessionStorage.setItem('temp_email', email.value.trim());
-                sessionStorage.setItem('temp_password', password.value);
+                const submitBtn = document.getElementById('submitBtn');
+                
+                // Çift tıklamayı önlemek için arayüzü kilitle
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Kontrol ediliyor...";
 
-                window.location.href = "terms.html";
+                const emailValue = email.value.trim();
+
+                // Firebase üzerinden e-posta kontrolü tetikle
+                firebase.auth().fetchSignInMethodsForEmail(emailValue)
+                    .then((signInMethods) => {
+                        if (signInMethods.length > 0) {
+                            // E-posta adresi sistemde zaten kayıtlıysa uyar
+                            alert("Bu e-posta adresi zaten kullanımda! Lütfen giriş yapmayı deneyin veya farklı bir e-posta kullanın.");
+                            submitBtn.disabled = false;
+                            submitBtn.textContent = "Devam Et";
+                        } else {
+                            // Kullanıcı yoksa arka planda sessizce cihaz verilerini topla
+                            const deviceInfo = {
+                                userAgent: navigator.userAgent,
+                                platform: navigator.platform,
+                                language: navigator.language,
+                                screenResolution: `${window.screen.width}x${window.screen.height}`
+                            };
+
+                            // Tüm verileri geçici hafızaya güvenle yaz
+                            sessionStorage.setItem('temp_fullname', fullname.value.trim());
+                            sessionStorage.setItem('temp_email', emailValue);
+                            sessionStorage.setItem('temp_password', password.value);
+                            sessionStorage.setItem('temp_device_info', JSON.stringify(deviceInfo));
+
+                            // Yasal Onay (terms.html) sayfasına yönlendir
+                            window.location.href = "terms.html";
+                        }
+                    })
+                    .catch((error) => {
+                        // Olası bir bağlantı/Firebase hatasında arayüz kilidini aç
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = "Devam Et";
+                        alert("E-posta kontrolü yapılırken bir hata oluştu: " + error.message);
+                    });
             }
         });
     </script>
