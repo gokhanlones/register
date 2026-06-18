@@ -136,6 +136,7 @@
         .btn-approve:disabled {
             background-color: #666666;
             cursor: not-allowed;
+            opacity: 0.6;
         }
 
         .btn-cancel {
@@ -175,7 +176,9 @@
 
         <footer class="button-group">
             <button type="button" class="btn btn-cancel" id="cancelBtn" onclick="handleCancel()">İptal</button>
-            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()">Onayla ve Başla</button>
+            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()" disabled>
+                E-posta Doğrulaması Bekleniyor...
+            </button>
         </footer>
 
     </div>
@@ -196,11 +199,31 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ONAY BUTONUNA TIKLANDIĞINDA E-POSTA DOĞRULAMA KONTROLÜ VE FIRESTORE KAYDI YAPILIR
+        // OTOMATİK KONTROL SAYAÇ MEKANİZMASI (Interval)
+        // Her 3 saniyede bir arka planda e-posta onay durumunu günceller
+        const verificationCheckInterval = setInterval(() => {
+            const user = firebase.auth().currentUser;
+            
+            if (user) {
+                user.reload().then(() => {
+                    const updatedUser = firebase.auth().currentUser;
+                    
+                    // Eğer kullanıcı linke tıklamışsa kilidi kaldır
+                    if (updatedUser.emailVerified) {
+                        clearInterval(verificationCheckInterval); // Onay alındığı için sayacı durdur
+                        
+                        const approveBtn = document.getElementById('approveBtn');
+                        approveBtn.disabled = false;
+                        approveBtn.textContent = "Onayla ve Başla";
+                    }
+                }).catch((err) => console.log("Otomatik kontrol sorgu hatası:", err));
+            }
+        }, 3000); // 3 saniye aralık
+
+        // ONAY BUTONUNA TIKLANDIĞINDA FIRESTORE KAYDI YAPILIR
         function handleApprove() {
             const user = firebase.auth().currentUser;
 
-            // Eğer sayfada aktif bir oturum yoksa register sayfasına geri gönder
             if (!user) {
                 alert("Oturum süresi dolmuş veya bulunamadı. Lütfen kayıt formunu tekrar doldurun.");
                 window.location.href = "register.html";
@@ -212,25 +235,21 @@
 
             // Arayüzü Geçici Olarak Kilitle
             approveBtn.disabled = true;
-            approveBtn.textContent = "Kontrol ediliyor...";
+            approveBtn.textContent = "Profiliniz Oluşturuluyor...";
             cancelBtn.disabled = true;
 
-            // KRİTİK ADIM: Kullanıcının maildeki linke tıklayıp tıklamadığını anlamak için profilini yeniliyoruz
+            // Güvenlik amaçlı son bir kez daha durum kontrolü
             user.reload()
                 .then(() => {
                     const updatedUser = firebase.auth().currentUser;
 
-                    // Eğer e-posta hâlâ onaylanmamışsa süreci durdur ve uyar
                     if (!updatedUser.emailVerified) {
-                        alert("E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu (veya spam klasörünü) kontrol edip doğrulama linkine tıklayın.");
+                        alert("E-posta adresiniz henüz doğrulanmamış.");
                         approveBtn.disabled = false;
                         approveBtn.textContent = "Onayla ve Başla";
                         cancelBtn.disabled = false;
-                        return; // Kodun aşağıya akmasını engelle
+                        return;
                     }
-
-                    // E-posta başarıyla onaylandıysa, Firestore dökümanını hazırlıyoruz
-                    approveBtn.textContent = "Profiliniz Oluşturuluyor...";
                     
                     const fullname = sessionStorage.getItem('temp_fullname') || updatedUser.displayName;
                     const email = sessionStorage.getItem('temp_email') || updatedUser.email;
@@ -249,15 +268,14 @@
                     });
                 })
                 .then(() => {
-                    // Her şey başarılıysa geçici hafızayı temizle ve içeri al
                     if (firebase.auth().currentUser && firebase.auth().currentUser.emailVerified) {
+                        clearInterval(verificationCheckInterval); // Güvenlik önlemi olarak sayacı temizle
                         sessionStorage.clear();
                         alert("E-posta doğrulamanız ve yasal onayınız başarıyla tamamlandı! Sisteme yönlendiriliyorsunuz.");
                         window.location.href = "dashboard.html";
                     }
                 })
                 .catch((error) => {
-                    // Hata durumunda buton kilitlerini çöz
                     approveBtn.disabled = false;
                     approveBtn.textContent = "Onayla ve Başla";
                     cancelBtn.disabled = false;
@@ -265,7 +283,7 @@
                 });
         }
 
-        // Talep doğrultusunda doğrulama mailini tekrar tetikleyen fonksiyon
+        // Doğrulama mailini tekrar tetikleyen fonksiyon
         function handleResendEmail() {
             const user = firebase.auth().currentUser;
             if (user) {
@@ -283,9 +301,9 @@
 
         // İptal durumunda açılan geçici hesabı temizleyip geri gönderme
         function handleCancel() {
+            clearInterval(verificationCheckInterval); // Sayacı durdur
             const user = firebase.auth().currentUser;
             if (user) {
-                // Kullanıcı onaylamadan çıkarsa Firebase Auth üzerinde biriken çöp hesabı siliyoruz
                 user.delete().then(() => {
                     sessionStorage.clear();
                     window.location.href = "register.html";
