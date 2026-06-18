@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yasal Onay ve Gizlilik Politikası | Astro Notlarım</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
     <style>
-        /* Temel Sıfırlamalar ve Kayıt Sayfasıyla Uyumlu Font */
         * {
             margin: 0;
             padding: 0;
@@ -13,7 +16,6 @@
             font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* Ekranı Tam Kaplayan Düz Beyaz Arka Plan */
         html, body {
             width: 100%;
             height: 100%;
@@ -23,7 +25,6 @@
             justify-content: center;
         }
 
-        /* Kayıt Sayfası Genişliğinde Mobil Uyumlu Konteyner */
         .app-container {
             width: 100%;
             max-width: 420px;
@@ -33,7 +34,6 @@
             padding: 24px 20px;
         }
 
-        /* Sabit Üst Başlık Alanı */
         .page-header {
             text-align: center;
             padding-bottom: 20px;
@@ -47,7 +47,6 @@
             letter-spacing: -0.5px;
         }
 
-        /* Düz Beyaz ve İçerisi Kaydırılabilir (Scroll) Metin Alanı */
         .scrollable-terms-section {
             flex: 1;
             overflow-y: auto;
@@ -56,7 +55,6 @@
             text-align: left;
         }
 
-        /* Scrollbar (Kaydırma Çubuğu) Tasarımı */
         .scrollable-terms-section::-webkit-scrollbar {
             width: 5px;
         }
@@ -69,7 +67,6 @@
             border-radius: 10px;
         }
 
-        /* Metin Tipografisi */
         .terms-text h2 {
             font-size: 1.05rem;
             font-weight: 600;
@@ -97,18 +94,16 @@
             margin-bottom: 6px;
         }
 
-        /* Yan Yana Duracak Butonların Alanı */
         .button-group {
             display: flex;
-            gap: 12px; /* Butonlar arasındaki boşluk */
+            gap: 12px;
             padding-top: 12px;
             border-top: 1px solid #f3f4f6;
             background-color: #ffffff;
         }
 
-        /* Ortak Buton Stili */
         .btn {
-            flex: 1; /* İki butonun da eşit genişlikte olmasını sağlar */
+            flex: 1;
             padding: 14px;
             font-size: 1rem;
             font-weight: 600;
@@ -118,27 +113,21 @@
             text-align: center;
         }
 
-        /* Onay Butonu (Kayıt sayfasındaki gibi net siyah arka plan) */
         .btn-approve {
             background-color: #000000;
             color: #ffffff;
             border: none;
         }
 
-        .btn-approve:active {
-            background-color: #222222;
+        .btn-approve:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
         }
 
-        /* İptal Butonu (Arka plansız, sadece ince gri çizgili ve kibar) */
         .btn-cancel {
             background-color: #ffffff;
             color: #4b5563;
             border: 1px solid #d1d5db;
-        }
-
-        .btn-cancel:hover {
-            background-color: #f9fafb;
-            color: #111111;
         }
     </style>
 </head>
@@ -155,46 +144,87 @@
                 <p>Lütfen Astro Notlarım platformunu kullanmaya başlamadan önce aşağıdaki kullanım şartlarını ve gizlilik politikasını dikkatlice okuyunuz.</p>
                 
                 <h2>1. Kullanım Şartları</h2>
-                <p>Astro Notlarım tarafından sunulan hizmetlerden faydalanarak, bu sayfada yer alan tüm maddeleri gayrikabili rücu kabul etmiş sayılırsınız. Platform içerisinde paylaşılan tüm içeriklerin sorumluluğu kullanıcıya aittir.</p>
+                <p>Astro Notlarım tarafından sunulan hizmetlerden faydalanarak, bu sayfada yer alan tüm maddeleri gayrikabili rücu kabul etmiş sayılırsınız.</p>
                 
                 <h2>2. Gizlilik Politikası ve KVKK</h2>
-                <p>Kişisel verilerinizin güvenliği bizim için son derece önemlidir. Kayıt esnasında paylaştığınız ad, soyad ve e-posta adresiniz, 6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında korunmaktadır.</p>
+                <p>Kişisel verilerinizin güvenliği bizim için son derece önemlidir. Kayıt esnasında paylaştığınız veriler 6698 sayılı KVKK kapsamında korunmaktadır.</p>
                 
                 <h2>3. Veri İşleme Amaçları</h2>
-                <p>Toplanan kişisel verileriniz şu amaçlarla işlenmektedir:</p>
-                <ul>
-                    <li>Kullanıcı hesabınızın doğrulanması ve güvenliği,</li>
-                    <li>Deneyiminizin kişiselleştirilmesi ve teknik destek süreçleri,</li>
-                    <li>Sistem güncellemeleri hakkında bilgilendirme yapılması.</li>
-                </ul>
-
-                <h2>4. Üçüncü Taraflarla Paylaşım</h2>
-                <p>Astro Notlarım, yasal bir zorunluluk olmadığı sürece şifrelerinizi, e-posta adreslerinizi veya kişisel notlarınızı hiçbir şekilde üçüncü şahıs ya da kurumlarla paylaşmaz, satmaz veya kiralamaz.</p>
-                
-                <h2>5. Hizmet Değişiklikleri</h2>
-                <p>Platform, sunduğu hizmetlerin içeriğini, tasarımını veya yasal metinlerini önceden haber vermeksizin güncelleme hakkını saklı tutar. Değişiklikler sayfada yayınlandığı an yürürlüğe girer.</p>
+                <p>Toplanan verileriniz hesap güvenliği ve deneyim kişiselleştirme amacıyla işlenmektedir.</p>
             </div>
         </main>
 
         <footer class="button-group">
-            <button type="button" class="btn btn-cancel" onclick="handleCancel()">İptal</button>
-            <button type="button" class="btn btn-approve" onclick="handleApprove()">Onay</button>
+            <button type="button" class="btn btn-cancel" id="cancelBtn" onclick="handleCancel()">İptal</button>
+            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()">Onay</button>
         </footer>
 
     </div>
 
     <script>
-        // Onay Butonuna Basıldığında
+        // Astro Notlarım Gerçek Firebase Yapılandırması
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        // ONAY BUTONUNA TIKLANDIĞINDA GERÇEK KAYIT BAŞLAR
         function handleApprove() {
-            alert("Sözleşmeyi onayladınız! Ana sayfaya yönlendiriliyorsunuz.");
-            // İleride buraya kullanıcının onay durumunu kaydedip 
-            // uygulamanın ana paneline (dashboard.html vb.) yönlendirme kodu yazılacak.
-            // window.location.href = "dashboard.html";
+            const fullname = sessionStorage.getItem('temp_fullname');
+            const email = sessionStorage.getItem('temp_email');
+            const password = sessionStorage.getItem('temp_password');
+
+            // Eğer hafızada veri yoksa güvenlik amacıyla geri fırlat
+            if (!email || !password) {
+                alert("Kayıt bilgileri bulunamadı. Lütfen formu tekrar doldurun.");
+                window.location.href = "register.html";
+                return;
+            }
+
+            const approveBtn = document.getElementById('approveBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+
+            // Arayüzü kilitle
+            approveBtn.disabled = true;
+            approveBtn.textContent = "Kaydediliyor...";
+            cancelBtn.disabled = true;
+
+            // Firebase Kayıt Motoru çalışıyor
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return user.updateProfile({ displayName: fullname });
+                })
+                .then(() => {
+                    // Kayıt başarılı! Geçici hafızayı temizle
+                    sessionStorage.clear();
+                    alert("Hesabınız başarıyla oluşturuldu! Hoş geldiniz.");
+                    window.location.href = "dashboard.html"; // Burayı ana sayfanıza göre güncellersiniz
+                })
+                .catch((error) => {
+                    approveBtn.disabled = false;
+                    approveBtn.textContent = "Onay";
+                    cancelBtn.disabled = false;
+
+                    if (error.code === 'auth/email-already-in-use') {
+                        alert("Bu e-posta adresi zaten kullanımda! Lütfen kayıt sayfasına dönüp başka bir e-posta deneyin.");
+                        window.location.href = "register.html";
+                    } else {
+                        alert("Kayıt oluşturulurken bir hata oluştu: " + error.message);
+                    }
+                });
         }
 
-        // İptal Butonuna Basıldığında
+        // İPTAL EDİLİRSE VERİLERİ SİL VE GERİ GÖNDER
         function handleCancel() {
-            // Kullanıcı iptal ederse tekrar kayıt sayfasına geri fırlatıyoruz
+            sessionStorage.clear();
             window.location.href = "register.html";
         }
     </script>
