@@ -82,18 +82,6 @@
             margin-bottom: 12px;
         }
 
-        .terms-text ul {
-            margin-left: 20px;
-            margin-bottom: 12px;
-        }
-
-        .terms-text li {
-            font-size: 0.9rem;
-            line-height: 1.5;
-            color: #4b5563;
-            margin-bottom: 6px;
-        }
-
         .button-group {
             display: flex;
             gap: 12px;
@@ -173,6 +161,7 @@
             measurementId: "G-19BSBWLJ7X"
         };
 
+        // Firebase Başlatma
         firebase.initializeApp(firebaseConfig);
 
         // ONAY BUTONUNA TIKLANDIĞINDA GERÇEK KAYIT BAŞLAR
@@ -206,7 +195,7 @@
                     // Kayıt başarılı! Geçici hafızayı temizle
                     sessionStorage.clear();
                     alert("Hesabınız başarıyla oluşturuldu! Hoş geldiniz.");
-                    window.location.href = "dashboard.html"; // Burayı ana sayfanıza göre güncellersiniz
+                    window.location.href = "dashboard.html";
                 })
                 .catch((error) => {
                     approveBtn.disabled = false;
