@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap | Astro Notlarım</title>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* CSS'inizi register.html'den olduğu gibi buraya kopyalayabilirsiniz */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { display: flex; justify-content: center; padding: 20px; background-color: #ffffff; }
+        .app-container { width: 100%; max-width: 420px; }
+        .page-header { text-align: center; margin-bottom: 30px; }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 14px; border: 1px solid #d1d5db; border-radius: 8px; }
+        .btn { width: 100%; padding: 14px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .btn-login { background-color: #000000; color: #ffffff; }
+        .btn-google { background-color: #f3f4f6; color: #000000; border: 1px solid #d1d5db; }
+        .links { text-align: center; margin-top: 20px; font-size: 0.9rem; }
+        .links a { color: #000000; text-decoration: underline; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header class="page-header">
+        <h1>Giriş Yap</h1>
+    </header>
+
+    <div class="input-group">
+        <input type="email" id="email" placeholder="E-posta adresi">
+    </div>
+    <div class="input-group">
+        <input type="password" id="password" placeholder="Şifre">
+    </div>
+
+    <button class="btn btn-login" onclick="handleLogin()">Giriş Yap</button>
+    <button class="btn btn-google" onclick="handleGoogleLogin()">Google ile Devam Et</button>
+
+    <div class="links">
+        <p><a onclick="handleForgotPassword()">Şifremi unuttum</a></p>
+        <p style="margin-top: 15px;">Üye değil misin? <a href="register.html">Kayıt ol</a></p>
+    </div>
+</div>
+
+<script>
+    // Firebase Config (register.html ile aynı olmalı)
+    const firebaseConfig = { /* ...buraya bilgileri yapıştırın... */ };
+    firebase.initializeApp(firebaseConfig);
+
+    // 1. E-posta ile Giriş
+    function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        firebase.auth().signInWithEmailAndPassword(email, password)
+            .then(() => window.location.href = "dashboard.html")
+            .catch(err => alert(err.message));
+    }
+
+    // 2. Google ile Giriş
+    function handleGoogleLogin() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider)
+            .then(() => window.location.href = "dashboard.html")
+            .catch(err => alert(err.message));
+    }
+
+    // 3. Şifre Sıfırlama
+    function handleForgotPassword() {
+        const email = document.getElementById('email').value;
+        if (!email) { alert("Lütfen önce e-posta adresinizi girin."); return; }
+        firebase.auth().sendPasswordResetEmail(email)
+            .then(() => alert("Şifre sıfırlama bağlantısı e-postanıza gönderildi."))
+            .catch(err => alert(err.message));
+    }
+</script>
+
+</body>
+</html>
