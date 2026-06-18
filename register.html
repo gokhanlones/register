@@ -76,19 +76,7 @@
 
     <script>
         // Astro Notlarım Orijinal Firebase Yapılandırması
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-
-        // Firebase Başlat
         firebase.initializeApp(firebaseConfig);
-
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
