@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro Notlarım</title>
+    <style>
+        /* Temel Sıfırlamalar */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Ekranı Tam Kaplayan Düz Beyaz Arka Plan */
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Merkeze Hizalanacak Splash Konteyneri */
+        .splash-container {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.6s ease-out; /* Sayfa açılırken şık bir yumuşak geçiş */
+        }
+
+        /* Logo Ayarları */
+        .splash-logo {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 16px;
+        }
+
+        /* Astro Notlarım Başlığı (Siyah ve Net) */
+        .splash-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #000000;
+            letter-spacing: -0.5px;
+        }
+
+        /* İnternet olmadığında belirecek ufak, kibar bir alt bilgilendirme */
+        .connection-status {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #ef4444;
+            font-weight: 500;
+            display: none; /* Varsayılan olarak gizli */
+        }
+
+        /* Yumuşak açılış efekti */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="splash-container">
+        <img src="logo.png" alt="Astro Notlarım Logo" class="splash-logo">
+        <h1 class="splash-title">Astro Notlarım</h1>
+        <div class="connection-status" id="statusText">İnternet bağlantısı bekleniyor...</div>
+    </div>
+
+    <script>
+        function checkAppConnection() {
+            // Tarayıcının internet durumunu kontrol et
+            if (navigator.onLine) {
+                // İnternet VARSA: Doğrudan register.html sayfasına yönlendir
+                window.location.href = "register.html";
+            } else {
+                // İnternet YOKSA: Sayfa sabit kalır ve kullanıcıya kırmızı uyarı metni gösterilir
+                document.getElementById('statusText').style.display = 'block';
+                
+                // Arka planda internetin geri gelmesini dinle (Geri geldiği an otomatik yönlendirir)
+                window.addEventListener('online', function() {
+                    window.location.href = "register.html";
+                });
+            }
+        }
+
+        // Sayfa tamamen yüklendiğinde kontrolü başlat
+        window.addEventListener('DOMContentLoaded', () => {
+            // Kullanıcının logoyu anlık da olsa görebilmesi ve sistemin stabil çalışması için 
+            // 800 milisaniyelik (yaklaşık 1 saniye) çok şık bir kurumsal bekleme süresi koydum.
+            setTimeout(checkAppConnection, 800);
+        });
+    </script>
+
+</body>
+</html>
