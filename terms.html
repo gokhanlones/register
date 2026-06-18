@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
         * {
@@ -150,27 +151,30 @@
     </div>
 
     <script>
-        // Astro Notlarım Gerçek Firebase Yapılandırması
+        // Astro Notlarım Orijinal Firebase Yapılandırması
         const firebaseConfig = {
-          apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-          authDomain: "astro-notlarim.firebaseapp.com",
-          projectId: "astro-notlarim",
-          storageBucket: "astro-notlarim.firebasestorage.app",
-          messagingSenderId: "123654326926",
-          appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-          measurementId: "G-19BSBWLJ7X"
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
         };
 
-        // Firebase Başlatma
+        // Firebase Servislerini Başlat
         firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(); // Firestore Veritabanı referansı
 
-        // ONAY BUTONUNA TIKLANDIĞINDA GERÇEK KAYIT BAŞLAR
+        // ONAY BUTONUNA TIKLANDIĞINDA KAYIT VE VERİTABANI YAZMA İŞLEMİ BAŞLAR
         function handleApprove() {
             const fullname = sessionStorage.getItem('temp_fullname');
             const email = sessionStorage.getItem('temp_email');
             const password = sessionStorage.getItem('temp_password');
+            // Geçici hafızadaki cihaz bilgilerini geri çekiyoruz
+            const rawDeviceInfo = sessionStorage.getItem('temp_device_info');
+            const deviceInfo = rawDeviceInfo ? JSON.parse(rawDeviceInfo) : {};
 
-            // Eğer hafızada veri yoksa güvenlik amacıyla geri fırlat
             if (!email || !password) {
                 alert("Kayıt bilgileri bulunamadı. Lütfen formu tekrar doldurun.");
                 window.location.href = "register.html";
@@ -180,38 +184,45 @@
             const approveBtn = document.getElementById('approveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
 
-            // Arayüzü kilitle
+            // Arayüzü Kilitle
             approveBtn.disabled = true;
-            approveBtn.textContent = "Kaydediliyor...";
+            approveBtn.textContent = "Hesap Oluşturuluyor...";
             cancelBtn.disabled = true;
 
-            // Firebase Kayıt Motoru çalışıyor
+            // ADIM 1: Firebase Auth ile kullanıcıyı oluştur
             firebase.auth().createUserWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    return user.updateProfile({ displayName: fullname });
+                    // Profil ismini güncelle ve kullanıcı nesnesini bir sonraki adıma aktar
+                    return user.updateProfile({ displayName: fullname }).then(() => user);
+                })
+                .then((user) => {
+                    // ADIM 2: Kullanıcı başarıyla oluştu, şimdi ek verileri Firestore'a kaydet
+                    return db.collection("users").doc(user.uid).set({
+                        uid: user.uid,
+                        fullname: fullname,
+                        email: email,
+                        isTermsApproved: true,               // İstediğiniz yasal onay boolean değeri
+                        deviceInfo: deviceInfo,              // Arka planda toplanan cihaz bilgileri
+                        approvedAt: firebase.firestore.FieldValue.serverTimestamp() // Sunucu saati ile onay zamanı
+                    });
                 })
                 .then(() => {
-                    // Kayıt başarılı! Geçici hafızayı temizle
+                    // ADIM 3: Her şey başarıyla tamamlandı
                     sessionStorage.clear();
-                    alert("Hesabınız başarıyla oluşturuldu! Hoş geldiniz.");
+                    alert("Hesabınız ve yasal onayınız başarıyla kaydedildi! Hoş geldiniz.");
                     window.location.href = "dashboard.html";
                 })
                 .catch((error) => {
+                    // Hata durumunda butonları tekrar aç
                     approveBtn.disabled = false;
                     approveBtn.textContent = "Onay";
                     cancelBtn.disabled = false;
 
-                    if (error.code === 'auth/email-already-in-use') {
-                        alert("Bu e-posta adresi zaten kullanımda! Lütfen kayıt sayfasına dönüp başka bir e-posta deneyin.");
-                        window.location.href = "register.html";
-                    } else {
-                        alert("Kayıt oluşturulurken bir hata oluştu: " + error.message);
-                    }
+                    alert("İşlem sırasında bir hata meydana geldi: " + error.message);
                 });
         }
 
-        // İPTAL EDİLİRSE VERİLERİ SİL VE GERİ GÖNDER
         function handleCancel() {
             sessionStorage.clear();
             window.location.href = "register.html";
