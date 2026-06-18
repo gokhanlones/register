@@ -75,7 +75,7 @@
     </div>
 
     <script>
-        // Astro Notlarım Orijinal Firebase Yapılandırması (Eksikti, Eklendi)
+        // Astro Notlarım Orijinal Firebase Yapılandırması
         const firebaseConfig = {
           apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
           authDomain: "astro-notlarim.firebaseapp.com",
@@ -100,7 +100,6 @@
             }
         }
 
-        // KRİTİK DEĞİŞİKLİK: Formun submit olayı yerine butonun click olayını dinliyoruz
         document.getElementById('submitBtn').addEventListener('click', function(e) {
             
             // Önceki hata sınıflarını temizle
@@ -134,49 +133,58 @@
                 isValid = false;
             }
 
-            // FORM KONTROLLERİ GEÇERLİYSE FIREBASE KONTROLÜ BAŞLAR
+            // FORM KONTROLLERİ GEÇERLİYSE FIREBASE KAYIT VE DOĞRULAMA ADIMI BAŞLAR
             if (isValid) {
                 const submitBtn = document.getElementById('submitBtn');
                 
                 // Çift tıklamayı önlemek için arayüzü kilitle
                 submitBtn.disabled = true;
-                submitBtn.textContent = "Kontrol ediliyor...";
+                submitBtn.textContent = "Hesap Oluşturuluyor...";
 
                 const emailValue = email.value.trim();
+                const passwordValue = password.value;
+                const fullnameValue = fullname.value.trim();
 
-                // Firebase üzerinden e-posta kontrolü tetikle
-                firebase.auth().fetchSignInMethodsForEmail(emailValue)
-                    .then((signInMethods) => {
-                        if (signInMethods.length > 0) {
-                            // E-posta adresi sistemde zaten kayıtlıysa uyar
-                            alert("Bu e-posta adresi zaten kullanımda! Lütfen giriş yapmayı deneyin veya farklı bir e-posta kullanın.");
-                            submitBtn.disabled = false;
-                            submitBtn.textContent = "Devam Et";
-                        } else {
-                            // Kullanıcı yoksa arka planda sessizce cihaz verilerini topla
-                            const deviceInfo = {
-                                userAgent: navigator.userAgent,
-                                platform: navigator.platform,
-                                language: navigator.language,
-                                screenResolution: `${window.screen.width}x${window.screen.height}`
-                            };
+                // ADIM 1: Firebase Auth ile kullanıcı kaydını doğrudan tetikle
+                firebase.auth().createUserWithEmailAndPassword(emailValue, passwordValue)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        // Kullanıcının profil ismini (displayName) güncelle
+                        return user.updateProfile({ displayName: fullnameValue }).then(() => user);
+                    })
+                    .then((user) => {
+                        // ADIM 2: Kullanıcı oluştu, şimdi E-posta Doğrulama Linkini gönder
+                        return user.sendEmailVerification();
+                    })
+                    .then(() => {
+                        // ADIM 3: Cihaz verilerini arka planda topla
+                        const deviceInfo = {
+                            userAgent: navigator.userAgent,
+                            platform: navigator.platform,
+                            language: navigator.language,
+                            screenResolution: `${window.screen.width}x${window.screen.height}`
+                        };
 
-                            // Tüm verileri geçici hafızaya güvenle yaz
-                            sessionStorage.setItem('temp_fullname', fullname.value.trim());
-                            sessionStorage.setItem('temp_email', emailValue);
-                            sessionStorage.setItem('temp_password', password.value);
-                            sessionStorage.setItem('temp_device_info', JSON.stringify(deviceInfo));
+                        // Firestore'a daha sonra yazılacak ek bilgileri geçici hafızaya atıyoruz
+                        sessionStorage.setItem('temp_fullname', fullnameValue);
+                        sessionStorage.setItem('temp_email', emailValue);
+                        sessionStorage.setItem('temp_device_info', JSON.stringify(deviceInfo));
 
-                            // Yasal Onay (terms.html) sayfasına yönlendir
-                            window.location.href = "terms.html";
-                        }
+                        // Kullanıcıyı bilgilendir ve Yasal Onay sayfasına yönlendir
+                        alert("Hesabınız başarıyla oluşturuldu! Lütfen " + emailValue + " adresine gönderilen doğrulama linkine tıklayın, ardından yasal onayı tamamlamak için devam edin.");
+                        window.location.href = "terms.html";
                     })
                     .catch((error) => {
-                        // Olası bir bağlantı/Firebase hatasında arayüz kilidini aç
+                        // Hata durumunda butonu eski haline getir
                         submitBtn.disabled = false;
                         submitBtn.textContent = "Devam Et";
-                        // Artık sayfa 405'e gitmeyecek, hatanın sebebini doğrudan görebileceksiniz
-                        alert("Firebase Hatası: " + error.message);
+
+                        // Özel e-posta zaten var hatası kontrolü
+                        if (error.code === 'auth/email-already-in-use') {
+                            alert("Bu e-posta adresi zaten kullanımda! Lütfen giriş yapmayı deneyin veya farklı bir e-posta kullanın.");
+                        } else {
+                            alert("Kayıt sırasında bir hata oluştu: " + error.message);
+                        }
                     });
             }
         });
