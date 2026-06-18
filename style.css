@@ -1,0 +1,123 @@
+/* Genel Sıfırlama ve Kutu Modeli */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Kenar boşluklarının genişliği bozmasını engeller */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Tüm Sayfayı Kaplayan ve İçeriği Ortatayan Arka Plan */
+body {
+    background-color: #f3f4f6; /* Açık gri modern bir arka plan */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px; /* Mobilde ekran kenarlarına yapışmasın diye */
+}
+
+/* Esnek Kayıt Kartı (Sihirli Kısım Burası) */
+.register-container {
+    width: 100%; /* Mobilde ekranın tamamını kaplasın */
+    max-width: 450px; /* Ama büyük ekranlarda 450px'den daha fazla büyümesin */
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px; /* Yumuşak köşeler */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Başlık ve Yazılar */
+h2 {
+    color: #1f2937;
+    margin-bottom: 8px;
+    font-size: 1.5rem;
+}
+
+p {
+    color: #4b5563;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+}
+
+/* Form Elemanlarının Düzeni */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Giriş Kutuları (Inputlar) */
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 100%; /* Genişlik her ekranda %100 olsun */
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+/* Kutunun içine tıklanınca (Focus) renk değişimi */
+.form-group input:focus {
+    border-color: #2563eb; /* Modern bir mavi */
+}
+
+/* Checkbox Düzeni */
+.checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.checkbox-group input {
+    margin-top: 3px;
+}
+
+.checkbox-group label {
+    font-weight: normal;
+    font-size: 0.85rem;
+    color: #4b5563;
+}
+
+/* Buton Tasarımı */
+.btn-submit {
+    width: 100%;
+    padding: 14px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #1d4ed8; /* Fare üzerine gelince biraz koyulaşsın */
+}
+
+/* Alt Kısımdaki Link Alanı */
+.register-footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 0.85rem;
+}
+
+.register-footer a, .checkbox-group a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.register-footer a:hover {
+    text-decoration: underline;
+}
