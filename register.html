@@ -21,7 +21,7 @@
         </header>
 
         <main class="scrollable-form-section">
-            <form action="#" method="POST" class="register-form" id="registerForm" novalidate>
+            <form class="register-form" id="registerForm" novalidate onsubmit="return false;">
                 
                 <div class="form-group" id="group-fullname">
                     <div class="input-wrapper">
@@ -63,7 +63,7 @@
                     <div class="error-message">Girdiğiniz şifreler birbiriyle eşleşmiyor.</div>
                 </div>
 
-                <button type="submit" class="btn-submit" id="submitBtn">Devam Et</button>
+                <button type="button" class="btn-submit" id="submitBtn">Devam Et</button>
 
             </form>
 
@@ -75,8 +75,20 @@
     </div>
 
     <script>
-        // Astro Notlarım Orijinal Firebase Yapılandırması
+        // Astro Notlarım Orijinal Firebase Yapılandırması (Eksikti, Eklendi)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbu",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+
+        // Firebase Başlat
         firebase.initializeApp(firebaseConfig);
+
         function togglePasswordVisibility(inputId, button) {
             const passwordInput = document.getElementById(inputId);
             if (passwordInput.type === "password") {
@@ -88,9 +100,9 @@
             }
         }
 
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
+        // KRİTİK DEĞİŞİKLİK: Formun submit olayı yerine butonun click olayını dinliyoruz
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            
             // Önceki hata sınıflarını temizle
             document.querySelectorAll('.form-group').forEach(function(element) {
                 element.classList.remove('has-error');
@@ -163,7 +175,8 @@
                         // Olası bir bağlantı/Firebase hatasında arayüz kilidini aç
                         submitBtn.disabled = false;
                         submitBtn.textContent = "Devam Et";
-                        alert("E-posta kontrolü yapılırken bir hata oluştu: " + error.message);
+                        // Artık sayfa 405'e gitmeyecek, hatanın sebebini doğrudan görebileceksiniz
+                        alert("Firebase Hatası: " + error.message);
                     });
             }
         });
