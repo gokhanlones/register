@@ -76,13 +76,15 @@ body {
 
 /* Form Satırları */
 .form-group {
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Şifre alanına özel bağımsız katman alanı */
-.password-group {
+/* Kutunun ve İkonun Hizalamasını Koruyan Güvenli Çerçeve */
+.input-wrapper {
     position: relative;
-    display: block;
+    width: 100%;
 }
 
 /* Giriş Kutuları (Altın Sarısı Çerçeve, Üst Yazı Yok) */
@@ -99,8 +101,8 @@ body {
 }
 
 /* Şifre kutularında yazının ikona çarpmaması için sağ boşluk */
-.password-group input {
-    padding-right: 48px;
+.password-input {
+    padding-right: 48px !important;
 }
 
 .form-group input:focus {
@@ -112,7 +114,7 @@ body {
     color: #9ca3af;
 }
 
-/* Şifre Gizle/Göster Butonu (Kutunun tam sağ tarafına kilitli) */
+/* Şifre Gizle/Göster Butonu (Kutunun içine tam sağa kilitli) */
 .toggle-password {
     position: absolute;
     right: 14px;
@@ -126,7 +128,7 @@ body {
     align-items: center;
     justify-content: center;
     color: #9ca3af;
-    z-index: 5; /* Kutunun kesinlikle üstünde durmasını sağlar */
+    z-index: 5;
     outline: none;
 }
 
@@ -137,39 +139,26 @@ body {
 .eye-icon {
     width: 22px;
     height: 22px;
-    pointer-events: none; /* Tıklama hatasını önler */
+    pointer-events: none;
 }
 
-/* Google Butonu */
-.btn-google {
-    width: 100%;
-    padding: 14px;
-    background-color: #ffffff;
-    color: #374151;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    margin-top: 10px;
-    margin-bottom: 12px;
-    transition: background-color 0.2s;
+/* Kırmızı Hata Mesajı Alanı (Sadece text olarak hata belirtme) */
+.error-message {
+    color: #ef4444; /* Net kırmızı */
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 5px;
+    padding-left: 2px;
+    text-align: left;
+    display: none; /* Varsayılan olarak gizli tutuyoruz */
 }
 
-.btn-google:hover {
-    background-color: #f9fafb;
+/* Eğer form-group elemanına 'has-error' sınıfı gelirse hata yazısı görünür */
+.form-group.has-error .error-message {
+    display: block;
 }
 
-.google-icon {
-    width: 18px;
-    height: 18px;
-}
-
-/* Kaydet Butonu (Tam Siyah) */
+/* Kaydet Butonu (Üst boşluğu Google butonu kalktığı için dengelendi) */
 .btn-submit {
     width: 100%;
     padding: 14px;
@@ -180,6 +169,7 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
+    margin-top: 12px;
     transition: opacity 0.2s;
 }
 
