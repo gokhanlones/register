@@ -83,6 +83,31 @@
             margin-bottom: 12px;
         }
 
+        /* Yeni Doğrulama Bilgi Kutusu Tasarımı */
+        .verification-alert-box {
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .verification-alert-box p {
+            font-size: 0.85rem;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .resend-link {
+            font-size: 0.85rem;
+            color: #000000;
+            font-weight: 600;
+            text-decoration: underline;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
         .button-group {
             display: flex;
             gap: 12px;
@@ -129,6 +154,11 @@
         </header>
 
         <main class="scrollable-terms-section">
+            <div class="verification-alert-box">
+                <p>⚠️ Devam etmeden önce e-posta kutunuza gönderilen doğrulama linkine tıklamış olmanız gerekmektedir.</p>
+                <button type="button" class="resend-link" onclick="handleResendEmail()">Doğrulama mailini tekrar gönder</button>
+            </div>
+
             <div class="terms-text">
                 <p>Lütfen Astro Notlarım platformunu kullanmaya başlamadan önce aşağıdaki kullanım şartlarını ve gizlilik politikasını dikkatlice okuyunuz.</p>
                 
@@ -145,7 +175,7 @@
 
         <footer class="button-group">
             <button type="button" class="btn btn-cancel" id="cancelBtn" onclick="handleCancel()">İptal</button>
-            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()">Onay</button>
+            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()">Onayla ve Başla</button>
         </footer>
 
     </div>
@@ -164,19 +194,15 @@
 
         // Firebase Servislerini Başlat
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore(); // Firestore Veritabanı referansı
+        const db = firebase.firestore();
 
-        // ONAY BUTONUNA TIKLANDIĞINDA KAYIT VE VERİTABANI YAZMA İŞLEMİ BAŞLAR
+        // ONAY BUTONUNA TIKLANDIĞINDA E-POSTA DOĞRULAMA KONTROLÜ VE FIRESTORE KAYDI YAPILIR
         function handleApprove() {
-            const fullname = sessionStorage.getItem('temp_fullname');
-            const email = sessionStorage.getItem('temp_email');
-            const password = sessionStorage.getItem('temp_password');
-            // Geçici hafızadaki cihaz bilgilerini geri çekiyoruz
-            const rawDeviceInfo = sessionStorage.getItem('temp_device_info');
-            const deviceInfo = rawDeviceInfo ? JSON.parse(rawDeviceInfo) : {};
+            const user = firebase.auth().currentUser;
 
-            if (!email || !password) {
-                alert("Kayıt bilgileri bulunamadı. Lütfen formu tekrar doldurun.");
+            // Eğer sayfada aktif bir oturum yoksa register sayfasına geri gönder
+            if (!user) {
+                alert("Oturum süresi dolmuş veya bulunamadı. Lütfen kayıt formunu tekrar doldurun.");
                 window.location.href = "register.html";
                 return;
             }
@@ -184,49 +210,93 @@
             const approveBtn = document.getElementById('approveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
 
-            // Arayüzü Kilitle
+            // Arayüzü Geçici Olarak Kilitle
             approveBtn.disabled = true;
-            approveBtn.textContent = "Hesap Oluşturuluyor...";
+            approveBtn.textContent = "Kontrol ediliyor...";
             cancelBtn.disabled = true;
 
-            // ADIM 1: Firebase Auth ile kullanıcıyı oluştur
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    // Profil ismini güncelle ve kullanıcı nesnesini bir sonraki adıma aktar
-                    return user.updateProfile({ displayName: fullname }).then(() => user);
-                })
-                .then((user) => {
-                    // ADIM 2: Kullanıcı başarıyla oluştu, şimdi ek verileri Firestore'a kaydet
-                    // "users" olan koleksiyon adını kurallarınıza uygun olarak "user_profiles" yapıyoruz
-                    return db.collection("user_profiles").doc(user.uid).set({
-                        uid: user.uid,
+            // KRİTİK ADIM: Kullanıcının maildeki linke tıklayıp tıklamadığını anlamak için profilini yeniliyoruz
+            user.reload()
+                .then(() => {
+                    const updatedUser = firebase.auth().currentUser;
+
+                    // Eğer e-posta hâlâ onaylanmamışsa süreci durdur ve uyar
+                    if (!updatedUser.emailVerified) {
+                        alert("E-posta adresiniz henüz doğrulanmamış. Lütfen gelen kutunuzu (veya spam klasörünü) kontrol edip doğrulama linkine tıklayın.");
+                        approveBtn.disabled = false;
+                        approveBtn.textContent = "Onayla ve Başla";
+                        cancelBtn.disabled = false;
+                        return; // Kodun aşağıya akmasını engelle
+                    }
+
+                    // E-posta başarıyla onaylandıysa, Firestore dökümanını hazırlıyoruz
+                    approveBtn.textContent = "Profiliniz Oluşturuluyor...";
+                    
+                    const fullname = sessionStorage.getItem('temp_fullname') || updatedUser.displayName;
+                    const email = sessionStorage.getItem('temp_email') || updatedUser.email;
+                    const rawDeviceInfo = sessionStorage.getItem('temp_device_info');
+                    const deviceInfo = rawDeviceInfo ? JSON.parse(rawDeviceInfo) : {};
+
+                    // Firestore Veritabanına Yazma İşlemi
+                    return db.collection("user_profiles").doc(updatedUser.uid).set({
+                        uid: updatedUser.uid,
                         fullname: fullname,
                         email: email,
-                        isTermsApproved: true,               // İstediğiniz yasal onay boolean değeri
-                        deviceInfo: deviceInfo,              // Arka planda toplanan cihaz bilgileri
-                        approvedAt: firebase.firestore.FieldValue.serverTimestamp() // Sunucu saati ile onay zamanı
+                        isTermsApproved: true,
+                        isEmailVerified: true, 
+                        deviceInfo: deviceInfo,
+                        approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 })
                 .then(() => {
-                    // ADIM 3: Her şey başarıyla tamamlandı
-                    sessionStorage.clear();
-                    alert("Hesabınız ve yasal onayınız başarıyla kaydedildi! Hoş geldiniz.");
-                    window.location.href = "dashboard.html";
+                    // Her şey başarılıysa geçici hafızayı temizle ve içeri al
+                    if (firebase.auth().currentUser && firebase.auth().currentUser.emailVerified) {
+                        sessionStorage.clear();
+                        alert("E-posta doğrulamanız ve yasal onayınız başarıyla tamamlandı! Sisteme yönlendiriliyorsunuz.");
+                        window.location.href = "dashboard.html";
+                    }
                 })
                 .catch((error) => {
-                    // Hata durumunda butonları tekrar aç
+                    // Hata durumunda buton kilitlerini çöz
                     approveBtn.disabled = false;
-                    approveBtn.textContent = "Onay";
+                    approveBtn.textContent = "Onayla ve Başla";
                     cancelBtn.disabled = false;
-
-                    alert("İşlem sırasında bir hata meydana geldi: " + error.message);
+                    alert("Bir sorun oluştu: " + error.message);
                 });
         }
 
+        // Talep doğrultusunda doğrulama mailini tekrar tetikleyen fonksiyon
+        function handleResendEmail() {
+            const user = firebase.auth().currentUser;
+            if (user) {
+                user.sendEmailVerification()
+                    .then(() => {
+                        alert("Doğrulama e-postası adresinize tekrar gönderildi. Lütfen kontrol edin.");
+                    })
+                    .catch((error) => {
+                        alert("Mail gönderilirken bir hata oluştu: " + error.message);
+                    });
+            } else {
+                alert("Kullanıcı oturumu bulunamadı, lütfen kayıt sayfasına geri dönün.");
+            }
+        }
+
+        // İptal durumunda açılan geçici hesabı temizleyip geri gönderme
         function handleCancel() {
-            sessionStorage.clear();
-            window.location.href = "register.html";
+            const user = firebase.auth().currentUser;
+            if (user) {
+                // Kullanıcı onaylamadan çıkarsa Firebase Auth üzerinde biriken çöp hesabı siliyoruz
+                user.delete().then(() => {
+                    sessionStorage.clear();
+                    window.location.href = "register.html";
+                }).catch(() => {
+                    sessionStorage.clear();
+                    window.location.href = "register.html";
+                });
+            } else {
+                sessionStorage.clear();
+                window.location.href = "register.html";
+            }
         }
     </script>
 
