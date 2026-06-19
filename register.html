@@ -8,23 +8,6 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
-    <style>
-        .btn-google { 
-            background-color: #ffffff; 
-            border: 1px solid #d1d5db; 
-            color: #374151; 
-            margin-top: 10px; 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 8px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: background 0.2s; 
-        }
-        .btn-google:hover { background-color: #f9fafb; }
-
-    </style>
 </head>
 <body>
 
@@ -73,10 +56,7 @@
                     <div class="error-message">Şifreler eşleşmiyor.</div>
                 </div>
 
-
-
                 <button type="button" class="btn-submit" id="registerBtn" onclick="handleRegister()">Kayıt Ol</button>
-                <button type="button" class="btn-google" onclick="handleGoogleRegister()">Google ile Kayıt Ol</button>
             </form>
 
             <footer class="register-footer">
@@ -161,31 +141,6 @@
                     btn.disabled = false;
                     btn.textContent = "Kayıt Ol";
                 });
-        }
-
-        function handleGoogleRegister() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    const isNewUser = result.additionalUserInfo.isNewUser;
-
-                    if (!isNewUser) {
-                        alert("Bu Google hesabı zaten kayıtlı. Giriş yapılıyor...");
-                        window.location.href = "dashboard.html";
-                        return;
-                    }
-
-                    sessionStorage.setItem('temp_fullname', user.displayName || "");
-                    sessionStorage.setItem('temp_email', user.email || "");
-                    sessionStorage.setItem('temp_device_info', JSON.stringify({
-                        userAgent: navigator.userAgent,
-                        platform: navigator.platform,
-                        language: navigator.language
-                    }));
-                    window.location.href = "terms.html";
-                })
-                .catch(err => alert("Google kaydı başarısız: " + err.message));
         }
     </script>
 </body>
