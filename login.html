@@ -8,6 +8,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
     <style>
         .btn-google { background-color: #ffffff; border: 1px solid #d1d5db; color: #374151; margin-top: 10px; width: 100%; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
@@ -72,6 +73,7 @@
             measurementId: "G-19BSBWLJ7X"
         };
         firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
@@ -110,7 +112,24 @@
             btn.textContent = "Giriş yapılıyor...";
 
             firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(() => window.location.href = "dashboard.html")
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // Doğum bilgisi kontrolü
+                    return db.collection("users").doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists && doc.data().birthYear) {
+                                // Doğum bilgisi var → dashboard
+                                window.location.href = "dashboard.html";
+                            } else {
+                                // Doğum bilgisi yok → birthinfo
+                                window.location.href = "birthinfo.html";
+                            }
+                        })
+                        .catch(() => {
+                            // Firestore okuma hatası → yine de dashboard
+                            window.location.href = "dashboard.html";
+                        });
+                })
                 .catch(err => {
                     alert("Hata: " + err.message);
                     btn.disabled = false;
