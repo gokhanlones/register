@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğum Bilgileri | Astro Notlarım</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* Cinsiyet Seçimi */
+        .gender-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .gender-option {
+            flex: 1;
+            position: relative;
+        }
+        .gender-option input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .gender-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            border: 1px solid #d4af37;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #6b7280;
+            background-color: #ffffff;
+        }
+        .gender-option input:checked + .gender-label {
+            background-color: #000000;
+            color: #d4af37;
+            border-color: #000000;
+        }
+        .gender-label svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Inline hata mesajı */
+        .inline-error {
+            display: none;
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+            color: #991b1b;
+        }
+        .inline-error.show {
+            display: block;
+        }
+
+        /* Date ve Time input stilleri */
+        input[type="date"],
+        input[type="time"] {
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.4);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header class="brand-section">
+            <button class="btn-menu" onclick="goBack()">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </button>
+            <h1>Doğum Bilgileri</h1>
+        </header>
+
+        <main class="scrollable-form-section">
+            <form class="register-form" id="birthInfoForm" onsubmit="return false;">
+
+                <!-- Hata Mesajı Alanı -->
+                <div class="inline-error" id="formError"></div>
+
+                <!-- Cinsiyet -->
+                <div class="form-group" id="group-gender">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Cinsiyet</label>
+                    <div class="gender-group">
+                        <div class="gender-option">
+                            <input type="radio" name="gender" id="gender-female" value="female">
+                            <label for="gender-female" class="gender-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M12 13v8"></path><path d="M9 18h6"></path></svg>
+                                Kadın
+                            </label>
+                        </div>
+                        <div class="gender-option">
+                            <input type="radio" name="gender" id="gender-male" value="male">
+                            <label for="gender-male" class="gender-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"></circle><path d="M12 13v8"></path><path d="M9 18h6"></path><path d="M16 3h5v5"></path><path d="M21 3l-6 6"></path></svg>
+                                Erkek
+                            </label>
+                        </div>
+                    </div>
+                    <div class="error-message">Lütfen cinsiyet seçin.</div>
+                </div>
+
+                <!-- Doğum Tarihi -->
+                <div class="form-group" id="group-birthdate">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Tarihi</label>
+                    <div class="input-wrapper">
+                        <input type="date" id="birthDate" max="">
+                    </div>
+                    <div class="error-message">Lütfen doğum tarihi seçin.</div>
+                </div>
+
+                <!-- Doğum Saati -->
+                <div class="form-group" id="group-birthtime">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Saati</label>
+                    <div class="input-wrapper">
+                        <input type="time" id="birthTime" step="60">
+                    </div>
+                    <div class="error-message">Lütfen doğum saati seçin.</div>
+                </div>
+
+                <!-- Doğum Yeri (Text Input) -->
+                <div class="form-group" id="group-birthplace">
+                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Yeri</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="birthPlace" placeholder="Örn: İstanbul, Türkiye">
+                    </div>
+                    <div class="error-message">Lütfen doğum yeri girin.</div>
+                </div>
+
+                <button type="button" class="btn-submit" id="saveBtn" onclick="handleSave()">Kaydet</button>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Date input max = bugün (gelecek tarih seçilemesin)
+        document.getElementById('birthDate').max = new Date().toISOString().split('T')[0];
+
+        // ─── HATA MESAJI YÖNETİMİ ───
+        function showError(message) {
+            const errorBox = document.getElementById('formError');
+            errorBox.textContent = message;
+            errorBox.classList.add('show');
+        }
+        function hideError() {
+            document.getElementById('formError').classList.remove('show');
+        }
+
+        // ─── KAYDET ───
+        function handleSave() {
+            // Hata temizleme
+            document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
+            hideError();
+
+            const gender = document.querySelector('input[name="gender"]:checked');
+            const birthDate = document.getElementById('birthDate').value;
+            const birthTime = document.getElementById('birthTime').value;
+            const birthPlace = document.getElementById('birthPlace').value.trim();
+
+            let isValid = true;
+            let errorMessages = [];
+
+            if (!gender) {
+                document.getElementById('group-gender').classList.add('has-error');
+                errorMessages.push('Cinsiyet');
+                isValid = false;
+            }
+            if (!birthDate) {
+                document.getElementById('group-birthdate').classList.add('has-error');
+                errorMessages.push('Doğum tarihi');
+                isValid = false;
+            }
+            if (!birthTime) {
+                document.getElementById('group-birthtime').classList.add('has-error');
+                errorMessages.push('Doğum saati');
+                isValid = false;
+            }
+            if (!birthPlace) {
+                document.getElementById('group-birthplace').classList.add('has-error');
+                errorMessages.push('Doğum yeri');
+                isValid = false;
+            }
+
+            if (!isValid) {
+                showError('Lütfen zorunlu alanları doldurun: ' + errorMessages.join(', '));
+                return;
+            }
+
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Kaydediliyor...';
+
+            const user = firebase.auth().currentUser;
+            if (!user) {
+                showError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
+                btn.disabled = false;
+                btn.textContent = 'Kaydet';
+                setTimeout(() => window.location.href = 'login.html', 2000);
+                return;
+            }
+
+            // Tarih parçalama
+            const [year, month, day] = birthDate.split('-').map(Number);
+            const [hour, minute] = birthTime.split(':').map(Number);
+
+            const birthData = {
+                gender: gender.value,
+                birthYear: year,
+                birthMonth: month,
+                birthDay: day,
+                birthHour: hour,
+                birthMinute: minute,
+                birthPlace: birthPlace,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            db.collection('users').doc(user.uid).set(birthData, { merge: true })
+                .then(() => {
+                    alert('Doğum bilgileriniz başarıyla kaydedildi!');
+                    window.location.href = 'dashboard.html';
+                })
+                .catch(err => {
+                    showError('Kayıt sırasında hata oluştu: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Kaydet';
+                });
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
