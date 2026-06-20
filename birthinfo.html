@@ -105,10 +105,10 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        // Firebase Remote Config Tanımlaması
+        // Remote Config Nesnesini Başlatma
         const remoteConfig = firebase.remoteConfig();
         remoteConfig.settings = {
-            minimumFetchIntervalMillis: 3600000 // 1 saat önbellekleme süresi
+            minimumFetchIntervalMillis: 60000 // Testlerin hızlı olması için önbellek süresi 1 dakika yapıldı
         };
 
         let currentUser = null;
@@ -116,7 +116,6 @@
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
-                console.log("Kullanıcı oturumu başarıyla alındı:", user.uid);
             } else {
                 window.location.href = 'login.html';
             }
@@ -133,7 +132,7 @@
             document.getElementById('formError').classList.remove('show');
         }
 
-        // Fonksiyon asenkron hale getirildi
+        // Fonksiyon asenkron (async) yapıya dönüştürüldü
         async function handleSave() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideError();
@@ -157,7 +156,7 @@
             }
 
             if (!currentUser) {
-                showError('Oturum bilgisi yükleniyor, lütfen birkaç saniye bekleyip tekrar deneyin.');
+                showError('Oturum bilgisi alınıyor, lütfen bekleyin...');
                 return;
             }
 
@@ -169,15 +168,15 @@
             const [hour, minute] = birthTime.split(':').map(Number);
 
             try {
-                // 1. ADIM: Remote Config'den güncel verileri çek ve aktifleştir
+                // 1. ADIM: Sunucudan parametreleri çekip aktif et
                 await remoteConfig.fetchAndActivate();
                 const apiKey = remoteConfig.getString('astro_api_key');
 
-                if (!apiKey) {
-                    throw new Error("Remote Config üzerinde 'astro_api_key' bulunamadı.");
+                // Güvenlik Kontrolü: Eğer anahtar gelmezse veya panelde boşsa hata fırlatır
+                if (!apiKey || apiKey === "(in-app default)") {
+                    throw new Error("Firebase Remote Config paneline geçerli bir API anahtarı tanımlanıp yayınlanmalıdır.");
                 }
 
-                // FreeAstroAPI için gerekli olan ortak parametre yapısı
                 const apiPayload = {
                     year: year,
                     month: month,
@@ -185,7 +184,7 @@
                     hour: hour,
                     minute: minute,
                     city: birthPlace,
-                    tz_str: "AUTO", // Zaman dilimini şehre göre otomatik bulur
+                    tz_str: "AUTO",
                     interpretation: { enable: true, style: "improved" }
                 };
 
@@ -196,14 +195,14 @@
 
                 const apiUrlBase = "https://api.freeastroapi.com/api/v1/western/signs";
 
-                // 2. ADIM: Güneş, Ay ve Yükselen bilgilerini eşzamanlı olarak API'den talep et
-                const [sunResponse, moonResponse, ascResponse] = await Promise.all([
+                // 2. ADIM: Eşzamanlı HTTP POST istekleri atılıyor
+                const [sunRes, moonRes, ascRes] = await Promise.all([
                     fetch(`${apiUrlBase}/sun`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json()),
                     fetch(`${apiUrlBase}/moon`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json()),
                     fetch(`${apiUrlBase}/ascendant`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json())
                 ]);
 
-                // 3. ADIM: Form verileri ile API sonuçlarını birleştirerek veri modelini oluştur
+                // 3. ADIM: API çıktısı ile ham verileri birleştir
                 const birthData = {
                     gender: gender.value,
                     birthYear: year,
@@ -213,22 +212,22 @@
                     birthMinute: minute,
                     birthPlace: birthPlace,
                     astroData: {
-                        sun: sunResponse,
-                        moon: moonResponse,
-                        ascendant: ascResponse
+                        sun: sunRes,
+                        moon: moonRes,
+                        ascendant: ascRes
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // 4. ADIM: Bütünleşik veriyi Firestore'a kaydet
+                // 4. ADIM: Firestore Dokümanını Güncelle / Kaydet
                 await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
 
                 alert('Doğum bilgileriniz ve astroloji haritanız başarıyla kaydedildi!');
                 window.location.href = 'dashboard.html';
 
             } catch (err) {
-                console.error("Astroloji Haritası / Firebase Hatası:", err);
-                showError('Kayıt veya hesaplama sırasında bir hata oluştu: ' + err.message);
+                console.error("İşlem Hatası:", err);
+                showError('Hata: ' + err.message);
                 btn.disabled = false;
                 btn.textContent = 'Kaydet';
             }
