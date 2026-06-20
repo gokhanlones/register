@@ -109,6 +109,7 @@
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                console.log("Kullanıcı oturumu başarıyla alındı:", user.uid);
             } else {
                 window.location.href = 'login.html';
             }
@@ -125,8 +126,7 @@
             document.getElementById('formError').classList.remove('show');
         }
 
-        // Fonksiyon asenkron (async) yapıya geçirildi
-        async function handleSave() {
+        function handleSave() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideError();
 
@@ -149,94 +149,40 @@
             }
 
             if (!currentUser) {
-                showError('Oturum bilgisi alınıyor, lütfen bekleyin...');
+                showError('Oturum bilgisi yükleniyor, lütfen birkaç saniye bekleyip tekrar deneyin.');
                 return;
             }
 
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
-            btn.textContent = 'Astroloji Haritası Hesaplanıyor...';
+            btn.textContent = 'Kaydediliyor...';
 
             const [year, month, day] = birthDate.split('-').map(Number);
             const [hour, minute] = birthTime.split(':').map(Number);
 
-            // 🔑 BURAYA FREEASTROAPI KEYİNİZİ YAZIN
-            const apiKey = "BURAYA_API_KEYINIZI_YAZIN"; 
-
-            if (!apiKey || apiKey === "BURAYA_API_KEYINIZI_YAZIN") {
-                showError("Lütfen kodun içerisindeki apiKey alanına FreeAstroAPI anahtarınızı yazın.");
-                btn.disabled = false;
-                btn.textContent = 'Kaydet';
-                return;
-            }
-
-            // Astroloji servisi için payload hazırlığı
-            const apiPayload = {
-                year: year,
-                month: month,
-                day: day,
-                hour: hour,
-                minute: minute,
-                city: birthPlace,
-                tz_str: "AUTO",
-                interpretation: {
-                    enable: true,
-                    style: "improved"
-                }
+            const birthData = {
+                gender: gender.value,
+                birthYear: year,
+                birthMonth: month,
+                birthDay: day,
+                birthHour: hour,
+                birthMinute: minute,
+                birthPlace: birthPlace,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            const headers = {
-                "x-api-key": apiKey,
-                "Content-Type": "application/json"
-            };
-
-            const baseUrl = "https://api.freeastroapi.com/api/v1/western/signs";
-
-            try {
-                // 1. Adım: API'den Güneş, Ay ve Yükselen bilgilerini paralel olarak çekiyoruz
-                const [sunRes, moonRes, ascRes] = await Promise.all([
-                    fetch(`${baseUrl}/sun`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
-                        if(!res.ok) throw new Error("Güneş burcu hesaplanamadı.");
-                        return res.json();
-                    }),
-                    fetch(`${baseUrl}/moon`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
-                        if(!res.ok) throw new Error("Ay burcu hesaplanamadı.");
-                        return res.json();
-                    }),
-                    fetch(`${baseUrl}/ascendant`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
-                        if(!res.ok) throw new Error("Yükselen burç hesaplanamadı.");
-                        return res.json();
-                    })
-                ]);
-
-                // 2. Adım: Hem ham verileri hem de API'den gelen burç analizlerini tek pakette birleştiriyoruz
-                const birthData = {
-                    gender: gender.value,
-                    birthYear: year,
-                    birthMonth: month,
-                    birthDay: day,
-                    birthHour: hour,
-                    birthMinute: minute,
-                    birthPlace: birthPlace,
-                    astroData: {
-                        sun: sunRes,
-                        moon: moonRes,
-                        ascendant: ascRes
-                    },
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                // 3. Adım: Firestore Veritabanına Yazma İşlemi
-                await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
-
-                alert('Doğum bilgileriniz ve astroloji haritanız başarıyla güncellendi!');
-                window.location.href = 'dashboard.html';
-
-            } catch (err) {
-                showError('İşlem sırasında bir hata oluştu: ' + err.message);
-                btn.disabled = false;
-                btn.textContent = 'Kaydet';
-            }
+            // Firestore Veri Yazma Alanı
+            db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true })
+                .then(() => {
+                    alert('Doğum bilgileriniz başarıyla kaydedildi!');
+                    window.location.href = 'dashboard.html';
+                })
+                .catch(err => {
+                    console.error("Firebase Firestore Hatası:", err);
+                    showError('Kayıt sırasında Firebase hatası oluştu: ' + err.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Kaydet';
+                });
         }
 
         function goBack() {
