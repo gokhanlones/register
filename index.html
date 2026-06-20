@@ -11,20 +11,22 @@
         .splash-logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 16px; }
         .splash-title { font-size: 1.6rem; font-weight: 700; color: #000000; letter-spacing: -0.5px; }
         .connection-status { margin-top: 20px; font-size: 0.85rem; color: #ef4444; font-weight: 500; display: none; }
+        .loading-text { margin-top: 12px; font-size: 0.9rem; color: #9ca3af; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
     <div class="splash-container">
         <img src="logo.png" alt="Astro Notlarım Logo" class="splash-logo">
         <h1 class="splash-title">Astro Notlarım</h1>
+        <div class="loading-text" id="loadingText">Yükleniyor...</div>
         <div class="connection-status" id="statusText">İnternet bağlantısı bekleniyor...</div>
     </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
         const firebaseConfig = {
@@ -36,12 +38,15 @@
             appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
             measurementId: "G-19BSBWLJ7X"
         };
+
+        // Firebase başlat
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
         function checkAppConnection() {
             if (!navigator.onLine) {
                 document.getElementById('statusText').style.display = 'block';
+                document.getElementById('loadingText').style.display = 'none';
                 window.addEventListener('online', function() {
                     checkAuthAndRedirect();
                 });
@@ -51,23 +56,27 @@
         }
 
         function checkAuthAndRedirect() {
+            document.getElementById('loadingText').textContent = 'Oturum kontrol ediliyor...';
+            
             firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
-                    // Kullanıcı zaten giriş yapmış → doğum bilgisi kontrolü
+                    // Kullanıcı giriş yapmış → doğum bilgisi kontrolü
+                    document.getElementById('loadingText').textContent = 'Bilgiler alınıyor...';
                     db.collection("users").doc(user.uid).get()
                         .then((doc) => {
                             if (doc.exists && doc.data().birthYear) {
-                                window.location.href = "dashboard.html";
+                                window.location.replace("dashboard.html");
                             } else {
-                                window.location.href = "birthinfo.html";
+                                window.location.replace("birthinfo.html");
                             }
                         })
-                        .catch(() => {
-                            window.location.href = "login.html";
+                        .catch((err) => {
+                            console.error("Firestore hatası:", err);
+                            window.location.replace("login.html");
                         });
                 } else {
-                    // Kullanıcı giriş yapmamış → login
-                    window.location.href = "login.html";
+                    // Giriş yapmamış → login
+                    window.location.replace("login.html");
                 }
             });
         }
