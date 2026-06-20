@@ -5,6 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anasayfa | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* Sabit karşılama alanı */
+        .greeting-section {
+            padding: 20px 20px 16px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .greeting-text {
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        .user-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #d4af37;
+            letter-spacing: -0.5px;
+        }
+
+        /* Scrollable içerik alanı */
+        .dashboard-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .dashboard-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .dashboard-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .dashboard-content::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+
+        /* Placeholder içerik kartları */
+        .content-placeholder {
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+
+        /* Çıkış butonu */
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -17,12 +81,19 @@
                 </svg>
             </button>
             <h1>Astro Notlarım</h1>
+            <button class="logout-btn" onclick="logout()">Çıkış</button>
         </header>
 
-        <main class="scrollable-form-section">
-            <div style="padding: 20px; text-align: center;">
-                <h2 style="color: #d4af37;">Anasayfa</h2>
-                <p>Buraya anasayfa içerikleri gelecek.</p>
+        <!-- Sabit Karşılama Alanı -->
+        <div class="greeting-section" id="greetingSection">
+            <div class="greeting-text">Merhaba</div>
+            <div class="user-name" id="userName">Yükleniyor...</div>
+        </div>
+
+        <!-- Kaydırılabilir İçerik Alanı -->
+        <main class="dashboard-content" id="dashboardContent">
+            <div class="content-placeholder">
+                Buraya anasayfa içerikleri gelecek.
             </div>
         </main>
 
@@ -41,5 +112,47 @@
             </a>
         </footer>
     </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Kullanıcı bilgisini al
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            // Firestore'dan kullanıcı profilini al
+            db.collection("user_profiles").doc(user.uid).get()
+                .then((doc) => {
+                    if (doc.exists && doc.data().fullname) {
+                        document.getElementById('userName').textContent = doc.data().fullname;
+                    } else {
+                        // Firestore'da yoksa Firebase Auth displayName kullan
+                        document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                });
+        });
+
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = "login.html";
+            });
+        }
+    </script>
 </body>
 </html>
