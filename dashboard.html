@@ -29,6 +29,7 @@
             font-weight: 700;
             color: #d4af37;
             letter-spacing: -0.5px;
+            min-height: 2.2rem; /* Yükleniyor... sızıntısını önle */
         }
 
         /* Scrollable içerik alanı */
@@ -77,7 +78,7 @@
         <!-- Sabit Karşılama Alanı -->
         <div class="greeting-section" id="greetingSection">
             <div class="greeting-text">Merhaba</div>
-            <div class="user-name" id="userName">Yükleniyor...</div>
+            <div class="user-name" id="userName">...</div>
         </div>
 
         <!-- Kaydırılabilir İçerik Alanı -->
@@ -116,24 +117,37 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Kullanıcı bilgisini al
+        // Önce localStorage'dan cached ismi hemen göster
+        const cachedName = localStorage.getItem('astro_user_name');
+        if (cachedName) {
+            document.getElementById('userName').textContent = cachedName;
+        }
+
+        // Sonra Firebase'den güncel veriyi çek
         firebase.auth().onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "login.html";
                 return;
             }
 
-            // Firestore'dan kullanıcı profilini al
             db.collection("user_profiles").doc(user.uid).get()
                 .then((doc) => {
+                    let fullname;
                     if (doc.exists && doc.data().fullname) {
-                        document.getElementById('userName').textContent = doc.data().fullname;
+                        fullname = doc.data().fullname;
                     } else {
-                        document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                        fullname = user.displayName || "Kullanıcı";
                     }
+                    
+                    // DOM'u güncelle
+                    document.getElementById('userName').textContent = fullname;
+                    // Cache'e kaydet
+                    localStorage.setItem('astro_user_name', fullname);
                 })
                 .catch(() => {
-                    document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                    const fallbackName = user.displayName || "Kullanıcı";
+                    document.getElementById('userName').textContent = fallbackName;
+                    localStorage.setItem('astro_user_name', fallbackName);
                 });
         });
     </script>
