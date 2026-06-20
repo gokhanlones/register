@@ -13,6 +13,10 @@
         .connection-status { margin-top: 20px; font-size: 0.85rem; color: #ef4444; font-weight: 500; display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
     </style>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.8/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -23,15 +27,49 @@
     </div>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         function checkAppConnection() {
-            if (navigator.onLine) {
-                window.location.href = "login.html";
-            } else {
+            if (!navigator.onLine) {
                 document.getElementById('statusText').style.display = 'block';
                 window.addEventListener('online', function() {
-                    window.location.href = "login.html";
+                    checkAuthAndRedirect();
                 });
+                return;
             }
+            checkAuthAndRedirect();
+        }
+
+        function checkAuthAndRedirect() {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // Kullanıcı zaten giriş yapmış → doğum bilgisi kontrolü
+                    db.collection("users").doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists && doc.data().birthYear) {
+                                window.location.href = "dashboard.html";
+                            } else {
+                                window.location.href = "birthinfo.html";
+                            }
+                        })
+                        .catch(() => {
+                            window.location.href = "login.html";
+                        });
+                } else {
+                    // Kullanıcı giriş yapmamış → login
+                    window.location.href = "login.html";
+                }
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
