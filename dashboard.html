@@ -79,14 +79,15 @@
             font-weight: 500;
         }
 
-        /* Günlük Burç Kartı */
+        /* === GÜNLÜK YORUM KARTI (BEYAZ ARKA PLAN, YAYILMIŞ, SCROLL) === */
         .daily-horoscope-card {
-            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            background-color: #ffffff;
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: #1f2937;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
         }
         .daily-horoscope-header {
             display: flex;
@@ -105,9 +106,19 @@
         }
         .daily-horoscope-text {
             font-size: 0.95rem;
-            line-height: 1.6;
-            color: #e5e7eb;
+            line-height: 1.7;
+            color: #374151;
             margin-bottom: 16px;
+        }
+        .daily-horoscope-text .theme-tag {
+            display: inline-block;
+            background-color: #fef9e7;
+            color: #b8860b;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
         }
         .score-bars {
             display: flex;
@@ -121,14 +132,15 @@
         }
         .score-bar-label {
             font-size: 0.8rem;
-            color: #9ca3af;
+            color: #6b7280;
             width: 60px;
             text-align: right;
+            font-weight: 500;
         }
         .score-bar-track {
             flex: 1;
             height: 8px;
-            background-color: rgba(255,255,255,0.1);
+            background-color: #f3f4f6;
             border-radius: 4px;
             overflow: hidden;
         }
@@ -142,6 +154,7 @@
             font-size: 0.8rem;
             color: #d4af37;
             width: 30px;
+            font-weight: 600;
         }
 
         .lucky-info {
@@ -149,14 +162,14 @@
             gap: 16px;
             margin-top: 16px;
             padding-top: 16px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid #f3f4f6;
         }
         .lucky-item {
             display: flex;
             align-items: center;
             gap: 6px;
             font-size: 0.85rem;
-            color: #9ca3af;
+            color: #6b7280;
         }
         .lucky-item svg {
             width: 16px;
@@ -326,6 +339,7 @@
             to { transform: rotate(360deg); }
         }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -674,7 +688,9 @@
                         <div class="daily-horoscope-title">Günlük Yorum</div>
                         <div class="daily-horoscope-date">${dailyHoroscopeData.date}</div>
                     </div>
-                    <div class="daily-horoscope-text">${content.text}</div>
+                    <div class="daily-horoscope-text">${content.text}
+                        <br><span class="theme-tag">Tema: ${content.theme || ''}</span>
+                    </div>
 
                     <div class="score-bars">
                         <div class="score-bar-item">
@@ -825,6 +841,18 @@
 
             if (reason.secondary) {
                 bodyHTML += `<p>${reason.secondary}</p>`;
+            }
+
+            // Aktive eden gezegenler listesi
+            if (factor.drivers && factor.drivers.length > 0) {
+                bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
+                bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler:</p>`;
+                factor.drivers.forEach(d => {
+                    const houseText = d.house ? ` - ${d.house}. Ev` : '';
+                    const intensityText = d.intensity ? ` (${d.intensity})` : '';
+                    bodyHTML += `<p style="font-size: 0.85rem; color: #4b5563; margin: 4px 0;">• ${d.label}${houseText}${intensityText}</p>`;
+                });
+                bodyHTML += `</div>`;
             }
 
             document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
