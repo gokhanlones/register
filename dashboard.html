@@ -13,18 +13,19 @@
     <style>
         /* Sabit karşılama alanı */
         .greeting-section {
-            padding: 20px 20px 16px;
+            padding: 24px 20px 20px;
             background-color: #ffffff;
             border-bottom: 1px solid #f3f4f6;
             flex-shrink: 0;
+            text-align: center;
         }
         .greeting-text {
-            font-size: 0.9rem;
+            font-size: 1.1rem;
             color: #6b7280;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .user-name {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: 700;
             color: #d4af37;
             letter-spacing: -0.5px;
@@ -58,16 +59,6 @@
             color: #9ca3af;
             font-size: 0.95rem;
         }
-
-        /* Çıkış butonu */
-        .logout-btn {
-            background: none;
-            border: none;
-            color: #ef4444;
-            font-size: 0.8rem;
-            cursor: pointer;
-            padding: 4px 8px;
-        }
     </style>
 </head>
 <body>
@@ -81,7 +72,6 @@
                 </svg>
             </button>
             <h1>Astro Notlarım</h1>
-            <button class="logout-btn" onclick="logout()">Çıkış</button>
         </header>
 
         <!-- Sabit Karşılama Alanı -->
@@ -139,7 +129,6 @@
                     if (doc.exists && doc.data().fullname) {
                         document.getElementById('userName').textContent = doc.data().fullname;
                     } else {
-                        // Firestore'da yoksa Firebase Auth displayName kullan
                         document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
                     }
                 })
@@ -147,12 +136,6 @@
                     document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
                 });
         });
-
-        function logout() {
-            firebase.auth().signOut().then(() => {
-                window.location.href = "login.html";
-            });
-        }
     </script>
 </body>
 </html>
