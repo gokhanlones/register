@@ -131,6 +131,11 @@
             document.getElementById('formError').classList.remove('show');
         }
 
+        // Bekleme fonksiyonu (rate limit için)
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         async function fetchPlanetSign(planet, apiKey, payload) {
             const apiUrl = `https://api.freeastroapi.com/api/v1/western/signs/${planet}`;
             
@@ -196,12 +201,14 @@
                     }
                 };
 
-                // 3 paralel API isteği: sun, moon, rising
-                const [sunData, moonData, risingData] = await Promise.all([
-                    fetchPlanetSign("sun", apiKey, basePayload),
-                    fetchPlanetSign("moon", apiKey, basePayload),
-                    fetchPlanetSign("rising", apiKey, basePayload)
-                ]);
+                // ✅ SERİ İSTEK: Rate limit sorununu çözmek için tek tek atıyoruz
+                const sunData = await fetchPlanetSign("sun", apiKey, basePayload);
+                await sleep(1500); // 1.5 saniye bekle
+
+                const moonData = await fetchPlanetSign("moon", apiKey, basePayload);
+                await sleep(1500); // 1.5 saniye bekle
+
+                const risingData = await fetchPlanetSign("rising", apiKey, basePayload);
 
                 const birthData = {
                     gender: gender.value,
