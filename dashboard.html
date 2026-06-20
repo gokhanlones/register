@@ -637,12 +637,14 @@
 
                 const data = await response.json();
                 console.log("Günlük Burç Yanıtı:", data);
+                console.log("score_factors var mı:", data.data.score_factors);
+                console.log("score_factors tipi:", typeof data.data.score_factors);
 
                 if (!response.ok || data.error) {
                     throw new Error(data.message || "API hatası");
                 }
 
-                // Firestore'a kaydet
+                // Firestore'a kaydet - score_factors'ü snake_case olarak kaydet
                 const horoscopeData = {
                     dailyHoroscope: {
                         sign: data.data.sign,
@@ -651,7 +653,7 @@
                         content: data.data.content,
                         lucky: data.data.lucky,
                         astro: data.data.astro,
-                        scoreFactors: data.data.score_factors,
+                        score_factors: data.data.score_factors || [],
                         fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -809,8 +811,8 @@
 
         // Kategori popup (Sağlık, Aşk, Kariyer, Para)
         function openCategoryPopup(type) {
-            // Her iki alan adını da destekle: scoreFactors (camelCase) ve score_factors (snake_case)
-            const scoreFactors = dailyHoroscopeData.scoreFactors || dailyHoroscopeData.score_factors || [];
+            // Firestore'da score_factors (snake_case) olarak kaydedildi
+            const scoreFactors = dailyHoroscopeData.score_factors || [];
             
             if (!dailyHoroscopeData || scoreFactors.length === 0) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
