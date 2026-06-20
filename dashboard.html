@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
 
     <style>
         * {
@@ -76,6 +77,91 @@
             font-size: 0.75rem;
             color: #6b7280;
             font-weight: 500;
+        }
+
+        /* Günlük Burç Kartı */
+        .daily-horoscope-card {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .daily-horoscope-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .daily-horoscope-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .daily-horoscope-date {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        .daily-horoscope-text {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #e5e7eb;
+            margin-bottom: 16px;
+        }
+        .score-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .score-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .score-bar-label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            width: 60px;
+            text-align: right;
+        }
+        .score-bar-track {
+            flex: 1;
+            height: 8px;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background-color: #d4af37;
+            transition: width 0.5s ease;
+        }
+        .score-bar-value {
+            font-size: 0.8rem;
+            color: #d4af37;
+            width: 30px;
+        }
+
+        .lucky-info {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .lucky-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #9ca3af;
+        }
+        .lucky-item svg {
+            width: 16px;
+            height: 16px;
+            color: #d4af37;
         }
 
         .category-scroll-wrapper {
@@ -176,6 +262,31 @@
             font-size: 0.95rem;
             line-height: 1.6;
         }
+        .popup-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .popup-score-bar {
+            flex: 1;
+            height: 10px;
+            background-color: #f3f4f6;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .popup-score-fill {
+            height: 100%;
+            border-radius: 5px;
+            background-color: #d4af37;
+        }
+        .popup-score-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #d4af37;
+            width: 40px;
+            text-align: right;
+        }
 
         .dashboard-content {
             flex: 1;
@@ -194,14 +305,25 @@
             border-radius: 4px;
         }
 
-        .content-placeholder {
-            background-color: #f9fafb;
-            border: 1px dashed #d1d5db;
-            border-radius: 12px;
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 40px 20px;
-            text-align: center;
             color: #9ca3af;
-            font-size: 0.95rem;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f3f4f6;
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -223,7 +345,7 @@
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
             
-            <!-- Astro İkonları - Firebase'den gelen verilerle -->
+            <!-- Astro İkonları -->
             <div class="astro-icons">
                 <button class="astro-icon-btn" onclick="openAstroPopup('sun')" title="Güneş">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -258,24 +380,29 @@
 
         <!-- Kaydırılabilir İçerik Alanı -->
         <main class="dashboard-content" id="dashboardContent">
-            <div class="content-placeholder">
-                Buraya anasayfa içerikleri gelecek.
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner"></div>
+                <div>Günlük burç yükleniyor...</div>
             </div>
+            
+            <!-- Günlük Burç Kartı (Dinamik) -->
+            <div id="horoscopeCard" style="display: none;"></div>
         </main>
 
         <!-- Kategori Kartları -->
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
-                <button class="category-btn" onclick="openPopup('health')">
+                <button class="category-btn" onclick="openCategoryPopup('health')">
                     <span class="category-text">Sağlık</span>
                 </button>
-                <button class="category-btn" onclick="openPopup('love')">
+                <button class="category-btn" onclick="openCategoryPopup('love')">
                     <span class="category-text">Aşk</span>
                 </button>
-                <button class="category-btn" onclick="openPopup('career')">
+                <button class="category-btn" onclick="openCategoryPopup('career')">
                     <span class="category-text">Kariyer</span>
                 </button>
-                <button class="category-btn" onclick="openPopup('money')">
+                <button class="category-btn" onclick="openCategoryPopup('money')">
                     <span class="category-text">Para</span>
                 </button>
             </div>
@@ -335,18 +462,26 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const remoteConfig = firebase.remoteConfig();
+        remoteConfig.settings = { minimumFetchIntervalMillis: 60000 };
 
-        // Kullanıcı astro verileri
-        let userAstroData = {
-            sunSign: null,
-            moonSign: null,
-            risingSign: null
-        };
+        // Kullanıcı verileri
+        let currentUser = null;
+        let userProfileData = null;
+        let dailyHoroscopeData = null;
+        let userSunSign = null; // Günlük burç için kullanılacak
 
         const signNames = {
             aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
             leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
             sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+        };
+
+        const categoryNames = {
+            love: 'Aşk',
+            career: 'Kariyer',
+            money: 'Para',
+            health: 'Sağlık'
         };
 
         // Önce localStorage'dan cached ismi hemen göster
@@ -355,56 +490,258 @@
             document.getElementById('userName').textContent = cachedName;
         }
 
-        // Firebase'den kullanıcı verilerini çek
+        // Firebase Auth state değişikliği
         firebase.auth().onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "login.html";
                 return;
             }
-
-            db.collection("user_profiles").doc(user.uid).get()
-                .then((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        
-                        // İsim güncelle
-                        const fullname = data.fullname || user.displayName || "Kullanıcı";
-                        document.getElementById('userName').textContent = fullname;
-                        localStorage.setItem('astro_user_name', fullname);
-
-                        // Astro verilerini kaydet
-                        userAstroData.sunSign = data.sunSign || null;
-                        userAstroData.moonSign = data.moonSign || null;
-                        userAstroData.risingSign = data.risingSign || null;
-
-                        // İkon altındaki etiketleri güncelle (burç isimleriyle)
-                        updateAstroLabels();
-                    }
-                })
-                .catch((err) => {
-                    console.error("Veri çekme hatası:", err);
-                    const fallbackName = user.displayName || "Kullanıcı";
-                    document.getElementById('userName').textContent = fallbackName;
-                });
+            currentUser = user;
+            loadUserData(user);
         });
 
-        function updateAstroLabels() {
-            if (userAstroData.sunSign) {
-                const signName = signNames[userAstroData.sunSign.signId] || userAstroData.sunSign.sign;
-                document.getElementById('sunLabel').textContent = `Güneş ${signName}`;
+        async function loadUserData(user) {
+            try {
+                const doc = await db.collection("user_profiles").doc(user.uid).get();
+                
+                if (!doc.exists) {
+                    // Kullanıcı yeni, doğum bilgisi yok
+                    window.location.href = "birthinfo.html";
+                    return;
+                }
+
+                userProfileData = doc.data();
+                
+                // İsim güncelle
+                const fullname = userProfileData.fullname || user.displayName || "Kullanıcı";
+                document.getElementById('userName').textContent = fullname;
+                localStorage.setItem('astro_user_name', fullname);
+
+                // Astro ikon etiketleri
+                updateAstroLabels();
+
+                // Günlük burç verisini kontrol et ve yükle
+                await loadDailyHoroscope();
+
+            } catch (err) {
+                console.error("Veri çekme hatası:", err);
+                document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
             }
-            if (userAstroData.moonSign) {
-                const signName = signNames[userAstroData.moonSign.signId] || userAstroData.moonSign.sign;
+        }
+
+        function updateAstroLabels() {
+            if (!userProfileData) return;
+            
+            if (userProfileData.sunSign) {
+                const signName = signNames[userProfileData.sunSign.signId] || userProfileData.sunSign.sign;
+                document.getElementById('sunLabel').textContent = `Güneş ${signName}`;
+                userSunSign = userProfileData.sunSign.signId;
+            }
+            if (userProfileData.moonSign) {
+                const signName = signNames[userProfileData.moonSign.signId] || userProfileData.moonSign.sign;
                 document.getElementById('moonLabel').textContent = `Ay ${signName}`;
             }
-            if (userAstroData.risingSign) {
-                const signName = signNames[userAstroData.risingSign.signId] || userAstroData.risingSign.sign;
+            if (userProfileData.risingSign) {
+                const signName = signNames[userProfileData.risingSign.signId] || userProfileData.risingSign.sign;
                 document.getElementById('risingLabel').textContent = `Yükselen ${signName}`;
             }
         }
 
+        // Günlük burç verisini kontrol et ve yükle
+        async function loadDailyHoroscope() {
+            if (!userProfileData || !userSunSign) {
+                showNoDataState();
+                return;
+            }
+
+            const horoscope = userProfileData.dailyHoroscope;
+
+            // Veri yoksa API'den çek
+            if (!horoscope) {
+                await fetchAndSaveHoroscope();
+                return;
+            }
+
+            // Son güncelleme tarihi kontrolü (24 saat)
+            const lastUpdate = horoscope.fetchedAt ? horoscope.fetchedAt.toDate() : null;
+            const now = new Date();
+            const hoursDiff = lastUpdate ? (now - lastUpdate) / (1000 * 60 * 60) : 25;
+
+            if (hoursDiff >= 24) {
+                // 24 saat geçmiş, yeni veri çek
+                await fetchAndSaveHoroscope();
+            } else {
+                // 24 saat geçmemiş, mevcut veriyi göster
+                dailyHoroscopeData = horoscope;
+                renderHoroscopeCard();
+            }
+        }
+
+        // API'den günlük burç çek ve Firestore'a kaydet
+        async function fetchAndSaveHoroscope() {
+            try {
+                await remoteConfig.fetchAndActivate();
+                const apiKey = remoteConfig.getString('astro_api_key');
+
+                if (!apiKey || apiKey === "(in-app default)") {
+                    throw new Error("API Anahtarı bulunamadı.");
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const apiUrl = `https://api.freeastroapi.com/api/v2/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=en`;
+
+                const response = await fetch(apiUrl, {
+                    method: "GET",
+                    headers: {
+                        "x-api-key": apiKey,
+                        "Content-Type": "application/json"
+                    }
+                });
+
+                const data = await response.json();
+                console.log("Günlük Burç Yanıtı:", data);
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.message || "API hatası");
+                }
+
+                // Firestore'a kaydet
+                const horoscopeData = {
+                    dailyHoroscope: {
+                        sign: data.data.sign,
+                        date: data.data.date,
+                        scores: data.data.scores,
+                        content: data.data.content,
+                        lucky: data.data.lucky,
+                        astro: data.data.astro,
+                        scoreFactors: data.data.score_factors,
+                        fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    },
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+
+                await db.collection('user_profiles').doc(currentUser.uid).set(horoscopeData, { merge: true });
+
+                // Veriyi güncelle ve göster
+                dailyHoroscopeData = horoscopeData.dailyHoroscope;
+                renderHoroscopeCard();
+
+            } catch (err) {
+                console.error("Horoscope hatası:", err);
+                showErrorState(err.message);
+            }
+        }
+
+        // Günlük burç kartını render et
+        function renderHoroscopeCard() {
+            if (!dailyHoroscopeData) {
+                showNoDataState();
+                return;
+            }
+
+            const scores = dailyHoroscopeData.scores;
+            const content = dailyHoroscopeData.content;
+            const lucky = dailyHoroscopeData.lucky;
+
+            const cardHTML = `
+                <div class="daily-horoscope-card">
+                    <div class="daily-horoscope-header">
+                        <div class="daily-horoscope-title">Günlük Yorum</div>
+                        <div class="daily-horoscope-date">${dailyHoroscopeData.date}</div>
+                    </div>
+                    <div class="daily-horoscope-text">${content.text}</div>
+                    
+                    <div class="score-bars">
+                        <div class="score-bar-item">
+                            <div class="score-bar-label">Genel</div>
+                            <div class="score-bar-track">
+                                <div class="score-bar-fill" style="width: ${scores.overall}%"></div>
+                            </div>
+                            <div class="score-bar-value">${scores.overall}</div>
+                        </div>
+                        <div class="score-bar-item">
+                            <div class="score-bar-label">Aşk</div>
+                            <div class="score-bar-track">
+                                <div class="score-bar-fill" style="width: ${scores.love}%"></div>
+                            </div>
+                            <div class="score-bar-value">${scores.love}</div>
+                        </div>
+                        <div class="score-bar-item">
+                            <div class="score-bar-label">Kariyer</div>
+                            <div class="score-bar-track">
+                                <div class="score-bar-fill" style="width: ${scores.career}%"></div>
+                            </div>
+                            <div class="score-bar-value">${scores.career}</div>
+                        </div>
+                        <div class="score-bar-item">
+                            <div class="score-bar-label">Para</div>
+                            <div class="score-bar-track">
+                                <div class="score-bar-fill" style="width: ${scores.money}%"></div>
+                            </div>
+                            <div class="score-bar-value">${scores.money}</div>
+                        </div>
+                        <div class="score-bar-item">
+                            <div class="score-bar-label">Sağlık</div>
+                            <div class="score-bar-track">
+                                <div class="score-bar-fill" style="width: ${scores.health}%"></div>
+                            </div>
+                            <div class="score-bar-value">${scores.health}</div>
+                        </div>
+                    </div>
+
+                    <div class="lucky-info">
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
+                            ${lucky.color.label}
+                        </div>
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                            ${lucky.number}
+                        </div>
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            ${lucky.time_window.display}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('horoscopeCard').innerHTML = cardHTML;
+            document.getElementById('horoscopeCard').style.display = 'block';
+        }
+
+        function showNoDataState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('horoscopeCard').innerHTML = `
+                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b;">
+                    Doğum bilgilerinizi kaydedin ve günlük yorumunuzu görün.
+                </div>
+            `;
+            document.getElementById('horoscopeCard').style.display = 'block';
+        }
+
+        function showErrorState(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('horoscopeCard').innerHTML = `
+                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b;">
+                    Hata: ${message}<br>
+                    <button onclick="loadDailyHoroscope()" style="margin-top: 12px; padding: 8px 16px; background: #000; color: #d4af37; border: none; border-radius: 8px; cursor: pointer;">Tekrar Dene</button>
+                </div>
+            `;
+            document.getElementById('horoscopeCard').style.display = 'block';
+        }
+
+        // Astro popup (Güneş, Ay, Yükselen)
         function openAstroPopup(type) {
-            const data = userAstroData[`${type}Sign`];
+            if (!userProfileData) {
+                document.getElementById('astroPopupTitle').textContent = 'Veri Bulunamadı';
+                document.getElementById('astroPopupBody').textContent = 'Lütfen önce doğum bilgilerinizi kaydedin.';
+                document.getElementById('astroPopupOverlay').classList.add('show');
+                return;
+            }
+
+            const data = userProfileData[`${type}Sign`];
             
             if (!data) {
                 document.getElementById('astroPopupTitle').textContent = 'Veri Bulunamadı';
@@ -431,23 +768,42 @@
             }
         }
 
-        // Kategori popup fonksiyonları
-        function openPopup(type) {
-            const titles = {
-                health: 'Sağlık',
-                love: 'Aşk',
-                career: 'Kariyer',
-                money: 'Para'
-            };
-            const messages = {
-                health: 'Sağlık yorumları burada gösterilecek.',
-                love: 'Aşk yorumları burada gösterilecek.',
-                career: 'Kariyer yorumları burada gösterilecek.',
-                money: 'Para yorumları burada gösterilecek.'
-            };
-            
-            document.getElementById('popupTitle').textContent = titles[type] || 'Bilgi';
-            document.getElementById('popupBody').textContent = messages[type] || 'Bilgi yükleniyor...';
+        // Kategori popup (Sağlık, Aşk, Kariyer, Para)
+        function openCategoryPopup(type) {
+            if (!dailyHoroscopeData || !dailyHoroscopeData.scoreFactors) {
+                document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
+                document.getElementById('popupBody').textContent = 'Günlük yorum verisi yüklenemedi.';
+                document.getElementById('popupOverlay').classList.add('show');
+                return;
+            }
+
+            const factor = dailyHoroscopeData.scoreFactors.find(f => f.dimension === type);
+            const score = dailyHoroscopeData.scores[type];
+
+            if (!factor) {
+                document.getElementById('popupTitle').textContent = categoryNames[type];
+                document.getElementById('popupBody').textContent = 'Bu kategori için detay bulunamadı.';
+                document.getElementById('popupOverlay').classList.add('show');
+                return;
+            }
+
+            const reason = factor.reason;
+            let bodyHTML = `
+                <div class="popup-score">
+                    <div class="popup-score-bar">
+                        <div class="popup-score-fill" style="width: ${score}%"></div>
+                    </div>
+                    <div class="popup-score-value">${score}</div>
+                </div>
+                <p><strong>${reason.main}</strong></p>
+            `;
+
+            if (reason.secondary) {
+                bodyHTML += `<p>${reason.secondary}</p>`;
+            }
+
+            document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
+            document.getElementById('popupBody').innerHTML = bodyHTML;
             document.getElementById('popupOverlay').classList.add('show');
         }
 
