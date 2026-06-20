@@ -81,21 +81,18 @@
             button.classList.toggle("visible");
         }
 
-        // Email Format Kontrolü
         function validateEmail(email) {
             const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return re.test(email);
         }
 
         function handleLogin() {
-            // Hata temizleme
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             let isValid = true;
 
-            // Kontroller
             if (!validateEmail(email)) {
                 document.getElementById('group-email').classList.add('has-error');
                 isValid = false;
@@ -114,19 +111,15 @@
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    // Doğum bilgisi kontrolü
                     return db.collection("users").doc(user.uid).get()
                         .then((doc) => {
                             if (doc.exists && doc.data().birthYear) {
-                                // Doğum bilgisi var → dashboard
                                 window.location.href = "dashboard.html";
                             } else {
-                                // Doğum bilgisi yok → birthinfo
                                 window.location.href = "birthinfo.html";
                             }
                         })
                         .catch(() => {
-                            // Firestore okuma hatası → yine de dashboard
                             window.location.href = "dashboard.html";
                         });
                 })
