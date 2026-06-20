@@ -29,7 +29,104 @@
             font-weight: 700;
             color: #d4af37;
             letter-spacing: -0.5px;
-            min-height: 2.2rem; /* Yükleniyor... sızıntısını önle */
+            min-height: 2.2rem;
+        }
+
+        /* Astro İkonları */
+        .astro-icons {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .astro-icon-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            transition: transform 0.2s;
+        }
+        .astro-icon-btn:active {
+            transform: scale(0.95);
+        }
+        .astro-icon-btn svg {
+            width: 48px;
+            height: 48px;
+            padding: 10px;
+            border-radius: 50%;
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            color: #d4af37;
+            transition: all 0.2s;
+        }
+        .astro-icon-btn:hover svg {
+            background-color: #000000;
+            border-color: #000000;
+            color: #d4af37;
+        }
+        .astro-icon-btn span {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        /* Popup/Modal */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .popup-overlay.show {
+            display: flex;
+        }
+        .popup-content {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 20px 32px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .popup-overlay.show .popup-content {
+            transform: translateY(0);
+        }
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .popup-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #000000;
+        }
+        .popup-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .popup-body {
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.5;
         }
 
         /* Scrollable içerik alanı */
@@ -79,6 +176,38 @@
         <div class="greeting-section" id="greetingSection">
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
+            
+            <!-- Astro İkonları -->
+            <div class="astro-icons">
+                <button class="astro-icon-btn" onclick="openPopup('sun')" title="Güneş">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <span>Güneş</span>
+                </button>
+                <button class="astro-icon-btn" onclick="openPopup('ascendant')" title="Yükselen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5"></path>
+                        <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                    <span>Yükselen</span>
+                </button>
+                <button class="astro-icon-btn" onclick="openPopup('moon')" title="Ay">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span>Ay</span>
+                </button>
+            </div>
         </div>
 
         <!-- Kaydırılabilir İçerik Alanı -->
@@ -139,9 +268,7 @@
                         fullname = user.displayName || "Kullanıcı";
                     }
                     
-                    // DOM'u güncelle
                     document.getElementById('userName').textContent = fullname;
-                    // Cache'e kaydet
                     localStorage.setItem('astro_user_name', fullname);
                 })
                 .catch(() => {
@@ -150,6 +277,44 @@
                     localStorage.setItem('astro_user_name', fallbackName);
                 });
         });
+    </script>
+
+    <!-- Popup Modal -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <div class="popup-header">
+                <div class="popup-title" id="popupTitle">Bilgi</div>
+                <button class="popup-close" onclick="closePopup()">&times;</button>
+            </div>
+            <div class="popup-body" id="popupBody">
+                Buraya bilgi gelecek.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPopup(type) {
+            const titles = {
+                sun: 'Güneş Burcu',
+                ascendant: 'Yükselen Burç',
+                moon: 'Ay Burcu'
+            };
+            const messages = {
+                sun: 'Güneş burcu bilgileri burada gösterilecek.',
+                ascendant: 'Yükselen burç bilgileri burada gösterilecek.',
+                moon: 'Ay burcu bilgileri burada gösterilecek.'
+            };
+            
+            document.getElementById('popupTitle').textContent = titles[type] || 'Bilgi';
+            document.getElementById('popupBody').textContent = messages[type] || 'Bilgi yükleniyor...';
+            document.getElementById('popupOverlay').classList.add('show');
+        }
+
+        function closePopup(event) {
+            if (!event || event.target === document.getElementById('popupOverlay')) {
+                document.getElementById('popupOverlay').classList.remove('show');
+            }
+        }
     </script>
 </body>
 </html>
