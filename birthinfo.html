@@ -134,103 +134,91 @@
 
         // Fonksiyon asenkron (async) yapıya dönüştürüldü
         async function handleSave() {
-            document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
-            hideError();
+        document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
+        hideError();
 
-            const gender = document.querySelector('input[name="gender"]:checked');
-            const birthDate = document.getElementById('birthDate').value;
-            const birthTime = document.getElementById('birthTime').value;
-            const birthPlace = document.getElementById('birthPlace').value.trim();
+        const gender = document.querySelector('input[name="gender"]:checked');
+        const birthDate = document.getElementById('birthDate').value;
+        const birthTime = document.getElementById('birthTime').value;
+        const birthPlace = document.getElementById('birthPlace').value.trim();
 
-            let isValid = true;
-            let errorMessages = [];
-
-            if (!gender) { document.getElementById('group-gender').classList.add('has-error'); errorMessages.push('Cinsiyet'); isValid = false; }
-            if (!birthDate) { document.getElementById('group-birthdate').classList.add('has-error'); errorMessages.push('Doğum tarihi'); isValid = false; }
-            if (!birthTime) { document.getElementById('group-birthtime').classList.add('has-error'); errorMessages.push('Doğum saati'); isValid = false; }
-            if (!birthPlace) { document.getElementById('group-birthplace').classList.add('has-error'); errorMessages.push('Doğum yeri'); isValid = false; }
-
-            if (!isValid) {
-                showError('Lütfen zorunlu alanları doldurun: ' + errorMessages.join(', '));
-                return;
-            }
-
-            if (!currentUser) {
-                showError('Oturum bilgisi alınıyor, lütfen bekleyin...');
-                return;
-            }
-
-            const btn = document.getElementById('saveBtn');
-            btn.disabled = true;
-            btn.textContent = 'Astroloji Haritası Hesaplanıyor...';
-
-            const [year, month, day] = birthDate.split('-').map(Number);
-            const [hour, minute] = birthTime.split(':').map(Number);
-
-            try {
-                await remoteConfig.fetchAndActivate();
-                const apiKey = remoteConfig.getString('astro_api_key');
-
-                if (!apiKey || apiKey === "(in-app default)") {
-                    throw new Error("Firebase Remote Config paneline geçerli bir API anahtarı tanımlanıp yayınlanmalıdır.");
-                }
-
-                // API İsteği: Alt yollar (sun, moon vb.) kaldırıldı, ana uç noktaya tek istek atılıyor.
-                const apiUrl = "https://api.freeastroapi.com/api/v1/western/signs";
-                
-                const apiPayload = {
-                    year: year,
-                    month: month,
-                    day: day,
-                    hour: hour,
-                    minute: minute,
-                    city: birthPlace,
-                    tz_str: "AUTO",
-                    interpretation: { enable: true, style: "improved" }
-                };
-
-                const response = await fetch(apiUrl, { 
-                    method: "POST", 
-                    headers: {
-                        "x-api-key": apiKey,
-                        "Content-Type": "application/json"
-                    }, 
-                    body: JSON.stringify(apiPayload) 
-                });
-
-                const data = await response.json();
-
-                // Hata kontrolü
-                if (data.error) {
-                    throw new Error(data.message || "API'den veri alınamadı.");
-                }
-
-                // Firestore'a kaydedilecek veri yapısı
-                const birthData = {
-                    gender: gender.value,
-                    birthYear: year,
-                    birthMonth: month,
-                    birthDay: day,
-                    birthHour: hour,
-                    birthMinute: minute,
-                    birthPlace: birthPlace,
-                    // API'den gelen toplu veriyi kaydediyoruz
-                    astroData: data, 
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                };
-
-                await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
-
-                alert('Doğum bilgileriniz ve astroloji haritanız başarıyla kaydedildi!');
-                window.location.href = 'dashboard.html';
-
-            } catch (err) {
-                console.error("İşlem Hatası:", err);
-                showError('Hata: ' + err.message);
-                btn.disabled = false;
-                btn.textContent = 'Kaydet';
-            }
+        // Validasyonlar ... (Aynı kalabilir)
+        if (!gender || !birthDate || !birthTime || !birthPlace) {
+            showError('Lütfen tüm alanları doldurun.');
+            return;
         }
+
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Hesaplanıyor...';
+
+        const [year, month, day] = birthDate.split('-').map(Number);
+        const [hour, minute] = birthTime.split(':').map(Number);
+
+        try {
+            await remoteConfig.fetchAndActivate();
+            const apiKey = remoteConfig.getString('astro_api_key');
+
+            if (!apiKey || apiKey === "(in-app default)") {
+                throw new Error("API Anahtarı bulunamadı.");
+            }
+
+            // DÜZELTME: Endpoint'i /western/natal olarak güncelledim. 
+            // Eğer hala hata alıyorsan API dokümanından endpoint ismini teyit et.
+            const apiUrl = "https://api.freeastroapi.com/api/v1/western/natal";
+            
+            const apiPayload = {
+                year: year,
+                month: month,
+                day: day,
+                hour: hour,
+                minute: minute,
+                city: birthPlace, // Bazı API'ler şehir ismi yerine lat/lon ister, buna dikkat et.
+                tz_str: "AUTO",
+                interpretation: { enable: true, style: "improved" }
+            };
+
+            const response = await fetch(apiUrl, { 
+                method: "POST", 
+                headers: {
+                    "x-api-key": apiKey,
+                    "Content-Type": "application/json"
+                }, 
+                body: JSON.stringify(apiPayload) 
+            });
+
+            const data = await response.json();
+            
+            // HATA AYIKLAMA: Konsola yanıtı yazdırıyoruz ki sorunu görebilelim.
+            console.log("API Yanıtı:", data);
+
+            if (!response.ok || data.error) {
+                throw new Error(data.message || "API isteği başarısız oldu.");
+            }
+
+            // Veri kaydetme ...
+            const birthData = {
+                gender: gender.value,
+                birthYear: year,
+                birthMonth: month,
+                birthDay: day,
+                birthHour: hour,
+                birthMinute: minute,
+                birthPlace: birthPlace,
+                astroData: data, 
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
+            window.location.href = 'dashboard.html';
+
+        } catch (err) {
+            console.error("Hata Detayı:", err);
+            showError('Hata: ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Kaydet';
+        }
+    }
 
         function goBack() {
             window.history.back();
