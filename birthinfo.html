@@ -6,12 +6,9 @@
     <title>Doğum Bilgileri | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
 
-    <!-- Firebase SDK'ları (Compat Sürümleri) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <!-- Remote Config için gerekli kütüphane eklendi -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
 
     <style>
         .gender-group { display: flex; gap: 12px; margin-bottom: 18px; }
@@ -106,15 +103,6 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        
-        // Remote Config Başlatma ve Yapılandırma
-        const remoteConfig = firebase.remoteConfig();
-        remoteConfig.settings = {
-            minimumFetchIntervalMillis: 3600000 // Verileri 1 saat boyunca yerelde önbelleğe alır
-        };
-        remoteConfig.defaultConfig = {
-            astro_api_key: ""
-        };
 
         let currentUser = null;
 
@@ -137,7 +125,7 @@
             document.getElementById('formError').classList.remove('show');
         }
 
-        // Ana Kayıt ve API Süreci (Asenkron yapıya geçirildi)
+        // Fonksiyon asenkron (async) yapıya geçirildi
         async function handleSave() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideError();
@@ -172,45 +160,56 @@
             const [year, month, day] = birthDate.split('-').map(Number);
             const [hour, minute] = birthTime.split(':').map(Number);
 
-            try {
-                // 1. Firebase Remote Config'den Güncel API Key'i Alıyoruz
-                await remoteConfig.fetchAndActivate();
-                const apiKey = remoteConfig.getString('astro_api_key');
+            // 🔑 BURAYA FREEASTROAPI KEYİNİZİ YAZIN
+            const apiKey = "BURAYA_API_KEYINIZI_YAZIN"; 
 
-                if (!apiKey) {
-                    throw new Error("Astroloji servis anahtarı sistemde bulunamadı.");
+            if (!apiKey || apiKey === "BURAYA_API_KEYINIZI_YAZIN") {
+                showError("Lütfen kodun içerisindeki apiKey alanına FreeAstroAPI anahtarınızı yazın.");
+                btn.disabled = false;
+                btn.textContent = 'Kaydet';
+                return;
+            }
+
+            // Astroloji servisi için payload hazırlığı
+            const apiPayload = {
+                year: year,
+                month: month,
+                day: day,
+                hour: hour,
+                minute: minute,
+                city: birthPlace,
+                tz_str: "AUTO",
+                interpretation: {
+                    enable: true,
+                    style: "improved"
                 }
+            };
 
-                // 2. FreeAstroAPI için Payload Hazırlığı
-                const apiPayload = {
-                    year: year,
-                    month: month,
-                    day: day,
-                    hour: hour,
-                    minute: minute,
-                    city: birthPlace,
-                    tz_str: "AUTO",
-                    interpretation: {
-                        enable: true,
-                        style: "improved"
-                    }
-                };
-
-                const headers = {
+            const headers = {
                 "x-api-key": apiKey,
                 "Content-Type": "application/json"
-                };
+            };
 
-                // 3. Güneş, Ay ve Yükselen İsteklerini Paralel (Eşzamanlı) Gönderiyoruz
-                const baseUrl = "https://api.freeastroapi.com/api/v1/western/signs";
-                
+            const baseUrl = "https://api.freeastroapi.com/api/v1/western/signs";
+
+            try {
+                // 1. Adım: API'den Güneş, Ay ve Yükselen bilgilerini paralel olarak çekiyoruz
                 const [sunRes, moonRes, ascRes] = await Promise.all([
-                    fetch(`${baseUrl}/sun`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => res.json()),
-                    fetch(`${baseUrl}/moon`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => res.json()),
-                    fetch(`${baseUrl}/ascendant`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => res.json())
+                    fetch(`${baseUrl}/sun`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
+                        if(!res.ok) throw new Error("Güneş burcu hesaplanamadı.");
+                        return res.json();
+                    }),
+                    fetch(`${baseUrl}/moon`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
+                        if(!res.ok) throw new Error("Ay burcu hesaplanamadı.");
+                        return res.json();
+                    }),
+                    fetch(`${baseUrl}/ascendant`, { method: "POST", headers, body: JSON.stringify(apiPayload) }).then(res => {
+                        if(!res.ok) throw new Error("Yükselen burç hesaplanamadı.");
+                        return res.json();
+                    })
                 ]);
 
-                // 4. Firestore ve Ekran Görüntüsü Uyumlu Data Objeyi Paketleme
+                // 2. Adım: Hem ham verileri hem de API'den gelen burç analizlerini tek pakette birleştiriyoruz
                 const birthData = {
                     gender: gender.value,
                     birthYear: year,
@@ -219,7 +218,6 @@
                     birthHour: hour,
                     birthMinute: minute,
                     birthPlace: birthPlace,
-                    // API'den dönen ve popup'larda kullanılacak olan ham JSON çıktıları kaydediliyor
                     astroData: {
                         sun: sunRes,
                         moon: moonRes,
@@ -228,8 +226,8 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // 5. Firestore'a Upsert (Varsa Üzerine Yaz/Güncelle, Yoksa Yeni Oluştur)
-                await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });[cite: 2]
+                // 3. Adım: Firestore Veritabanına Yazma İşlemi
+                await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
 
                 alert('Doğum bilgileriniz ve astroloji haritanız başarıyla güncellendi!');
                 window.location.href = 'dashboard.html';
