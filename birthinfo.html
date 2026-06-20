@@ -157,36 +157,6 @@
             return data;
         }
 
-        // Gemini API ile Türkçeye çeviri
-        async function translateWithGemini(text, geminiApiKey) {
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `Bu astrolojik yorumu doğal ve akıcı Türkçeye çevir. Sadece çeviriyi ver, başka açıklama ekleme:\n\n${text}`
-                            }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.3,
-                            maxOutputTokens: 1024
-                        }
-                    })
-                }
-            );
-
-            const data = await response.json();
-            
-            if (data.error) {
-                throw new Error(`Gemini çeviri hatası: ${data.error.message}`);
-            }
-
-            return data.candidates[0].content.parts[0].text;
-        }
-
         async function handleSave() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideError();
@@ -211,13 +181,9 @@
             try {
                 await remoteConfig.fetchAndActivate();
                 const apiKey = remoteConfig.getString('astro_api_key');
-                const geminiApiKey = remoteConfig.getString('gemini_api_key');
 
                 if (!apiKey || apiKey === "(in-app default)") {
-                    throw new Error("Astro API Anahtarı bulunamadı.");
-                }
-                if (!geminiApiKey || geminiApiKey === "(in-app default)") {
-                    throw new Error("Gemini API Anahtarı bulunamadı.");
+                    throw new Error("API Anahtarı bulunamadı.");
                 }
 
                 const basePayload = {
@@ -234,7 +200,7 @@
                     }
                 };
 
-                // Seri API istekleri
+                // Seri API istekleri: sun, moon, rising
                 const sunData = await fetchPlanetSign("sun", apiKey, basePayload);
                 await sleep(1500);
 
@@ -242,15 +208,6 @@
                 await sleep(1500);
 
                 const risingData = await fetchPlanetSign("rising", apiKey, basePayload);
-
-                btn.textContent = 'Türkçeye çevriliyor...';
-
-                // Gemini ile Türkçeye çeviri
-                const [sunTr, moonTr, risingTr] = await Promise.all([
-                    translateWithGemini(sunData.interpretation.body, geminiApiKey),
-                    translateWithGemini(moonData.interpretation.body, geminiApiKey),
-                    translateWithGemini(risingData.interpretation.body, geminiApiKey)
-                ]);
 
                 const birthData = {
                     gender: gender.value,
@@ -266,10 +223,7 @@
                         signId: sunData.sign_id,
                         degree: sunData.degree,
                         house: sunData.house,
-                        interpretation: {
-                            title: sunData.interpretation.title,
-                            body: sunTr
-                        }
+                        interpretation: sunData.interpretation
                     },
                     
                     moonSign: {
@@ -277,10 +231,7 @@
                         signId: moonData.sign_id,
                         degree: moonData.degree,
                         house: moonData.house,
-                        interpretation: {
-                            title: moonData.interpretation.title,
-                            body: moonTr
-                        }
+                        interpretation: moonData.interpretation
                     },
                     
                     risingSign: {
@@ -288,10 +239,7 @@
                         signId: risingData.sign_id,
                         degree: risingData.degree,
                         house: risingData.house,
-                        interpretation: {
-                            title: risingData.interpretation.title,
-                            body: risingTr
-                        }
+                        interpretation: risingData.interpretation
                     },
                     
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
