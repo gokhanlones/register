@@ -20,7 +20,7 @@
     <div class="splash-container">
         <img src="logo.png" alt="Astro Notlarım Logo" class="splash-logo">
         <h1 class="splash-title">Astro Notlarım</h1>
-        <div class="loading-text" id="loadingText">Yükleniyor...</div>
+        <div class="loading-text" id="loadingText">Başlatılıyor...</div>
         <div class="connection-status" id="statusText">İnternet bağlantısı bekleniyor...</div>
     </div>
 
@@ -29,6 +29,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // ADIM 1: Script yüklendi mi?
+        alert("Scriptler yüklendi");
+
         const firebaseConfig = {
             apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
             authDomain: "astro-notlarim.firebaseapp.com",
@@ -39,12 +42,20 @@
             measurementId: "G-19BSBWLJ7X"
         };
 
-        // Firebase başlat
-        firebase.initializeApp(firebaseConfig);
+        try {
+            firebase.initializeApp(firebaseConfig);
+            alert("Firebase başlatıldı");
+        } catch (e) {
+            alert("Firebase hatası: " + e.message);
+        }
+
         const db = firebase.firestore();
 
         function checkAppConnection() {
+            alert("checkAppConnection çağrıldı");
+            
             if (!navigator.onLine) {
+                alert("İnternet yok");
                 document.getElementById('statusText').style.display = 'block';
                 document.getElementById('loadingText').style.display = 'none';
                 window.addEventListener('online', function() {
@@ -52,36 +63,46 @@
                 });
                 return;
             }
+            alert("İnternet var");
             checkAuthAndRedirect();
         }
 
         function checkAuthAndRedirect() {
+            alert("checkAuthAndRedirect çağrıldı");
             document.getElementById('loadingText').textContent = 'Oturum kontrol ediliyor...';
             
-            firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    // Kullanıcı giriş yapmış → doğum bilgisi kontrolü
-                    document.getElementById('loadingText').textContent = 'Bilgiler alınıyor...';
-                    db.collection("users").doc(user.uid).get()
-                        .then((doc) => {
-                            if (doc.exists && doc.data().birthYear) {
-                                window.location.replace("dashboard.html");
-                            } else {
-                                window.location.replace("birthinfo.html");
-                            }
-                        })
-                        .catch((err) => {
-                            console.error("Firestore hatası:", err);
-                            window.location.replace("login.html");
-                        });
-                } else {
-                    // Giriş yapmamış → login
-                    window.location.replace("login.html");
-                }
-            });
+            try {
+                firebase.auth().onAuthStateChanged((user) => {
+                    alert("onAuthStateChanged çalıştı. User: " + (user ? "VAR" : "YOK"));
+                    
+                    if (user) {
+                        alert("Giriş yapmış kullanıcı bulundu");
+                        document.getElementById('loadingText').textContent = 'Bilgiler alınıyor...';
+                        db.collection("users").doc(user.uid).get()
+                            .then((doc) => {
+                                alert("Firestore verisi geldi. birthYear: " + (doc.exists && doc.data().birthYear ? "VAR" : "YOK"));
+                                if (doc.exists && doc.data().birthYear) {
+                                    window.location.replace("dashboard.html");
+                                } else {
+                                    window.location.replace("birthinfo.html");
+                                }
+                            })
+                            .catch((err) => {
+                                alert("Firestore hatası: " + err.message);
+                                window.location.replace("login.html");
+                            });
+                    } else {
+                        alert("Giriş yapmamış, login'e gidiyor");
+                        window.location.replace("login.html");
+                    }
+                });
+            } catch (e) {
+                alert("onAuthStateChanged hatası: " + e.message);
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            alert("DOMContentLoaded");
             setTimeout(checkAppConnection, 800);
         });
     </script>
