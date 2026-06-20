@@ -11,13 +11,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* Global: Tüm tıklanabilir elemanlarda mavi efekti kaldır */
         * {
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
         }
         
-        /* Sabit karşılama alanı */
         .greeting-section {
             padding: 20px 20px 12px;
             background-color: #ffffff;
@@ -38,7 +36,6 @@
             min-height: 2.2rem;
         }
 
-        /* Astro İkonları */
         .astro-icons {
             display: flex;
             justify-content: center;
@@ -81,7 +78,6 @@
             font-weight: 500;
         }
 
-        /* Kategori Yatay Scroll */
         .category-scroll-wrapper {
             padding: 16px 0;
             background-color: #ffffff;
@@ -124,7 +120,6 @@
             white-space: nowrap;
         }
 
-        /* Popup/Modal */
         .popup-overlay {
             display: none;
             position: fixed;
@@ -148,6 +143,8 @@
             padding: 24px 20px 32px;
             transform: translateY(100%);
             transition: transform 0.3s ease-out;
+            max-height: 70vh;
+            overflow-y: auto;
         }
         .popup-overlay.show .popup-content {
             transform: translateY(0);
@@ -157,6 +154,8 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 12px;
         }
         .popup-title {
             font-size: 1.2rem;
@@ -175,10 +174,9 @@
         .popup-body {
             color: #4b5563;
             font-size: 0.95rem;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        /* Scrollable içerik alanı */
         .dashboard-content {
             flex: 1;
             overflow-y: auto;
@@ -196,7 +194,6 @@
             border-radius: 4px;
         }
 
-        /* Placeholder içerik kartları */
         .content-placeholder {
             background-color: #f9fafb;
             border: 1px dashed #d1d5db;
@@ -226,9 +223,9 @@
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
             
-            <!-- Astro İkonları -->
+            <!-- Astro İkonları - Firebase'den gelen verilerle -->
             <div class="astro-icons">
-                <button class="astro-icon-btn" onclick="openPopup('sun')" title="Güneş">
+                <button class="astro-icon-btn" onclick="openAstroPopup('sun')" title="Güneş">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="5"></circle>
                         <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -240,21 +237,21 @@
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
-                    <span>Güneş</span>
+                    <span id="sunLabel">Güneş</span>
                 </button>
-                <button class="astro-icon-btn" onclick="openPopup('ascendant')" title="Yükselen">
+                <button class="astro-icon-btn" onclick="openAstroPopup('rising')" title="Yükselen">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"></circle>
                         <polyline points="16 12 12 8 8 12"></polyline>
                         <line x1="12" y1="16" x2="12" y2="8"></line>
                     </svg>
-                    <span>Yükselen</span>
+                    <span id="risingLabel">Yükselen</span>
                 </button>
-                <button class="astro-icon-btn" onclick="openPopup('moon')" title="Ay">
+                <button class="astro-icon-btn" onclick="openAstroPopup('moon')" title="Ay">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
-                    <span>Ay</span>
+                    <span id="moonLabel">Ay</span>
                 </button>
             </div>
         </div>
@@ -266,7 +263,7 @@
             </div>
         </main>
 
-        <!-- Kategori Kartları (Yatay Scroll) - Bottombar hemen üstü -->
+        <!-- Kategori Kartları -->
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
                 <button class="category-btn" onclick="openPopup('health')">
@@ -300,53 +297,20 @@
         </footer>
     </div>
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <!-- Astro Popup Modal -->
+    <div class="popup-overlay" id="astroPopupOverlay" onclick="closeAstroPopup(event)">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <div class="popup-header">
+                <div class="popup-title" id="astroPopupTitle">Bilgi</div>
+                <button class="popup-close" onclick="closeAstroPopup()">&times;</button>
+            </div>
+            <div class="popup-body" id="astroPopupBody">
+                Buraya bilgi gelecek.
+            </div>
+        </div>
+    </div>
 
-        // Önce localStorage'dan cached ismi hemen göster
-        const cachedName = localStorage.getItem('astro_user_name');
-        if (cachedName) {
-            document.getElementById('userName').textContent = cachedName;
-        }
-
-        // Sonra Firebase'den güncel veriyi çek
-        firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = "login.html";
-                return;
-            }
-
-            db.collection("user_profiles").doc(user.uid).get()
-                .then((doc) => {
-                    let fullname;
-                    if (doc.exists && doc.data().fullname) {
-                        fullname = doc.data().fullname;
-                    } else {
-                        fullname = user.displayName || "Kullanıcı";
-                    }
-                    
-                    document.getElementById('userName').textContent = fullname;
-                    localStorage.setItem('astro_user_name', fullname);
-                })
-                .catch(() => {
-                    const fallbackName = user.displayName || "Kullanıcı";
-                    document.getElementById('userName').textContent = fallbackName;
-                    localStorage.setItem('astro_user_name', fallbackName);
-                });
-        });
-    </script>
-
-    <!-- Popup Modal -->
+    <!-- Kategori Popup Modal -->
     <div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
         <div class="popup-content" onclick="event.stopPropagation()">
             <div class="popup-header">
@@ -360,20 +324,122 @@
     </div>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Kullanıcı astro verileri
+        let userAstroData = {
+            sunSign: null,
+            moonSign: null,
+            risingSign: null
+        };
+
+        const signNames = {
+            aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
+            leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
+            sagittarius: 'Yay', capricorn: 'Oğlak', aquarius: 'Kova', pisces: 'Balık'
+        };
+
+        // Önce localStorage'dan cached ismi hemen göster
+        const cachedName = localStorage.getItem('astro_user_name');
+        if (cachedName) {
+            document.getElementById('userName').textContent = cachedName;
+        }
+
+        // Firebase'den kullanıcı verilerini çek
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            db.collection("user_profiles").doc(user.uid).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        
+                        // İsim güncelle
+                        const fullname = data.fullname || user.displayName || "Kullanıcı";
+                        document.getElementById('userName').textContent = fullname;
+                        localStorage.setItem('astro_user_name', fullname);
+
+                        // Astro verilerini kaydet
+                        userAstroData.sunSign = data.sunSign || null;
+                        userAstroData.moonSign = data.moonSign || null;
+                        userAstroData.risingSign = data.risingSign || null;
+
+                        // İkon altındaki etiketleri güncelle (burç isimleriyle)
+                        updateAstroLabels();
+                    }
+                })
+                .catch((err) => {
+                    console.error("Veri çekme hatası:", err);
+                    const fallbackName = user.displayName || "Kullanıcı";
+                    document.getElementById('userName').textContent = fallbackName;
+                });
+        });
+
+        function updateAstroLabels() {
+            if (userAstroData.sunSign) {
+                const signName = signNames[userAstroData.sunSign.signId] || userAstroData.sunSign.sign;
+                document.getElementById('sunLabel').textContent = `Güneş ${signName}`;
+            }
+            if (userAstroData.moonSign) {
+                const signName = signNames[userAstroData.moonSign.signId] || userAstroData.moonSign.sign;
+                document.getElementById('moonLabel').textContent = `Ay ${signName}`;
+            }
+            if (userAstroData.risingSign) {
+                const signName = signNames[userAstroData.risingSign.signId] || userAstroData.risingSign.sign;
+                document.getElementById('risingLabel').textContent = `Yükselen ${signName}`;
+            }
+        }
+
+        function openAstroPopup(type) {
+            const data = userAstroData[`${type}Sign`];
+            
+            if (!data) {
+                document.getElementById('astroPopupTitle').textContent = 'Veri Bulunamadı';
+                document.getElementById('astroPopupBody').textContent = 'Lütfen önce doğum bilgilerinizi kaydedin.';
+                document.getElementById('astroPopupOverlay').classList.add('show');
+                return;
+            }
+
+            const signName = signNames[data.signId] || data.sign;
+            const titles = {
+                sun: `Güneş ${signName}`,
+                moon: `Ay ${signName}`,
+                rising: `Yükselen ${signName}`
+            };
+
+            document.getElementById('astroPopupTitle').textContent = titles[type];
+            document.getElementById('astroPopupBody').textContent = data.interpretation.body;
+            document.getElementById('astroPopupOverlay').classList.add('show');
+        }
+
+        function closeAstroPopup(event) {
+            if (!event || event.target === document.getElementById('astroPopupOverlay')) {
+                document.getElementById('astroPopupOverlay').classList.remove('show');
+            }
+        }
+
+        // Kategori popup fonksiyonları
         function openPopup(type) {
             const titles = {
-                sun: 'Güneş Burcu',
-                ascendant: 'Yükselen Burç',
-                moon: 'Ay Burcu',
                 health: 'Sağlık',
                 love: 'Aşk',
                 career: 'Kariyer',
                 money: 'Para'
             };
             const messages = {
-                sun: 'Güneş burcu bilgileri burada gösterilecek.',
-                ascendant: 'Yükselen burç bilgileri burada gösterilecek.',
-                moon: 'Ay burcu bilgileri burada gösterilecek.',
                 health: 'Sağlık yorumları burada gösterilecek.',
                 love: 'Aşk yorumları burada gösterilecek.',
                 career: 'Kariyer yorumları burada gösterilecek.',
