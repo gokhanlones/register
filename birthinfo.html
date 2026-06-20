@@ -168,15 +168,16 @@
             const [hour, minute] = birthTime.split(':').map(Number);
 
             try {
-                // 1. ADIM: Sunucudan parametreleri çekip aktif et
                 await remoteConfig.fetchAndActivate();
                 const apiKey = remoteConfig.getString('astro_api_key');
 
-                // Güvenlik Kontrolü: Eğer anahtar gelmezse veya panelde boşsa hata fırlatır
                 if (!apiKey || apiKey === "(in-app default)") {
                     throw new Error("Firebase Remote Config paneline geçerli bir API anahtarı tanımlanıp yayınlanmalıdır.");
                 }
 
+                // API İsteği: Alt yollar (sun, moon vb.) kaldırıldı, ana uç noktaya tek istek atılıyor.
+                const apiUrl = "https://api.freeastroapi.com/api/v1/western/signs";
+                
                 const apiPayload = {
                     year: year,
                     month: month,
@@ -188,21 +189,23 @@
                     interpretation: { enable: true, style: "improved" }
                 };
 
-                const apiHeaders = {
-                    "x-api-key": apiKey,
-                    "Content-Type": "application/json"
-                };
+                const response = await fetch(apiUrl, { 
+                    method: "POST", 
+                    headers: {
+                        "x-api-key": apiKey,
+                        "Content-Type": "application/json"
+                    }, 
+                    body: JSON.stringify(apiPayload) 
+                });
 
-                const apiUrlBase = "https://api.freeastroapi.com/api/v1/western/signs";
+                const data = await response.json();
 
-                // 2. ADIM: Eşzamanlı HTTP POST istekleri atılıyor
-                const [sunRes, moonRes, ascRes] = await Promise.all([
-                    fetch(`${apiUrlBase}/sun`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json()),
-                    fetch(`${apiUrlBase}/moon`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json()),
-                    fetch(`${apiUrlBase}/ascendant`, { method: "POST", headers: apiHeaders, body: JSON.stringify(apiPayload) }).then(res => res.json())
-                ]);
+                // Hata kontrolü
+                if (data.error) {
+                    throw new Error(data.message || "API'den veri alınamadı.");
+                }
 
-                // 3. ADIM: API çıktısı ile ham verileri birleştir
+                // Firestore'a kaydedilecek veri yapısı
                 const birthData = {
                     gender: gender.value,
                     birthYear: year,
@@ -211,15 +214,11 @@
                     birthHour: hour,
                     birthMinute: minute,
                     birthPlace: birthPlace,
-                    astroData: {
-                        sun: sunRes,
-                        moon: moonRes,
-                        ascendant: ascRes
-                    },
+                    // API'den gelen toplu veriyi kaydediyoruz
+                    astroData: data, 
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // 4. ADIM: Firestore Dokümanını Güncelle / Kaydet
                 await db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true });
 
                 alert('Doğum bilgileriniz ve astroloji haritanız başarıyla kaydedildi!');
