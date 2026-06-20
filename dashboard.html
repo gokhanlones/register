@@ -82,7 +82,7 @@
         .category-scroll-wrapper {
             padding: 16px 0;
             background-color: #ffffff;
-            border-bottom: 1px solid #f3f4f6;
+            border-top: 1px solid #f3f4f6;
             flex-shrink: 0;
         }
         .category-scroll {
@@ -258,7 +258,14 @@
             </div>
         </div>
 
-        <!-- Kategori Kartları (Yatay Scroll) -->
+        <!-- Kaydırılabilir İçerik Alanı -->
+        <main class="dashboard-content" id="dashboardContent">
+            <div class="content-placeholder">
+                Buraya anasayfa içerikleri gelecek.
+            </div>
+        </main>
+
+        <!-- Kategori Kartları (Yatay Scroll) - Bottombar hemen üstü -->
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
                 <button class="category-btn" onclick="openPopup('health')">
@@ -275,13 +282,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- Kaydırılabilir İçerik Alanı -->
-        <main class="dashboard-content" id="dashboardContent">
-            <div class="content-placeholder">
-                Buraya anasayfa içerikleri gelecek.
-            </div>
-        </main>
 
         <footer class="bottom-navbar">
             <a href="dashboard.html" class="nav-item active">
