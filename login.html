@@ -111,7 +111,8 @@
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    return db.collection("users").doc(user.uid).get()
+                    // user_profiles koleksiyonuna bak (terms.html buraya kaydediyor)
+                    return db.collection("user_profiles").doc(user.uid).get()
                         .then((doc) => {
                             if (doc.exists && doc.data().birthYear) {
                                 window.location.href = "dashboard.html";
@@ -120,7 +121,8 @@
                             }
                         })
                         .catch(() => {
-                            window.location.href = "dashboard.html";
+                            // Firestore hatası → güvenli taraf birthinfo
+                            window.location.href = "birthinfo.html";
                         });
                 })
                 .catch(err => {
@@ -135,7 +137,7 @@
             firebase.auth().signInWithPopup(provider)
                 .then((result) => {
                     const user = result.user;
-                    return db.collection("users").doc(user.uid).get()
+                    return db.collection("user_profiles").doc(user.uid).get()
                         .then((doc) => {
                             if (doc.exists && doc.data().birthYear) {
                                 window.location.href = "dashboard.html";
@@ -144,7 +146,7 @@
                             }
                         })
                         .catch(() => {
-                            window.location.href = "dashboard.html";
+                            window.location.href = "birthinfo.html";
                         });
                 })
                 .catch(err => alert("Google girişi başarısız: " + err.message));
