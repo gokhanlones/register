@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Anasayfa | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -16,7 +16,7 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
         }
-        
+
         .greeting-section {
             padding: 20px 20px 12px;
             background-color: #ffffff;
@@ -326,6 +326,7 @@
             to { transform: rotate(360deg); }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="app-container">
@@ -344,7 +345,7 @@
         <div class="greeting-section" id="greetingSection">
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
-            
+
             <!-- Astro İkonları -->
             <div class="astro-icons">
                 <button class="astro-icon-btn" onclick="openAstroPopup('sun')" title="Güneş">
@@ -385,7 +386,7 @@
                 <div class="loading-spinner"></div>
                 <div>Günlük burç yükleniyor...</div>
             </div>
-            
+
             <!-- Günlük Burç Kartı (Dinamik) -->
             <div id="horoscopeCard" style="display: none;"></div>
         </main>
@@ -469,7 +470,7 @@
         let currentUser = null;
         let userProfileData = null;
         let dailyHoroscopeData = null;
-        let userSunSign = null; // Günlük burç için kullanılacak
+        let userSunSign = null;
 
         const signNames = {
             aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
@@ -503,15 +504,14 @@
         async function loadUserData(user) {
             try {
                 const doc = await db.collection("user_profiles").doc(user.uid).get();
-                
+
                 if (!doc.exists) {
-                    // Kullanıcı yeni, doğum bilgisi yok
                     window.location.href = "birthinfo.html";
                     return;
                 }
 
                 userProfileData = doc.data();
-                
+
                 // İsim güncelle
                 const fullname = userProfileData.fullname || user.displayName || "Kullanıcı";
                 document.getElementById('userName').textContent = fullname;
@@ -531,7 +531,7 @@
 
         function updateAstroLabels() {
             if (!userProfileData) return;
-            
+
             if (userProfileData.sunSign) {
                 const signName = signNames[userProfileData.sunSign.signId] || userProfileData.sunSign.sign;
                 document.getElementById('sunLabel').textContent = `Güneş ${signName}`;
@@ -549,7 +549,17 @@
 
         // Günlük burç verisini kontrol et ve yükle
         async function loadDailyHoroscope() {
-            if (!userProfileData || !userSunSign) {
+            if (!userProfileData) {
+                showNoDataState();
+                return;
+            }
+
+            // sunSign yoksa doğum bilgilerinden hesapla
+            if (!userSunSign && userProfileData.birthMonth && userProfileData.birthDay) {
+                userSunSign = getSunSignFromDate(userProfileData.birthMonth, userProfileData.birthDay);
+            }
+
+            if (!userSunSign) {
                 showNoDataState();
                 return;
             }
@@ -568,13 +578,28 @@
             const hoursDiff = lastUpdate ? (now - lastUpdate) / (1000 * 60 * 60) : 25;
 
             if (hoursDiff >= 24) {
-                // 24 saat geçmiş, yeni veri çek
                 await fetchAndSaveHoroscope();
             } else {
-                // 24 saat geçmemiş, mevcut veriyi göster
                 dailyHoroscopeData = horoscope;
                 renderHoroscopeCard();
             }
+        }
+
+        // Doğum tarihinden Güneş burcunu hesapla
+        function getSunSignFromDate(month, day) {
+            if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'aries';
+            if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'taurus';
+            if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'gemini';
+            if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'cancer';
+            if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'leo';
+            if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'virgo';
+            if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'libra';
+            if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'scorpio';
+            if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'sagittarius';
+            if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return 'capricorn';
+            if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'aquarius';
+            if ((month === 2 && day >= 19) || (month === 3 && day <= 20)) return 'pisces';
+            return null;
         }
 
         // API'den günlük burç çek ve Firestore'a kaydet
@@ -650,7 +675,7 @@
                         <div class="daily-horoscope-date">${dailyHoroscopeData.date}</div>
                     </div>
                     <div class="daily-horoscope-text">${content.text}</div>
-                    
+
                     <div class="score-bars">
                         <div class="score-bar-item">
                             <div class="score-bar-label">Genel</div>
@@ -715,7 +740,7 @@
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('horoscopeCard').innerHTML = `
                 <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b;">
-                    Doğum bilgilerinizi kaydedin ve günlük yorumunuzu görün.
+                    Doğum bilgileriniz eksik. Lütfen doğum bilgilerinizi güncelleyin.
                 </div>
             `;
             document.getElementById('horoscopeCard').style.display = 'block';
@@ -742,7 +767,7 @@
             }
 
             const data = userProfileData[`${type}Sign`];
-            
+
             if (!data) {
                 document.getElementById('astroPopupTitle').textContent = 'Veri Bulunamadı';
                 document.getElementById('astroPopupBody').textContent = 'Lütfen önce doğum bilgilerinizi kaydedin.';
