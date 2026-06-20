@@ -11,73 +11,16 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <style>
-        /* Cinsiyet Seçimi */
-        .gender-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-        .gender-option {
-            flex: 1;
-            position: relative;
-        }
-        .gender-option input {
-            position: absolute;
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .gender-label {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px;
-            border: 1px solid #d4af37;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #6b7280;
-            background-color: #ffffff;
-        }
-        .gender-option input:checked + .gender-label {
-            background-color: #000000;
-            color: #d4af37;
-            border-color: #000000;
-        }
-        .gender-label svg {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* Inline hata mesajı */
-        .inline-error {
-            display: none;
-            background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 12px 16px;
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-            color: #991b1b;
-        }
-        .inline-error.show {
-            display: block;
-        }
-
-        /* Date ve Time input stilleri */
-        input[type="date"],
-        input[type="time"] {
-            appearance: none;
-            -webkit-appearance: none;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator,
-        input[type="time"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.4);
-            cursor: pointer;
-        }
+        .gender-group { display: flex; gap: 12px; margin-bottom: 18px; }
+        .gender-option { flex: 1; position: relative; }
+        .gender-option input { position: absolute; opacity: 0; width: 0; height: 0; }
+        .gender-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border: 1px solid #d4af37; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; font-weight: 500; color: #6b7280; background-color: #ffffff; }
+        .gender-option input:checked + .gender-label { background-color: #000000; color: #d4af37; border-color: #000000; }
+        .gender-label svg { width: 20px; height: 20px; }
+        .inline-error { display: none; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 0.9rem; color: #991b1b; }
+        .inline-error.show { display: block; }
+        input[type="date"], input[type="time"] { appearance: none; -webkit-appearance: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(0.4); cursor: pointer; }
     </style>
 </head>
 <body>
@@ -96,10 +39,8 @@
         <main class="scrollable-form-section">
             <form class="register-form" id="birthInfoForm" onsubmit="return false;">
 
-                <!-- Hata Mesajı Alanı -->
                 <div class="inline-error" id="formError"></div>
 
-                <!-- Cinsiyet -->
                 <div class="form-group" id="group-gender">
                     <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Cinsiyet</label>
                     <div class="gender-group">
@@ -121,7 +62,6 @@
                     <div class="error-message">Lütfen cinsiyet seçin.</div>
                 </div>
 
-                <!-- Doğum Tarihi -->
                 <div class="form-group" id="group-birthdate">
                     <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Tarihi</label>
                     <div class="input-wrapper">
@@ -130,7 +70,6 @@
                     <div class="error-message">Lütfen doğum tarihi seçin.</div>
                 </div>
 
-                <!-- Doğum Saati -->
                 <div class="form-group" id="group-birthtime">
                     <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Saati</label>
                     <div class="input-wrapper">
@@ -139,7 +78,6 @@
                     <div class="error-message">Lütfen doğum saati seçin.</div>
                 </div>
 
-                <!-- Doğum Yeri (Text Input) -->
                 <div class="form-group" id="group-birthplace">
                     <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Doğum Yeri</label>
                     <div class="input-wrapper">
@@ -166,10 +104,21 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Date input max = bugün (gelecek tarih seçilemesin)
+        // Kullanıcı bilgisini global olarak tut
+        let currentUser = null;
+
+        // Sayfa yüklenince auth state'i bekle
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                // Giriş yapmamış → login'e yönlendir
+                window.location.href = 'login.html';
+            }
+        });
+
         document.getElementById('birthDate').max = new Date().toISOString().split('T')[0];
 
-        // ─── HATA MESAJI YÖNETİMİ ───
         function showError(message) {
             const errorBox = document.getElementById('formError');
             errorBox.textContent = message;
@@ -179,9 +128,7 @@
             document.getElementById('formError').classList.remove('show');
         }
 
-        // ─── KAYDET ───
         function handleSave() {
-            // Hata temizleme
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideError();
 
@@ -219,20 +166,16 @@
                 return;
             }
 
+            // Kullanıcı kontrolü
+            if (!currentUser) {
+                showError('Oturum bilgisi alınıyor, lütfen bekleyin...');
+                return;
+            }
+
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
             btn.textContent = 'Kaydediliyor...';
 
-            const user = firebase.auth().currentUser;
-            if (!user) {
-                showError('Oturum süresi dolmuş. Lütfen tekrar giriş yapın.');
-                btn.disabled = false;
-                btn.textContent = 'Kaydet';
-                setTimeout(() => window.location.href = 'login.html', 2000);
-                return;
-            }
-
-            // Tarih parçalama
             const [year, month, day] = birthDate.split('-').map(Number);
             const [hour, minute] = birthTime.split(':').map(Number);
 
@@ -247,7 +190,7 @@
                 updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
-            db.collection('users').doc(user.uid).set(birthData, { merge: true })
+            db.collection('user_profiles').doc(currentUser.uid).set(birthData, { merge: true })
                 .then(() => {
                     alert('Doğum bilgileriniz başarıyla kaydedildi!');
                     window.location.href = 'dashboard.html';
