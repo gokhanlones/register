@@ -78,6 +78,50 @@
             font-weight: 500;
         }
 
+        /* Kategori Yatay Scroll */
+        .category-scroll-wrapper {
+            padding: 16px 0;
+            background-color: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .category-scroll {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 20px;
+        }
+        .category-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            min-width: 80px;
+        }
+        .category-btn:active {
+            transform: scale(0.95);
+        }
+        .category-btn:hover {
+            background-color: #000000;
+            border-color: #000000;
+        }
+        .category-btn:hover .category-text {
+            color: #d4af37;
+        }
+        .category-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+
         /* Popup/Modal */
         .popup-overlay {
             display: none;
@@ -214,6 +258,24 @@
             </div>
         </div>
 
+        <!-- Kategori Kartları (Yatay Scroll) -->
+        <div class="category-scroll-wrapper">
+            <div class="category-scroll">
+                <button class="category-btn" onclick="openPopup('health')">
+                    <span class="category-text">Sağlık</span>
+                </button>
+                <button class="category-btn" onclick="openPopup('love')">
+                    <span class="category-text">Aşk</span>
+                </button>
+                <button class="category-btn" onclick="openPopup('career')">
+                    <span class="category-text">Kariyer</span>
+                </button>
+                <button class="category-btn" onclick="openPopup('money')">
+                    <span class="category-text">Para</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Kaydırılabilir İçerik Alanı -->
         <main class="dashboard-content" id="dashboardContent">
             <div class="content-placeholder">
@@ -301,12 +363,20 @@
             const titles = {
                 sun: 'Güneş Burcu',
                 ascendant: 'Yükselen Burç',
-                moon: 'Ay Burcu'
+                moon: 'Ay Burcu',
+                health: 'Sağlık',
+                love: 'Aşk',
+                career: 'Kariyer',
+                money: 'Para'
             };
             const messages = {
                 sun: 'Güneş burcu bilgileri burada gösterilecek.',
                 ascendant: 'Yükselen burç bilgileri burada gösterilecek.',
-                moon: 'Ay burcu bilgileri burada gösterilecek.'
+                moon: 'Ay burcu bilgileri burada gösterilecek.',
+                health: 'Sağlık yorumları burada gösterilecek.',
+                love: 'Aşk yorumları burada gösterilecek.',
+                career: 'Kariyer yorumları burada gösterilecek.',
+                money: 'Para yorumları burada gösterilecek.'
             };
             
             document.getElementById('popupTitle').textContent = titles[type] || 'Bilgi';
