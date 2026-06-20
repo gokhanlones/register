@@ -809,14 +809,17 @@
 
         // Kategori popup (Sağlık, Aşk, Kariyer, Para)
         function openCategoryPopup(type) {
-            if (!dailyHoroscopeData || !dailyHoroscopeData.scoreFactors) {
+            // Her iki alan adını da destekle: scoreFactors (camelCase) ve score_factors (snake_case)
+            const scoreFactors = dailyHoroscopeData.scoreFactors || dailyHoroscopeData.score_factors || [];
+            
+            if (!dailyHoroscopeData || scoreFactors.length === 0) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
                 document.getElementById('popupBody').textContent = 'Günlük yorum verisi yüklenemedi.';
                 document.getElementById('popupOverlay').classList.add('show');
                 return;
             }
 
-            const factor = dailyHoroscopeData.scoreFactors.find(f => f.dimension === type);
+            const factor = scoreFactors.find(f => f.dimension === type);
             const score = dailyHoroscopeData.scores[type];
 
             if (!factor) {
