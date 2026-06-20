@@ -391,15 +391,15 @@
         function updateAstroLabels() {
             if (userAstroData.sunSign) {
                 const signName = signNames[userAstroData.sunSign.signId] || userAstroData.sunSign.sign;
-                document.getElementById('sunLabel').textContent = ${signName}`;
+                document.getElementById('sunLabel').textContent = `Güneş ${signName}`;
             }
             if (userAstroData.moonSign) {
                 const signName = signNames[userAstroData.moonSign.signId] || userAstroData.moonSign.sign;
-                document.getElementById('moonLabel').textContent = ${signName}`;
+                document.getElementById('moonLabel').textContent = `Ay ${signName}`;
             }
             if (userAstroData.risingSign) {
                 const signName = signNames[userAstroData.risingSign.signId] || userAstroData.risingSign.sign;
-                document.getElementById('risingLabel').textContent = ${signName}`;
+                document.getElementById('risingLabel').textContent = `Yükselen ${signName}`;
             }
         }
 
@@ -415,9 +415,9 @@
 
             const signName = signNames[data.signId] || data.sign;
             const titles = {
-                sun: ${signName}`,
-                moon: ${signName}`,
-                rising: ${signName}`
+                sun: `Güneş ${signName}`,
+                moon: `Ay ${signName}`,
+                rising: `Yükselen ${signName}`
             };
 
             document.getElementById('astroPopupTitle').textContent = titles[type];
