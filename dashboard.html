@@ -6,6 +6,10 @@
     <title>Anasayfa | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
 
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         * {
             -webkit-tap-highlight-color: transparent;
@@ -302,27 +306,6 @@
             background: #d1d5db;
             border-radius: 4px;
         }
-
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            color: #9ca3af;
-        }
-        .loading-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid #f3f4f6;
-            border-top-color: #d4af37;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
     </style>
 <base target="_blank">
 </head>
@@ -341,7 +324,7 @@
 
         <div class="greeting-section">
             <div class="greeting-text">Merhaba</div>
-            <div class="user-name">Kullanıcı</div>
+            <div class="user-name" id="userName">...</div>
 
             <div class="astro-icons">
                 <button class="astro-icon-btn" title="Güneş">
@@ -356,7 +339,7 @@
                         <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
                         <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
-                    <span>Güneş</span>
+                    <span id="sunLabel">Güneş</span>
                 </button>
                 <button class="astro-icon-btn" title="Yükselen">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -364,19 +347,19 @@
                         <polyline points="16 12 12 8 8 12"></polyline>
                         <line x1="12" y1="16" x2="12" y2="8"></line>
                     </svg>
-                    <span>Yükselen</span>
+                    <span id="risingLabel">Yükselen</span>
                 </button>
                 <button class="astro-icon-btn" title="Ay">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                     </svg>
-                    <span>Ay</span>
+                    <span id="moonLabel">Ay</span>
                 </button>
             </div>
         </div>
 
         <main class="dashboard-content">
-            <!-- Günlük Yorum Kartı - Statik Tasarım -->
+            <!-- Günlük Yorum Kartı - Statik Tasarım (API isteği yok) -->
             <div class="daily-horoscope-card">
                 <div class="daily-horoscope-header">
                     <div class="daily-horoscope-title">Günlük Yorum</div>
@@ -478,5 +461,44 @@
             </a>
         </footer>
     </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
+            authDomain: "astro-notlarim.firebaseapp.com",
+            projectId: "astro-notlarim",
+            storageBucket: "astro-notlarim.firebasestorage.app",
+            messagingSenderId: "123654326926",
+            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
+            measurementId: "G-19BSBWLJ7X"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Sadece kullanıcı adını çek
+        firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                window.location.href = "login.html";
+                return;
+            }
+            loadUserName(user);
+        });
+
+        async function loadUserName(user) {
+            try {
+                const doc = await db.collection("user_profiles").doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    const fullname = data.fullname || user.displayName || "Kullanıcı";
+                    document.getElementById('userName').textContent = fullname;
+                } else {
+                    document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                }
+            } catch (err) {
+                console.error("İsim çekme hatası:", err);
+                document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+            }
+        }
+    </script>
 </body>
 </html>
