@@ -596,7 +596,7 @@
             return null;
         }
 
-        async function fetchAndSaveHoroscope() {
+           async function fetchAndSaveHoroscope() {
             try {
                 await remoteConfig.fetchAndActivate();
                 const apiKey = remoteConfig.getString('astro_api_key');
@@ -622,15 +622,37 @@
                     throw new Error(data.message || "API hatası");
                 }
 
+                const responseData = data.data;
+                const scoreFactors = responseData.score_factors || [];
+
+                // --- YENİ EKLEMELER: Kategorileri Firestore için isimlendirerek haritalıyoruz ---
+                const categoriesMap = {
+                    love: { main: '', secondary: '', drivers: [] },
+                    career: { main: '', secondary: '', drivers: [] },
+                    money: { main: '', secondary: '', drivers: [] },
+                    health: { main: '', secondary: '', drivers: [] }
+                };
+
+                scoreFactors.forEach(factor => {
+                    if (categoriesMap[factor.dimension]) {
+                        categoriesMap[factor.dimension] = {
+                            main: factor.reason?.main || '',
+                            secondary: factor.reason?.secondary || '',
+                            drivers: factor.drivers || []
+                        };
+                    }
+                });
+                // -----------------------------------------------------------------
+
                 const horoscopeData = {
                     dailyHoroscope: {
-                        sign: data.data.sign,
-                        date: data.data.date,
-                        scores: data.data.scores,
-                        content: data.data.content,
-                        lucky: data.data.lucky,
-                        astro: data.data.astro,
-                        score_factors: data.data.score_factors || [],
+                        sign: responseData.sign,
+                        date: responseData.date,
+                        scores: responseData.scores,
+                        content: responseData.content,
+                        lucky: responseData.lucky,
+                        astro: responseData.astro,
+                        categories: categoriesMap, // <-- Artık Firestore'da aşk, para, kariyer, sağlık adıyla doğrudan görünecek!
                         fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -784,6 +806,7 @@
         }
 
         // Kategori popup (Sağlık, Aşk, Kariyer, Para) - SADECE API VERİSİNE BAĞLI
+        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - YENİ DİNAMİK YAPI
         function openCategoryPopup(type) {
             if (!dailyHoroscopeData) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
@@ -792,12 +815,13 @@
                 return;
             }
 
-            const scoreFactors = dailyHoroscopeData.score_factors || [];
             const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : 50;
-            const factor = scoreFactors.find(f => f.dimension === type);
+            
+            // --- YENİ YAPI: Doğrudan categories nesnesinden ilgili boyutu çekiyoruz ---
+            const categoryData = dailyHoroscopeData.categories ? dailyHoroscopeData.categories[type] : null;
 
-            // API'den o kategoriye ait analiz gelmediyse temiz bir hata mesajı ver
-            if (!factor || !factor.reason) {
+            // Veritabanında veya API'den o kategoriye ait analiz gelmediyse temiz bir hata mesajı ver
+            if (!categoryData || !categoryData.main) {
                 document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
                 document.getElementById('popupBody').innerHTML = `
                     <div class="popup-score">
@@ -819,18 +843,18 @@
                     </div>
                     <div class="popup-score-value">${score}</div>
                 </div>
-                <p style="margin-top: 14px; font-size: 1rem; color: #1f2937;"><strong>${factor.reason.main || ''}</strong></p>
+                <p style="margin-top: 14px; font-size: 1rem; color: #1f2937;"><strong>${categoryData.main}</strong></p>
             `;
 
-            if (factor.reason.secondary) {
-                bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${factor.reason.secondary}</p>`;
+            if (categoryData.secondary) {
+                bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${categoryData.secondary}</p>`;
             }
 
-            // Aktive eden gezegenler listesi (API sürücüleri varsa)
-            if (factor.drivers && factor.drivers.length > 0) {
+            // Aktive eden gezegenler listesi (Sürücüler varsa)
+            if (categoryData.drivers && categoryData.drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
                 bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
-                factor.drivers.forEach(d => {
+                categoryData.drivers.forEach(d => {
                     if (d.label) {
                         const houseText = d.house ? ` - ${d.house}. Ev` : '';
                         const intensityText = d.intensity ? ` (${d.intensity})` : '';
