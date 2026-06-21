@@ -476,6 +476,10 @@
         let dailyHoroscopeData = null;
         let userSunSign = null;
 
+        // Veri şeması değiştiğinde (örn. score_factors eklendiğinde) bu sayıyı
+        // artırınca, 24 saat dolmamış olsa bile eski/eksik kayıtlar zorla yenilenir.
+        const HOROSCOPE_DATA_VERSION = 2;
+
         const signNames = {
             aries: 'Koç', taurus: 'Boğa', gemini: 'İkizler', cancer: 'Yengeç',
             leo: 'Aslan', virgo: 'Başak', libra: 'Terazi', scorpio: 'Akrep',
@@ -572,7 +576,16 @@
             const now = new Date();
             const hoursDiff = lastUpdate ? (now - lastUpdate) / (1000 * 60 * 60) : 25;
 
-            if (hoursDiff >= 24) {
+            // Eski şema ile kaydedilmiş (score_factors içermeyen) veya
+            // güncel versiyon numarasına sahip olmayan kayıtları, 24 saat
+            // dolmamış olsa bile zorla yenile. Böylece aşk/kariyer/para/sağlık
+            // detay verisi olmayan kullanıcılar bir sonraki güne kadar beklemez.
+            const isStaleSchema =
+                horoscope.dataVersion !== HOROSCOPE_DATA_VERSION ||
+                !Array.isArray(horoscope.score_factors) ||
+                horoscope.score_factors.length === 0;
+
+            if (hoursDiff >= 24 || isStaleSchema) {
                 await fetchAndSaveHoroscope();
             } else {
                 dailyHoroscopeData = horoscope;
@@ -622,37 +635,24 @@
                     throw new Error(data.message || "API hatası");
                 }
 
-                const responseData = data.data;
-                const scoreFactors = responseData.score_factors || [];
-
-                // === YENİ KATMAN: Firestore'da aşk, para, kariyer, sağlık isimleriyle kayıt etmek için Map oluşturuyoruz ===
-                const categoriesMap = {
-                    love: { main: '', secondary: '', drivers: [] },
-                    career: { main: '', secondary: '', drivers: [] },
-                    money: { main: '', secondary: '', drivers: [] },
-                    health: { main: '', secondary: '', drivers: [] }
-                };
-
-                scoreFactors.forEach(factor => {
-                    if (categoriesMap[factor.dimension]) {
-                        categoriesMap[factor.dimension] = {
-                            main: factor.reason?.main || '',
-                            secondary: factor.reason?.secondary || '',
-                            drivers: factor.drivers || []
-                        };
-                    }
-                });
+                if (!data.data.score_factors || data.data.score_factors.length === 0) {
+                    console.warn(
+                        "API yanıtında score_factors (aşk/kariyer/para/sağlık gerekçeleri) " +
+                        "bulunamadı. Backend/Cloud Function yanıtını kontrol edin.",
+                        data
+                    );
+                }
 
                 const horoscopeData = {
                     dailyHoroscope: {
-                        sign: responseData.sign,
-                        date: responseData.date,
-                        scores: responseData.scores,
-                        content: responseData.content,
-                        lucky: responseData.lucky,
-                        astro: responseData.astro,
-                        score_factors: scoreFactors, // Eski yapıya uyumluluk korunsun
-                        categories: categoriesMap,   // Firestore'da doğrudan nesne (Map) olarak görünecek alan
+                        sign: data.data.sign,
+                        date: data.data.date,
+                        scores: data.data.scores,
+                        content: data.data.content,
+                        lucky: data.data.lucky,
+                        astro: data.data.astro,
+                        score_factors: data.data.score_factors || [],
+                        dataVersion: HOROSCOPE_DATA_VERSION,
                         fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -805,7 +805,7 @@
             }
         }
 
-        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - HİBRİT VE GÜVENLİ YAPI
+        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - SADECE API VERİSİNE BAĞLI
         function openCategoryPopup(type) {
             if (!dailyHoroscopeData) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
@@ -814,26 +814,12 @@
                 return;
             }
 
+            const scoreFactors = dailyHoroscopeData.score_factors || [];
             const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : 50;
-            
-            // === HİBRİT VERİ ÇEKİCİ: Hem yeni Map nesnesini hem de eski Array yapısını kontrol ederek asla patlamaz ===
-            let categoryData = null;
+            const factor = scoreFactors.find(f => f.dimension === type);
 
-            if (dailyHoroscopeData.categories && dailyHoroscopeData.categories[type]) {
-                categoryData = dailyHoroscopeData.categories[type];
-            } else if (dailyHoroscopeData.score_factors) {
-                const factor = dailyHoroscopeData.score_factors.find(f => f.dimension === type);
-                if (factor) {
-                    categoryData = {
-                        main: factor.reason?.main || '',
-                        secondary: factor.reason?.secondary || '',
-                        drivers: factor.drivers || []
-                    };
-                }
-            }
-
-            // Eğer API'den hiçbir analiz gelmediyse temiz bir hata mesajı ver
-            if (!categoryData || !categoryData.main) {
+            // API'den o kategoriye ait analiz gelmediyse temiz bir hata mesajı ver
+            if (!factor || !factor.reason) {
                 document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
                 document.getElementById('popupBody').innerHTML = `
                     <div class="popup-score">
@@ -855,18 +841,18 @@
                     </div>
                     <div class="popup-score-value">${score}</div>
                 </div>
-                <p style="margin-top: 14px; font-size: 1rem; color: #1f2937;"><strong>${categoryData.main}</strong></p>
+                <p style="margin-top: 14px; font-size: 1rem; color: #1f2937;"><strong>${factor.reason.main || ''}</strong></p>
             `;
 
-            if (categoryData.secondary) {
-                bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${categoryData.secondary}</p>`;
+            if (factor.reason.secondary) {
+                bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${factor.reason.secondary}</p>`;
             }
 
             // Aktive eden gezegenler listesi (API sürücüleri varsa)
-            if (categoryData.drivers && categoryData.drivers.length > 0) {
+            if (factor.drivers && factor.drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
                 bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
-                categoryData.drivers.forEach(d => {
+                factor.drivers.forEach(d => {
                     if (d.label) {
                         const houseText = d.house ? ` - ${d.house}. Ev` : '';
                         const intensityText = d.intensity ? ` (${d.intensity})` : '';
