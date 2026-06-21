@@ -710,11 +710,11 @@
             if (personal && personal.transits_top && personal.transits_top.length > 0) {
                 transitHTML = `
                     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
-                        <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">🌟 Bugünün Öne Çıkan Transitleri</p>
-                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 10px; font-weight: 600;">🌟 Bugünün Öne Çıkan Transitleri</p>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
                             ${personal.transits_top.slice(0, 3).map(t => `
-                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4b5563;">
-                                    <span style="background: #fef9e7; color: #b8860b; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;">${Math.round(t.score)}%</span>
+                                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #4b5563;">
+                                    <span style="background: #fef9e7; color: #b8860b; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">${Math.round(t.score)}%</span>
                                     <span>${t.label}</span>
                                 </div>
                             `).join("")}
@@ -729,11 +729,13 @@
                         <div class="daily-horoscope-title">Günlük Yorum</div>
                         <div class="daily-horoscope-date">${dailyHoroscopeData.date}</div>
                     </div>
+
+                    <!-- Tema başlığı ve anahtar kelimeler -->
                     <div class="daily-horoscope-text">
-                        <p style="font-size: 1rem; font-weight: 600; color: #1f2937; margin-bottom: 8px;">${themeText}</p>
-                        <p style="font-size: 0.9rem; color: #6b7280;">${keywords}</p>
-                        <br><span class="theme-tag">Tema: ${themeText}</span>
+                        <p style="font-size: 1.1rem; font-weight: 700; color: #1f2937; margin-bottom: 4px;">${themeText}</p>
+                        <p style="font-size: 0.9rem; color: #6b7280; margin-bottom: 12px;">${keywords}</p>
                     </div>
+
                     ${transitHTML}
 
                     <div class="score-bars">
@@ -774,18 +776,22 @@
                         </div>
                     </div>
 
+                    <!-- Şanslı bilgiler - etiketli -->
                     <div class="lucky-info">
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M8 14s1.5 2 4 2 4-2 4-2"></path><line x1="9" y1="9" x2="9.01" y2="9"></line><line x1="15" y1="9" x2="15.01" y2="9"></line></svg>
-                            ${lucky.color.label}
+                            <span style="color: #9ca3af; font-size: 0.75rem;">Renk</span>
+                            <span style="font-weight: 600; color: #374151;">${lucky.color.label}</span>
                         </div>
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                            ${lucky.number}
+                            <span style="color: #9ca3af; font-size: 0.75rem;">Sayı</span>
+                            <span style="font-weight: 600; color: #374151;">${lucky.number}</span>
                         </div>
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            ${lucky.time_window.display}
+                            <span style="color: #9ca3af; font-size: 0.75rem;">Saat</span>
+                            <span style="font-weight: 600; color: #374151;">${lucky.time_window.display}</span>
                         </div>
                     </div>
                 </div>
