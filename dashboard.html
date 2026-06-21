@@ -636,10 +636,7 @@
                 });
 
                 const data = await response.json();
-                console.log("API Yanıtı - data:", data);
-                console.log("API Yanıtı - data.data:", data.data);
-                console.log("API Yanıtı - score_factors:", data.data.score_factors);
-
+                
                 if (!response.ok || data.error) {
                     throw new Error(data.message || "API hatası");
                 }
@@ -755,7 +752,7 @@
         function showNoDataState() {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('horoscopeCard').innerHTML = `
-                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b;">
+                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b; padding: 20px; border-radius: 12px; text-align: center;">
                     Doğum bilgileriniz eksik. Lütfen doğum bilgilerinizi güncelleyin.
                 </div>
             `;
@@ -765,7 +762,7 @@
         function showErrorState(message) {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('horoscopeCard').innerHTML = `
-                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b;">
+                <div class="content-placeholder" style="background: #fef2f2; border: 1px dashed #fecaca; color: #991b1b; padding: 20px; border-radius: 12px; text-align: center;">
                     Hata: ${message}<br>
                     <button onclick="loadDailyHoroscope()" style="margin-top: 12px; padding: 8px 16px; background: #000; color: #d4af37; border: none; border-radius: 8px; cursor: pointer;">Tekrar Dene</button>
                 </div>
@@ -799,7 +796,7 @@
             };
 
             document.getElementById('astroPopupTitle').textContent = titles[type];
-            document.getElementById('astroPopupBody').textContent = data.interpretation.body;
+            document.getElementById('astroPopupBody').textContent = data.interpretation?.body || 'Yorum bulunamadı.';
             document.getElementById('astroPopupOverlay').classList.add('show');
         }
 
@@ -811,12 +808,19 @@
 
         // Kategori popup (Sağlık, Aşk, Kariyer, Para)
         function openCategoryPopup(type) {
-            // Firestore'da score_factors (snake_case) olarak kaydedildi
+            // Defansif kontrol: dailyHoroscopeData tamamen null ise kodun çökmesini engelle
+            if (!dailyHoroscopeData) {
+                document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
+                document.getElementById('popupBody').textContent = 'Günlük yorum verisi bulunamadı.';
+                document.getElementById('popupOverlay').classList.add('show');
+                return;
+            }
+
             const scoreFactors = dailyHoroscopeData.score_factors || [];
-            
-            if (!dailyHoroscopeData || scoreFactors.length === 0) {
-                // score_factors yoksa sadece puan göster
-                const score = dailyHoroscopeData.scores ? dailyHoroscopeData.scores[type] : null;
+            const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : null;
+
+            // Eğer veritabanında score_factors dizisi hiç yoksa veya boşsa sadece skoru göstererek güvenli çıkış yap
+            if (scoreFactors.length === 0) {
                 if (score !== null) {
                     document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
                     document.getElementById('popupBody').innerHTML = `
@@ -830,29 +834,37 @@
                     `;
                 } else {
                     document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
-                    document.getElementById('popupBody').textContent = 'Günlük yorum verisi yüklenemedi.';
+                    document.getElementById('popupBody').textContent = 'Bu kategoriye ait puanlama bulunamadı.';
                 }
                 document.getElementById('popupOverlay').classList.add('show');
                 return;
             }
 
             const factor = scoreFactors.find(f => f.dimension === type);
-            const score = dailyHoroscopeData.scores[type];
 
             if (!factor) {
-                document.getElementById('popupTitle').textContent = categoryNames[type];
-                document.getElementById('popupBody').textContent = 'Bu kategori için detay bulunamadı.';
+                document.getElementById('popupTitle').textContent = `${categoryNames[type]} ${score !== null ? `- ${score}/100` : ''}`;
+                document.getElementById('popupBody').innerHTML = `
+                    ${score !== null ? `
+                    <div class="popup-score">
+                        <div class="popup-score-bar">
+                            <div class="popup-score-fill" style="width: ${score}%"></div>
+                        </div>
+                        <div class="popup-score-value">${score}</div>
+                    </div>` : ''}
+                    <p>Bu kategori için detaylı astrolojik etken bulunamadı.</p>
+                `;
                 document.getElementById('popupOverlay').classList.add('show');
                 return;
             }
 
-            const reason = factor.reason;
+            const reason = factor.reason || { main: "Detaylı açıklama mevcut değil.", secondary: null };
             let bodyHTML = `
                 <div class="popup-score">
                     <div class="popup-score-bar">
-                        <div class="popup-score-fill" style="width: ${score}%"></div>
+                        <div class="popup-score-fill" style="width: ${score || 0}%"></div>
                     </div>
-                    <div class="popup-score-value">${score}</div>
+                    <div class="popup-score-value">${score || 0}</div>
                 </div>
                 <p><strong>${reason.main}</strong></p>
             `;
@@ -861,19 +873,22 @@
                 bodyHTML += `<p>${reason.secondary}</p>`;
             }
 
-            // Aktive eden gezegenler listesi
+            // Aktive eden gezegenler (drivers) listesi
             if (factor.drivers && factor.drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
-                bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler:</p>`;
+                bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
                 factor.drivers.forEach(d => {
-                    const houseText = d.house ? ` - ${d.house}. Ev` : '';
-                    const intensityText = d.intensity ? ` (${d.intensity})` : '';
-                    bodyHTML += `<p style="font-size: 0.85rem; color: #4b5563; margin: 4px 0;">• ${d.label}${houseText}${intensityText}</p>`;
+                    // Sadece geçerli driver tiplerini listele (aggregate skoru filtrelemek için label kontrolü)
+                    if (d.label) {
+                        const houseText = d.house ? ` - ${d.house}. Ev` : '';
+                        const intensityText = d.intensity ? ` (${d.intensity})` : '';
+                        bodyHTML += `<p style="font-size: 0.85rem; color: #4b5563; margin: 4px 0;">• ${d.label}${houseText}${intensityText}</p>`;
+                    }
                 });
                 bodyHTML += `</div>`;
             }
 
-            document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
+            document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score || 0}/100`;
             document.getElementById('popupBody').innerHTML = bodyHTML;
             document.getElementById('popupOverlay').classList.add('show');
         }
