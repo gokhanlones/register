@@ -620,7 +620,7 @@
                 }
 
                 const today = new Date().toISOString().split('T')[0];
-                const apiUrl = `https://api.freeastroapi.com/api/v2/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=en`;
+                const apiUrl = `https://api.freeastroapi.com/api/v1/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=en`;
 
                 const response = await fetch(apiUrl, {
                     method: "GET",
