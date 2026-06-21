@@ -27,7 +27,6 @@
     </style>
 </head>
 <body>
-
     <div class="app-container">
         <header class="brand-section">
             <button class="btn-menu" onclick="window.history.back()">
@@ -64,6 +63,9 @@
 
     <script>
         const GEONAMES_USERNAME = 'gokhansenol';
+        let selectedLocation = { name: '', lat: null, lng: null };
+
+        // Firebase Ayarları
         const firebaseConfig = { apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU", authDomain: "astro-notlarim.firebaseapp.com", projectId: "astro-notlarim", storageBucket: "astro-notlarim.firebasestorage.app", messagingSenderId: "123654326926", appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df", measurementId: "G-19BSBWLJ7X" };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -76,6 +78,7 @@
         // Şehir Otomatik Tamamlama
         const birthPlaceInput = document.getElementById('birthPlace');
         const suggestionsBox = document.getElementById('placeSuggestions');
+        
         birthPlaceInput.addEventListener('input', async (e) => {
             const query = e.target.value.trim();
             if (query.length < 2) { suggestionsBox.style.display = 'none'; return; }
@@ -88,7 +91,11 @@
                         const item = document.createElement('div');
                         item.className = 'suggestion-item';
                         item.textContent = `${place.name}, ${place.adminName1 || place.countryName}`;
-                        item.onclick = () => { birthPlaceInput.value = item.textContent; suggestionsBox.style.display = 'none'; };
+                        item.onclick = () => { 
+                            birthPlaceInput.value = item.textContent; 
+                            selectedLocation = { name: item.textContent, lat: place.lat, lng: place.lng };
+                            suggestionsBox.style.display = 'none'; 
+                        };
                         suggestionsBox.appendChild(item);
                     });
                     suggestionsBox.style.display = 'block';
@@ -110,7 +117,7 @@
             const gender = document.querySelector('input[name="gender"]:checked');
             const birthDate = document.getElementById('birthDate').value;
             const birthTime = document.getElementById('birthTime').value;
-            const birthPlace = document.getElementById('birthPlace').value.trim();
+            const birthPlace = birthPlaceInput.value.trim();
 
             if (!gender || !birthDate || !birthTime || !birthPlace) { showError('Lütfen tüm alanları doldurun.'); return; }
 
@@ -130,6 +137,8 @@
                     birthHour: Number(birthTime.split(':')[0]),
                     birthMinute: Number(birthTime.split(':')[1]),
                     birthPlace: birthPlace,
+                    latitude: selectedLocation.lat ? parseFloat(selectedLocation.lat) : null,
+                    longitude: selectedLocation.lng ? parseFloat(selectedLocation.lng) : null,
                     dailyHoroscope: horoscopeData.data,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
