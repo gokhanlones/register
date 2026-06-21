@@ -619,15 +619,35 @@
                     throw new Error("API Anahtarı bulunamadı.");
                 }
 
+                if (!userProfileData) {
+                    throw new Error("Kullanıcı profili yüklenemedi.");
+                }
+
+                // v3 personal endpoint - kullanıcının doğum bilgileri ile kişiselleştirilmiş
                 const today = new Date().toISOString().split('T')[0];
-                const apiUrl = `https://api.freeastroapi.com/api/v1/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=en`;
+                const apiUrl = `https://api.freeastroapi.com/api/v3/horoscope/daily/personal`;
+
+                const requestBody = {
+                    birth: {
+                        year: userProfileData.birthYear,
+                        month: userProfileData.birthMonth,
+                        day: userProfileData.birthDay,
+                        hour: userProfileData.birthHour || 12,
+                        minute: userProfileData.birthMinute || 0,
+                        city: userProfileData.birthPlace || "Istanbul, Turkey",
+                        tz_str: userProfileData.birthTimeZone || "Europe/Istanbul"
+                    },
+                    date: today,
+                    tz_str: userProfileData.birthTimeZone || "Europe/Istanbul"
+                };
 
                 const response = await fetch(apiUrl, {
-                    method: "GET",
+                    method: "POST",
                     headers: {
                         "x-api-key": apiKey,
                         "Content-Type": "application/json"
-                    }
+                    },
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
@@ -638,8 +658,7 @@
 
                 if (!data.data.score_factors || data.data.score_factors.length === 0) {
                     console.warn(
-                        "API yanıtında score_factors (aşk/kariyer/para/sağlık gerekçeleri) " +
-                        "bulunamadı. Backend/Cloud Function yanıtını kontrol edin.",
+                        "API yanıtında score_factors bulunamadı.",
                         data
                     );
                 }
@@ -653,6 +672,7 @@
                         lucky: data.data.lucky,
                         astro: data.data.astro,
                         score_factors: data.data.score_factors || [],
+                        personal: data.data.personal || null,
                         dataVersion: HOROSCOPE_DATA_VERSION,
                         fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
                     },
@@ -679,6 +699,29 @@
             const scores = dailyHoroscopeData.scores;
             const content = dailyHoroscopeData.content;
             const lucky = dailyHoroscopeData.lucky;
+            const personal = dailyHoroscopeData.personal || null;
+
+            // v3 content yapısı: text yok, theme + keywords var
+            const keywords = content.keywords ? content.keywords.join(", ") : "";
+            const themeText = content.theme || "";
+
+            // Kişiselleştirilmiş transit özetini oluştur
+            let transitHTML = "";
+            if (personal && personal.transits_top && personal.transits_top.length > 0) {
+                transitHTML = `
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+                        <p style="font-size: 0.8rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">🌟 Bugünün Öne Çıkan Transitleri</p>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            ${personal.transits_top.slice(0, 3).map(t => `
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4b5563;">
+                                    <span style="background: #fef9e7; color: #b8860b; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600;">${Math.round(t.score)}%</span>
+                                    <span>${t.label}</span>
+                                </div>
+                            `).join("")}
+                        </div>
+                    </div>
+                `;
+            }
 
             const cardHTML = `
                 <div class="daily-horoscope-card">
@@ -686,9 +729,12 @@
                         <div class="daily-horoscope-title">Günlük Yorum</div>
                         <div class="daily-horoscope-date">${dailyHoroscopeData.date}</div>
                     </div>
-                    <div class="daily-horoscope-text">${content.text}
-                        <br><span class="theme-tag">Tema: ${content.theme || ''}</span>
+                    <div class="daily-horoscope-text">
+                        <p style="font-size: 1rem; font-weight: 600; color: #1f2937; margin-bottom: 8px;">${themeText}</p>
+                        <p style="font-size: 0.9rem; color: #6b7280;">${keywords}</p>
+                        <br><span class="theme-tag">Tema: ${themeText}</span>
                     </div>
+                    ${transitHTML}
 
                     <div class="score-bars">
                         <div class="score-bar-item">
@@ -806,7 +852,7 @@
             }
         }
 
-        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - SADECE API VERİSİNE BAĞLI
+        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - v3 API VERİSİNE BAĞLI
         function openCategoryPopup(type) {
             if (!dailyHoroscopeData) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
@@ -849,15 +895,18 @@
                 bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${factor.reason.secondary}</p>`;
             }
 
-            // Aktive eden gezegenler listesi (API sürücüleri varsa)
+            // v3: Etkileyen transitler / evler listesi
             if (factor.drivers && factor.drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
-                bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
+                bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Faktörler:</p>`;
                 factor.drivers.forEach(d => {
                     if (d.label) {
-                        const houseText = d.house ? ` - ${d.house}. Ev` : '';
-                        const intensityText = d.intensity ? ` (${d.intensity})` : '';
-                        bodyHTML += `<p style="font-size: 0.85rem; color: #4b5563; margin: 4px 0;">• ${d.label}${houseText}${intensityText}</p>`;
+                        const intensityText = d.intensity ? ` <span style="color: #d4af37; font-weight: 600;">(${d.intensity})</span>` : '';
+                        const orbText = d.orb_deg ? ` <span style="color: #9ca3af; font-size: 0.75rem;">±${d.orb_deg}°</span>` : '';
+                        bodyHTML += `<div style="display: flex; align-items: center; gap: 8px; margin: 6px 0; padding: 8px; background: #f9fafb; border-radius: 8px;">
+                            <span style="background: #fef9e7; color: #b8860b; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; white-space: nowrap;">${Math.round((d.weight || 0) * 100)}%</span>
+                            <span style="font-size: 0.85rem; color: #4b5563;">${d.label}${intensityText}${orbText}</span>
+                        </div>`;
                     }
                 });
                 bodyHTML += `</div>`;
