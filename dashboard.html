@@ -596,7 +596,7 @@
             return null;
         }
 
-           async function fetchAndSaveHoroscope() {
+        async function fetchAndSaveHoroscope() {
             try {
                 await remoteConfig.fetchAndActivate();
                 const apiKey = remoteConfig.getString('astro_api_key');
@@ -625,7 +625,7 @@
                 const responseData = data.data;
                 const scoreFactors = responseData.score_factors || [];
 
-                // --- YENİ EKLEMELER: Kategorileri Firestore için isimlendirerek haritalıyoruz ---
+                // === YENİ KATMAN: Firestore'da aşk, para, kariyer, sağlık isimleriyle kayıt etmek için Map oluşturuyoruz ===
                 const categoriesMap = {
                     love: { main: '', secondary: '', drivers: [] },
                     career: { main: '', secondary: '', drivers: [] },
@@ -642,7 +642,6 @@
                         };
                     }
                 });
-                // -----------------------------------------------------------------
 
                 const horoscopeData = {
                     dailyHoroscope: {
@@ -652,7 +651,8 @@
                         content: responseData.content,
                         lucky: responseData.lucky,
                         astro: responseData.astro,
-                        categories: categoriesMap, // <-- Artık Firestore'da aşk, para, kariyer, sağlık adıyla doğrudan görünecek!
+                        score_factors: scoreFactors, // Eski yapıya uyumluluk korunsun
+                        categories: categoriesMap,   // Firestore'da doğrudan nesne (Map) olarak görünecek alan
                         fetchedAt: firebase.firestore.FieldValue.serverTimestamp()
                     },
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -805,8 +805,7 @@
             }
         }
 
-        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - SADECE API VERİSİNE BAĞLI
-        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - YENİ DİNAMİK YAPI
+        // Kategori popup (Sağlık, Aşk, Kariyer, Para) - HİBRİT VE GÜVENLİ YAPI
         function openCategoryPopup(type) {
             if (!dailyHoroscopeData) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
@@ -817,10 +816,23 @@
 
             const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : 50;
             
-            // --- YENİ YAPI: Doğrudan categories nesnesinden ilgili boyutu çekiyoruz ---
-            const categoryData = dailyHoroscopeData.categories ? dailyHoroscopeData.categories[type] : null;
+            // === HİBRİT VERİ ÇEKİCİ: Hem yeni Map nesnesini hem de eski Array yapısını kontrol ederek asla patlamaz ===
+            let categoryData = null;
 
-            // Veritabanında veya API'den o kategoriye ait analiz gelmediyse temiz bir hata mesajı ver
+            if (dailyHoroscopeData.categories && dailyHoroscopeData.categories[type]) {
+                categoryData = dailyHoroscopeData.categories[type];
+            } else if (dailyHoroscopeData.score_factors) {
+                const factor = dailyHoroscopeData.score_factors.find(f => f.dimension === type);
+                if (factor) {
+                    categoryData = {
+                        main: factor.reason?.main || '',
+                        secondary: factor.reason?.secondary || '',
+                        drivers: factor.drivers || []
+                    };
+                }
+            }
+
+            // Eğer API'den hiçbir analiz gelmediyse temiz bir hata mesajı ver
             if (!categoryData || !categoryData.main) {
                 document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
                 document.getElementById('popupBody').innerHTML = `
@@ -850,7 +862,7 @@
                 bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${categoryData.secondary}</p>`;
             }
 
-            // Aktive eden gezegenler listesi (Sürücüler varsa)
+            // Aktive eden gezegenler listesi (API sürücüleri varsa)
             if (categoryData.drivers && categoryData.drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
                 bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
