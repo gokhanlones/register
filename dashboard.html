@@ -353,12 +353,10 @@
             <h1>Astro Notlarım</h1>
         </header>
 
-        <!-- Sabit Karşılama Alanı -->
         <div class="greeting-section" id="greetingSection">
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
 
-            <!-- Astro İkonları -->
             <div class="astro-icons">
                 <button class="astro-icon-btn" onclick="openAstroPopup('sun')" title="Güneş">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -391,19 +389,15 @@
             </div>
         </div>
 
-        <!-- Kaydırılabilir İçerik Alanı -->
         <main class="dashboard-content" id="dashboardContent">
-            <!-- Loading State -->
             <div class="loading-state" id="loadingState">
                 <div class="loading-spinner"></div>
                 <div>Günlük burç yükleniyor...</div>
             </div>
 
-            <!-- Günlük Burç Kartı (Dinamik) -->
             <div id="horoscopeCard" style="display: none;"></div>
         </main>
 
-        <!-- Kategori Kartları -->
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
                 <button class="category-btn" onclick="openCategoryPopup('health')">
@@ -437,7 +431,6 @@
         </footer>
     </div>
 
-    <!-- Astro Popup Modal -->
     <div class="popup-overlay" id="astroPopupOverlay" onclick="closeAstroPopup(event)">
         <div class="popup-content" onclick="event.stopPropagation()">
             <div class="popup-header">
@@ -450,7 +443,6 @@
         </div>
     </div>
 
-    <!-- Kategori Popup Modal -->
     <div class="popup-overlay" id="popupOverlay" onclick="closePopup(event)">
         <div class="popup-content" onclick="event.stopPropagation()">
             <div class="popup-header">
@@ -636,7 +628,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (!response.ok || data.error) {
                     throw new Error(data.message || "API hatası");
                 }
@@ -796,7 +788,7 @@
             };
 
             document.getElementById('astroPopupTitle').textContent = titles[type];
-            document.getElementById('astroPopupBody').textContent = data.interpretation?.body || 'Yorum bulunamadı.';
+            document.getElementById('astroPopupBody').textContent = data.interpretation?.body || data.interpretation || 'Yorum bulunamadı.';
             document.getElementById('astroPopupOverlay').classList.add('show');
         }
 
@@ -806,79 +798,121 @@
             }
         }
 
+        // API'den detay gelmediğinde puan seviyesine göre profesyonel yorum üreten motor
+        function getDynamicInterpretation(type, score) {
+            const interpretations = {
+                love: {
+                    high: {
+                        main: "Yıldızlar aşk hayatında parlıyor! Bugün ilişkilerde çekim gücünün en yüksek olduğu şanslı günlerden biri.",
+                        secondary: "Mevcut bir ilişkin varsa partnerinle arandaki uyum ve tutku derinleşebilir. Eğer kalbin boşsa, özgüveninin yüksek olduğu bu süreçte dikkat çekici enerjiler altındasın. Duygularını netçe ifade etmek için harika bir zaman."
+                    },
+                    medium: {
+                        main: "Duygusal dengenin ve huzurun ön planda olduğu, akıcı bir gün.",
+                        secondary: "İlişkilerde ne çok iddialı ne de çok mesafeli bir tutum var. Küçük ve samimi adımlarla bağlarınızı koruyabilirsiniz. Mevcut sorunları tatlı dille çözmek adına gökyüzü seni destekliyor."
+                    },
+                    low: {
+                        main: "Gökyüzü ikili ilişkilerde seni biraz sakin kalmaya ve fevri olmamaya davet ediyor.",
+                        secondary: "Bugün alınganlıklara, yanlış anlaşılmalara veya ego çatışmalarına açık bir zemin olabilir. Partnerinle veya flörtünle olan iletişiminde büyük kararlar almaktan kaçınmalı, enerjiyi akışına bırakmalısın."
+                    }
+                },
+                career: {
+                    high: {
+                        main: "Kariyerinde ve günlük hedeflerinde liderlik yapabileceğin, parlayacağın bir gün!",
+                        secondary: "Üzerinde çalıştığın işlerde dikkat toplayabilir, fikirlerinle takdir kazanabilirsin. İş arayışları, mülakatlar veya yarım kalan projeleri bitirmek adına motivasyonun ve kozmik desteğin tam."
+                    },
+                    medium: {
+                        main: "İş ve sorumluluk hayatında rutinlerin sorunsuz aktığı, stabil bir gün.",
+                        secondary: "Büyük riskler alıp maceralara atılmak yerine, mevcut düzeni korumak ve planlı ilerlemek daha verimli sonuçlar getirecektir. İşbirlikleri ve toplantılar için yapıcı bir atmosfer hakim."
+                    },
+                    low: {
+                        main: "Mesleki konularda odaklanma sorunları veya ufak aksilikler yaşanabilir.",
+                        secondary: "Bugün önemli sunumları, büyük sözleşmeleri veya radikal kariyer değişikliklerini mümkünse ertelemek faydalı olabilir. Enerjini planlama yapmaya ve detayları kontrol etmeye harcamalısın."
+                    }
+                },
+                money: {
+                    high: {
+                        main: "Finansal konularda şanslı ve bereketli etkiler altındasın.",
+                        secondary: "Beklediğin bir para girişi gerçekleşebilir, karlı bir alışveriş yapabilir veya bütçeni rahatlatacak yeni fikirler üretebilirsin. Maddi yatırımları planlarken sezgilerine güvenebileceğin bir süreç."
+                    },
+                    medium: {
+                        main: "Maddi durumunda gelgitlerin olmadığı, dengeli bir bütçe dönemi.",
+                        secondary: "Gelir ve gider dengeni iyi yönettiğin bir gündesin. Ne büyük bir kazanç ne de beklenmedik bir kayıp öngörülüyor. Harcamalarını akıllıca kontrol altında tutmaya devam etmelisin."
+                    },
+                    low: {
+                        main: "Maddi konularda ve harcamalarda ekstra temkinli olman gereken bir gün.",
+                        secondary: "Gereksiz harcamalar veya hesapsız alışverişler bütçeni sonradan zorlayabilir. Bugün riskli yatırımlardan, borç alıp vermekten uzak durmalı, cüzdanını korumaya odaklanmalısın."
+                    }
+                },
+                health: {
+                    high: {
+                        main: "Zihinsel ve fiziksel enerjinin zirvede olduğu, son derece zinde bir gün!",
+                        secondary: "Kendini her zamankinden daha güçlü, motive ve canlı hissetmen mümkün. Spor yapmak, yeni bir sağlıklı yaşam rutinine başlamak veya kişisel bakımına zaman ayırmak için mükemmel bir kozmik etki."
+                    },
+                    medium: {
+                        main: "Sağlık durumunun stabil, sakin ve dengeli seyrettiği bir süreç.",
+                        secondary: "Bedeninin sesini dinlemeli ve aşırı yüklenmelerden kaçınmalısın. Rutin dinlenme sürelerine sadık kaldığın sürece enerjini gün boyu harika bir dengede tutabilirsin."
+                    },
+                    low: {
+                        main: "Bağışıklık sistemine, uyku düzenine ve dinlenmene özen göstermen gereken bir gün.",
+                        secondary: "Kendini biraz yorgun veya halsiz hissetmen normal olabilir. Bugün bedenini çok zorlayacak ağır aktivitelerden kaçınmalı, stresten uzak kalmalı ve vitamin dengene dikkat etmelisin."
+                    }
+                }
+            };
+
+            let tier = 'medium';
+            if (score >= 75) tier = 'high';
+            else if (score < 45) tier = 'low';
+
+            return interpretations[type]?.[tier] || { main: "Günlük enerjiler bu alanda dengeleniyor.", secondary: "İlerleyen saatlerde gökyüzü etkileri daha net şekillenecektir." };
+        }
+
         // Kategori popup (Sağlık, Aşk, Kariyer, Para)
         function openCategoryPopup(type) {
-            // Defansif kontrol: dailyHoroscopeData tamamen null ise kodun çökmesini engelle
             if (!dailyHoroscopeData) {
                 document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
-                document.getElementById('popupBody').textContent = 'Günlük yorum verisi bulunamadı.';
+                document.getElementById('popupBody').textContent = 'Günlük yorum verisi henüz yüklenemedi.';
                 document.getElementById('popupOverlay').classList.add('show');
                 return;
             }
 
             const scoreFactors = dailyHoroscopeData.score_factors || [];
-            const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : null;
-
-            // Eğer veritabanında score_factors dizisi hiç yoksa veya boşsa sadece skoru göstererek güvenli çıkış yap
-            if (scoreFactors.length === 0) {
-                if (score !== null) {
-                    document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
-                    document.getElementById('popupBody').innerHTML = `
-                        <div class="popup-score">
-                            <div class="popup-score-bar">
-                                <div class="popup-score-fill" style="width: ${score}%"></div>
-                            </div>
-                            <div class="popup-score-value">${score}</div>
-                        </div>
-                        <p>Bu kategori için detaylı yorum verisi bulunmuyor.</p>
-                    `;
-                } else {
-                    document.getElementById('popupTitle').textContent = categoryNames[type] || 'Bilgi';
-                    document.getElementById('popupBody').textContent = 'Bu kategoriye ait puanlama bulunamadı.';
-                }
-                document.getElementById('popupOverlay').classList.add('show');
-                return;
-            }
-
+            const score = (dailyHoroscopeData.scores && dailyHoroscopeData.scores[type] !== undefined) ? dailyHoroscopeData.scores[type] : 50;
             const factor = scoreFactors.find(f => f.dimension === type);
 
-            if (!factor) {
-                document.getElementById('popupTitle').textContent = `${categoryNames[type]} ${score !== null ? `- ${score}/100` : ''}`;
-                document.getElementById('popupBody').innerHTML = `
-                    ${score !== null ? `
-                    <div class="popup-score">
-                        <div class="popup-score-bar">
-                            <div class="popup-score-fill" style="width: ${score}%"></div>
-                        </div>
-                        <div class="popup-score-value">${score}</div>
-                    </div>` : ''}
-                    <p>Bu kategori için detaylı astrolojik etken bulunamadı.</p>
-                `;
-                document.getElementById('popupOverlay').classList.add('show');
-                return;
+            let reasonMain = "";
+            let reasonSecondary = "";
+            let drivers = [];
+
+            // Eğer API'den score_factors içeriği geldiyse onu kullan, gelmediyse dinamik motoru çalıştır
+            if (factor && factor.reason) {
+                reasonMain = factor.reason.main || "";
+                reasonSecondary = factor.reason.secondary || "";
+                drivers = factor.drivers || [];
+            } else {
+                const dynamicContent = getDynamicInterpretation(type, score);
+                reasonMain = dynamicContent.main;
+                reasonSecondary = dynamicContent.secondary;
             }
 
-            const reason = factor.reason || { main: "Detaylı açıklama mevcut değil.", secondary: null };
             let bodyHTML = `
                 <div class="popup-score">
                     <div class="popup-score-bar">
-                        <div class="popup-score-fill" style="width: ${score || 0}%"></div>
+                        <div class="popup-score-fill" style="width: ${score}%"></div>
                     </div>
-                    <div class="popup-score-value">${score || 0}</div>
+                    <div class="popup-score-value">${score}</div>
                 </div>
-                <p><strong>${reason.main}</strong></p>
+                <p style="margin-top: 14px; font-size: 1rem; color: #1f2937;"><strong>${reasonMain}</strong></p>
             `;
 
-            if (reason.secondary) {
-                bodyHTML += `<p>${reason.secondary}</p>`;
+            if (reasonSecondary) {
+                bodyHTML += `<p style="margin-top: 8px; font-size: 0.95rem; color: #4b5563; line-height: 1.6;">${reasonSecondary}</p>`;
             }
 
-            // Aktive eden gezegenler (drivers) listesi
-            if (factor.drivers && factor.drivers.length > 0) {
+            // Aktive eden gezegenler listesi (Eğer API'den geldiyse alt kısma ekler)
+            if (drivers && drivers.length > 0) {
                 bodyHTML += `<div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid #f3f4f6;">`;
                 bodyHTML += `<p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 8px; font-weight: 600;">Etkileyen Gezegenler / Evler:</p>`;
-                factor.drivers.forEach(d => {
-                    // Sadece geçerli driver tiplerini listele (aggregate skoru filtrelemek için label kontrolü)
+                drivers.forEach(d => {
                     if (d.label) {
                         const houseText = d.house ? ` - ${d.house}. Ev` : '';
                         const intensityText = d.intensity ? ` (${d.intensity})` : '';
@@ -888,7 +922,7 @@
                 bodyHTML += `</div>`;
             }
 
-            document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score || 0}/100`;
+            document.getElementById('popupTitle').textContent = `${categoryNames[type]} - ${score}/100`;
             document.getElementById('popupBody').innerHTML = bodyHTML;
             document.getElementById('popupOverlay').classList.add('show');
         }
