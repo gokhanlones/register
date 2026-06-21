@@ -79,7 +79,7 @@
             font-weight: 500;
         }
 
-        /* === GÜNLÜK YORUM KARTI === */
+        /* === GÜNLÜK YORUM KARTS === */
         .daily-horoscope-card {
             background-color: #ffffff;
             border-radius: 16px;
@@ -617,7 +617,8 @@
                 }
 
                 const today = new Date().toISOString().split('T')[0];
-                const apiUrl = `https://api.freeastroapi.com/api/v2/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=tr`;
+                // locale=tr alanı locale=en olarak güncellendi
+                const apiUrl = `https://api.freeastroapi.com/api/v2/horoscope/daily/sign?sign=${userSunSign}&date=${today}&tz_str=Europe%2FLondon&locale=en`;
 
                 const response = await fetch(apiUrl, {
                     method: "GET",
@@ -798,6 +799,74 @@
             }
         }
 
+        // API'den detay gelmediğinde puan seviyesine göre profesyonel yorum üreten motor
+        function getDynamicInterpretation(type, score) {
+            const interpretations = {
+                love: {
+                    high: {
+                        main: "Yıldızlar aşk hayatında parlıyor! Bugün ilişkilerde çekim gücünün en yüksek olduğu şanslı günlerden biri.",
+                        secondary: "Mevcut bir ilişkin varsa partnerinle arandaki uyum ve tutku derinleşebilir. Eğer kalbin boşsa, özgüveninin yüksek olduğu bu süreçte dikkat çekici enerjiler altındasın. Duygularını netçe ifade etmek için harika bir zaman."
+                    },
+                    medium: {
+                        main: "Duygusal dengenin ve huzurun ön planda olduğu, akıcı bir gün.",
+                        secondary: "İlişkilerde ne çok iddialı ne de çok mesafeli bir tutum var. Küçük ve samimi adımlarla bağlarınızı koruyabilirsiniz. Mevcut sorunları tatlı dille çözmek adına gökyüzü seni destekliyor."
+                    },
+                    low: {
+                        main: "Gökyüzü ikili ilişkilerde seni biraz sakin kalmaya ve fevri olmamaya davet ediyor.",
+                        secondary: "Bugün alınganlıklara, yanlış anlaşılmalara veya ego çatışmalarına açık bir zemin olabilir. Partnerinle veya flörtünle olan iletişiminde büyük kararlar almaktan kaçınmalı, enerjiyi akışına bırakmalısın."
+                    }
+                },
+                career: {
+                    high: {
+                        main: "Kariyerinde ve günlük hedeflerinde liderlik yapabileceğin, parlayacağın bir gün!",
+                        secondary: "Üzerinde çalıştığın işlerde dikkat toplayabilir, fikirlerinle takdir kazanabilirsin. İş arayışları, mülakatlar veya yarım kalan projeleri bitirmek adına motivasyonun ve kozmik desteğin tam."
+                    },
+                    medium: {
+                        main: "İş ve sorumluluk hayatında rutinlerin sorunsuz aktığı, stabil bir gün.",
+                        secondary: "Büyük riskler alıp maceralara atılmak yerine, mevcut düzeni korumak ve planlı ilerlemek daha verimli sonuçlar getirecektir. İşbirlikleri ve toplantılar için yapıcı bir atmosfer hakim."
+                    },
+                    low: {
+                        main: "Mesleki konularda odaklanma sorunları veya ufak aksilikler yaşanabilir.",
+                        secondary: "Bugün önemli sunumları, büyük sözleşmeleri veya radikal kariyer değişikliklerini mümkünse ertelemek faydalı olabilir. Enerjini planlama yapmaya ve detayları kontrol etmeye harcamalısın."
+                    }
+                },
+                money: {
+                    high: {
+                        main: "Finansal konularda şanslı ve bereketli etkiler altındasın.",
+                        secondary: "Beklediğin bir para girişi gerçekleşebilir, karlı bir alışveriş yapabilir veya bütçeni rahatlatacak yeni fikirler üretebilirsin. Maddi yatırımları planlarken sezgilerine güvenebileceğin bir süreç."
+                    },
+                    medium: {
+                        main: "Maddi durumunda gelgitlerin olmadığı, dengeli bir bütçe dönemi.",
+                        secondary: "Gelir ve gider dengeni iyi yönettiğin bir gündesin. Ne büyük bir kazanç ne de beklenmedik bir kayıp öngörülüyor. Harcamalarını akıllıca kontrol altında tutmaya devam etmelisin."
+                    },
+                    low: {
+                        main: "Maddi konularda ve harcamalarda ekstra temkinli olman gereken bir gün.",
+                        secondary: "Gereksiz harcamalar veya hesapsız alışverişler bütçeni sonradan zorlayabilir. Bugün riskli yatırımlardan, borç alıp vermekten uzak durmalı, cüzdanını korumaya odaklanmalısın."
+                    }
+                },
+                health: {
+                    high: {
+                        main: "Zihinsel ve fiziksel enerjinin zirvede olduğu, son derece zinde bir gün!",
+                        secondary: "Kendini her zamankinden daha güçlü, motive ve canlı hissetmen mümkün. Spor yapmak, yeni bir sağlıklı yaşam rutinine başlamak veya kişisel bakımına zaman ayırmak için mükemmel bir kozmik etki."
+                    },
+                    medium: {
+                        main: "Sağlık durumunun stabil, sakin ve dengeli seyrettiği bir süreç.",
+                        secondary: "Bedeninin sesini dinlemeli ve aşırı yüklenmelerden kaçınmalısın. Rutin dinlenme sürelerine sadık kaldığın sürece enerjini gün boyu harika bir dengede tutabilirsin."
+                    },
+                    low: {
+                        main: "Bağışıklık sistemine, uyku düzenine ve dinlenmene özen göstermen gereken bir gün.",
+                        secondary: "Kendini biraz yorgun veya halsiz hissetmen normal olabilir. Bugün bedenini çok zorlayacak ağır aktivitelerden kaçınmalı, stresten uzak kalmalı ve vitamin dengene dikkat etmelisin."
+                    }
+                }
+            };
+
+            let tier = 'medium';
+            if (score >= 75) tier = 'high';
+            else if (score < 45) tier = 'low';
+
+            return interpretations[type]?.[tier] || { main: "Günlük enerjiler bu alanda dengeleniyor.", secondary: "İlerleyen saatlerde gökyüzü etkileri daha net şekillenecektir." };
+        }
+
         // Kategori popup (Sağlık, Aşk, Kariyer, Para)
         function openCategoryPopup(type) {
             if (!dailyHoroscopeData) {
@@ -815,14 +884,15 @@
             let reasonSecondary = "";
             let drivers = [];
 
-            // Eğer API'den score_factors içeriği geldiyse onu kullan, gelmediyse varsayılan uyarıyı göster
+            // Eğer API'den score_factors içeriği geldiyse onu kullan, gelmediyse dinamik motoru çalıştır
             if (factor && factor.reason) {
                 reasonMain = factor.reason.main || "";
                 reasonSecondary = factor.reason.secondary || "";
                 drivers = factor.drivers || [];
             } else {
-                reasonMain = "Bu kategori için detaylı yorum verisi bulunmuyor.";
-                reasonSecondary = "";
+                const dynamicContent = getDynamicInterpretation(type, score);
+                reasonMain = dynamicContent.main;
+                reasonSecondary = dynamicContent.secondary;
             }
 
             let bodyHTML = `
