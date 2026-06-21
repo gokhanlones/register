@@ -177,7 +177,47 @@
             color: #d4af37;
         }
 
-        .category-scroll-wrapper
+        .category-scroll-wrapper {
+            padding: 16px 0;
+            background-color: #ffffff;
+            border-top: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .category-scroll {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 20px;
+        }
+        .category-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            min-width: 80px;
+        }
+        .category-btn:active {
+            transform: scale(0.95);
+        }
+        .category-btn:hover {
+            background-color: #000000;
+            border-color: #000000;
+        }
+        .category-btn:hover .category-text {
+            color: #d4af37;
+        }
+        .category-text {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
 
         .popup-overlay {
             display: none;
@@ -299,6 +339,7 @@
             to { transform: rotate(360deg); }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="app-container">
