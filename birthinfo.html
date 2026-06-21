@@ -24,7 +24,43 @@
         .suggestion-item { padding: 10px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid #eee; }
         .suggestion-item:hover { background-color: #f3f4f6; }
 
-        .form-group label { display: none; }
+        /* Label'ları gizle */
+        .form-group > label { display: none; }
+
+        /* Dropdown stilleri */
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            color: #374151;
+            background-color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        .form-group select:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+        .form-group select option:first-child {
+            color: #9ca3af;
+        }
+
+        /* Tarih/Saat dropdown grubu */
+        .date-group, .time-group {
+            display: flex;
+            gap: 8px;
+        }
+        .date-group select, .time-group select {
+            flex: 1;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -41,18 +77,69 @@
             <form class="register-form" id="birthInfoForm" onsubmit="return false;">
                 <div class="inline-error" id="formError"></div>
 
+                <!-- Cinsiyet -->
                 <div class="form-group">
-                    <label style="font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Cinsiyet</label>
+                    <label>Cinsiyet</label>
                     <div class="gender-group">
-                        <div class="gender-option"><input type="radio" name="gender" id="gender-female" value="female"><label for="gender-female" class="gender-label">Kadın</label></div>
-                        <div class="gender-option"><input type="radio" name="gender" id="gender-male" value="male"><label for="gender-male" class="gender-label">Erkek</label></div>
+                        <div class="gender-option">
+                            <input type="radio" name="gender" id="gender-female" value="female">
+                            <label for="gender-female" class="gender-label">Kadın</label>
+                        </div>
+                        <div class="gender-option">
+                            <input type="radio" name="gender" id="gender-male" value="male">
+                            <label for="gender-male" class="gender-label">Erkek</label>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group"><label>Ad Soyad</label><input type="text" id="fullName" placeholder="Ad Soyad"></div>
-                <div class="form-group"><label>Doğum Tarihi</label><input type="date" id="birthDate"></div>
-                <div class="form-group"><label>Doğum Saati</label><input type="time" id="birthTime" step="60"></div>
+                <!-- Ad Soyad -->
+                <div class="form-group">
+                    <label>Ad Soyad</label>
+                    <input type="text" id="fullName" placeholder="Ad Soyad">
+                </div>
 
+                <!-- Doğum Tarihi Dropdown -->
+                <div class="form-group">
+                    <label>Doğum Tarihi</label>
+                    <div class="date-group">
+                        <select id="birthDay">
+                            <option value="" disabled selected>Gün</option>
+                        </select>
+                        <select id="birthMonth">
+                            <option value="" disabled selected>Ay</option>
+                            <option value="1">Ocak</option>
+                            <option value="2">Şubat</option>
+                            <option value="3">Mart</option>
+                            <option value="4">Nisan</option>
+                            <option value="5">Mayıs</option>
+                            <option value="6">Haziran</option>
+                            <option value="7">Temmuz</option>
+                            <option value="8">Ağustos</option>
+                            <option value="9">Eylül</option>
+                            <option value="10">Ekim</option>
+                            <option value="11">Kasım</option>
+                            <option value="12">Aralık</option>
+                        </select>
+                        <select id="birthYear">
+                            <option value="" disabled selected>Yıl</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Doğum Saati Dropdown -->
+                <div class="form-group">
+                    <label>Doğum Saati</label>
+                    <div class="time-group">
+                        <select id="birthHour">
+                            <option value="" disabled selected>Saat</option>
+                        </select>
+                        <select id="birthMinute">
+                            <option value="" disabled selected>Dakika</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Doğum Yeri -->
                 <div class="form-group" id="group-birthplace" style="position: relative;">
                     <label>Doğum Yeri</label>
                     <input type="text" id="birthPlace" placeholder="Doğum Yeri (Şehir ara...)" autocomplete="off">
@@ -84,6 +171,48 @@
             return key;
         }
 
+        // Dropdown'ları doldur
+        function populateDropdowns() {
+            // Günler 1-31
+            const daySelect = document.getElementById('birthDay');
+            for (let i = 1; i <= 31; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i;
+                daySelect.appendChild(opt);
+            }
+
+            // Yıllar (1900 - bugün)
+            const yearSelect = document.getElementById('birthYear');
+            const currentYear = new Date().getFullYear();
+            for (let i = currentYear; i >= 1900; i--) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i;
+                yearSelect.appendChild(opt);
+            }
+
+            // Saatler 0-23
+            const hourSelect = document.getElementById('birthHour');
+            for (let i = 0; i <= 23; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i.toString().padStart(2, '0');
+                hourSelect.appendChild(opt);
+            }
+
+            // Dakikalar 0-59
+            const minuteSelect = document.getElementById('birthMinute');
+            for (let i = 0; i <= 59; i++) {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = i.toString().padStart(2, '0');
+                minuteSelect.appendChild(opt);
+            }
+        }
+        populateDropdowns();
+
+        // Şehir arama
         const birthPlaceInput = document.getElementById('birthPlace');
         const suggestionsBox = document.getElementById('placeSuggestions');
 
@@ -133,11 +262,14 @@
             hideError();
             const gender = document.querySelector('input[name="gender"]:checked');
             const fullName = document.getElementById('fullName').value.trim();
-            const birthDate = document.getElementById('birthDate').value;
-            const birthTime = document.getElementById('birthTime').value;
+            const day = document.getElementById('birthDay').value;
+            const month = document.getElementById('birthMonth').value;
+            const year = document.getElementById('birthYear').value;
+            const hour = document.getElementById('birthHour').value;
+            const minute = document.getElementById('birthMinute').value;
             const birthPlace = birthPlaceInput.value.trim();
 
-            if (!gender || !fullName || !birthDate || !birthTime || !birthPlace) { 
+            if (!gender || !fullName || !day || !month || !year || !hour || !minute || !birthPlace) { 
                 showError('Lütfen tüm alanları doldurun.'); 
                 return; 
             }
@@ -153,16 +285,13 @@
             try {
                 const apiKey = await getApiKey();
 
-                const [year, month, day] = birthDate.split('-').map(Number);
-                const [hour, minute] = birthTime.split(':').map(Number);
-
                 const requestBody = {
                     name: fullName,
-                    year: year,
-                    month: month,
-                    day: day,
-                    hour: hour,
-                    minute: minute,
+                    year: parseInt(year),
+                    month: parseInt(month),
+                    day: parseInt(day),
+                    hour: parseInt(hour),
+                    minute: parseInt(minute),
                     city: birthPlace,
                     lat: parseFloat(selectedLocation.lat),
                     lng: parseFloat(selectedLocation.lng),
@@ -182,11 +311,11 @@
                 const birthData = {
                     gender: gender.value,
                     fullname: fullName,
-                    birthYear: year,
-                    birthMonth: month,
-                    birthDay: day,
-                    birthHour: hour,
-                    birthMinute: minute,
+                    birthYear: parseInt(year),
+                    birthMonth: parseInt(month),
+                    birthDay: parseInt(day),
+                    birthHour: parseInt(hour),
+                    birthMinute: parseInt(minute),
                     birthPlace: birthPlace,
                     latitude: parseFloat(selectedLocation.lat),
                     longitude: parseFloat(selectedLocation.lng),
