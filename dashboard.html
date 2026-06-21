@@ -290,6 +290,36 @@
             text-align: right;
         }
 
+        .astro-signs-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 0 16px;
+        }
+        .astro-sign-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            transition: all 0.2s;
+        }
+        .astro-sign-card svg {
+            width: 20px;
+            height: 20px;
+            color: #d4af37;
+            flex-shrink: 0;
+        }
+        .astro-sign-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
+        }
+
         .dashboard-content {
             flex: 1;
             overflow-y: auto;
@@ -327,8 +357,39 @@
             <div class="greeting-text">Merhaba</div>
             <div class="user-name" id="userName">...</div>
 
+            <div class="astro-signs-row" id="astroSignsRow">
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <span class="astro-sign-label" id="sunSign">...</span>
+                </div>
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="16 12 12 8 8 12"></polyline>
+                        <line x1="12" y1="16" x2="12" y2="8"></line>
+                    </svg>
+                    <span class="astro-sign-label" id="risingSign">...</span>
+                </div>
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span class="astro-sign-label" id="moonSign">...</span>
+                </div>
+            </div>
+        </div>
 
-        </main>
+        <main class="dashboard-content">
 
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
@@ -392,6 +453,15 @@
                     const data = doc.data();
                     const fullname = data.fullname || user.displayName || "Kullanıcı";
                     document.getElementById('userName').textContent = fullname;
+
+                    // Burçları göster
+                    const sunSign = data.sunSign || data.natalChart?.planets?.find(p => p.id === "sun")?.sign;
+                    const moonSign = data.moonSign || data.natalChart?.planets?.find(p => p.id === "moon")?.sign;
+                    const risingSign = data.risingSign || data.natalChart?.angles_details?.asc?.sign;
+
+                    if (sunSign) document.getElementById('sunSign').textContent = sunSign;
+                    if (moonSign) document.getElementById('moonSign').textContent = moonSign;
+                    if (risingSign) document.getElementById('risingSign').textContent = risingSign;
                 } else {
                     document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
                 }
