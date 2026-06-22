@@ -204,6 +204,152 @@
             margin-top: 2px;
         }
 
+        /* === BURÇ ANALİZ KARTI === */
+        .sign-analysis-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .sign-analysis-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .sign-analysis-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sign-analysis-symbol {
+            font-size: 1.5rem;
+        }
+        .sign-analysis-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+        .sign-analysis-house {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            background-color: #f9fafb;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .sign-analysis-counts {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .sign-count-badge {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .sign-count-planets { background-color: #fef3c7; color: #92400e; }
+        .sign-count-points { background-color: #dbeafe; color: #1e40af; }
+        .sign-count-stars { background-color: #fce7f3; color: #9d174d; }
+        .sign-analysis-items {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .sign-analysis-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .sign-analysis-item-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sign-analysis-item-icon {
+            font-size: 1rem;
+        }
+        .sign-analysis-item-name {
+            font-weight: 500;
+            color: #374151;
+        }
+        .sign-analysis-item-retro {
+            font-size: 0.7rem;
+            color: #ef4444;
+            font-weight: 600;
+            background-color: #fef2f2;
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        .sign-analysis-item-right {
+            text-align: right;
+        }
+        .sign-analysis-item-degree {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .sign-analysis-item-detail {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        .sign-analysis-total {
+            text-align: right;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #d4af37;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        /* === GENEL ÖZET KARTI === */
+        .summary-card {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+        .summary-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d4af37;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .summary-item {
+            text-align: center;
+            padding: 12px;
+            background-color: rgba(255,255,255,0.05);
+            border-radius: 12px;
+        }
+        .summary-item-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+        .summary-item-label {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
         .natal-content {
             flex: 1;
             overflow-y: auto;
@@ -221,6 +367,7 @@
             border-radius: 4px;
         }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -298,6 +445,12 @@
         function renderNatalChart(chart) {
             const container = document.getElementById('natalContent');
             let html = '';
+
+            // === DOĞUM HARİTASI ANALİZİ ===
+            html += renderNatalAnalysis(chart);
+
+            // === EVLER ===
+            html += '<div class="section-title">Evler</div>';
 
             // === EVLER ===
             if (chart.houses && chart.houses.length > 0) {
@@ -486,6 +639,220 @@
         }
 
         // Yardımcı fonksiyonlar
+        function renderNatalAnalysis(chart) {
+            let html = '<div class="section-title">📊 Burç Analizi</div>';
+
+            // Gezegenleri burçlara göre grupla
+            const planetsBySign = {};
+            if (chart.planets) {
+                chart.planets.forEach(p => {
+                    if (!planetsBySign[p.sign_id]) planetsBySign[p.sign_id] = [];
+                    planetsBySign[p.sign_id].push(p);
+                });
+            }
+
+            // Noktaları burçlara göre grupla
+            const pointsBySign = {};
+
+            // Kuzey/Güney Düğüm
+            const northNode = chart.planets?.find(p => p.id === 'north_node');
+            if (northNode) {
+                const southSigns = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
+                const southIdx = (southSigns.indexOf(northNode.sign_id) + 6) % 12;
+
+                if (!pointsBySign[northNode.sign_id]) pointsBySign[northNode.sign_id] = [];
+                pointsBySign[northNode.sign_id].push({...northNode, name: 'North Node', type: 'point'});
+
+                if (!pointsBySign[southSigns[southIdx]]) pointsBySign[southSigns[southIdx]] = [];
+                pointsBySign[southSigns[southIdx]].push({
+                    name: 'South Node', sign_id: southSigns[southIdx],
+                    pos: northNode.pos, retrograde: true, type: 'point'
+                });
+            }
+
+            // Lilith, Chiron
+            ['lilith','chiron'].forEach(id => {
+                const p = chart.planets?.find(pl => pl.id === id);
+                if (p) {
+                    if (!pointsBySign[p.sign_id]) pointsBySign[p.sign_id] = [];
+                    pointsBySign[p.sign_id].push({...p, type: 'point'});
+                }
+            });
+
+            // Şans Noktası
+            const sun = chart.planets?.find(p => p.id === 'sun');
+            const moon = chart.planets?.find(p => p.id === 'moon');
+            const asc = chart.angles_details?.asc;
+            if (sun && moon && asc) {
+                const isDay = sun.house > 6 && sun.house <= 12;
+                let fortuneAbs = isDay ? 
+                    (asc.abs_pos + moon.abs_pos - sun.abs_pos) % 360 :
+                    (asc.abs_pos + sun.abs_pos - moon.abs_pos) % 360;
+
+                const signStarts = {aries:0,taurus:30,gemini:60,cancer:90,leo:120,virgo:150,libra:180,scorpio:210,sagittarius:240,capricorn:270,aquarius:300,pisces:330};
+                let fortuneSign = '', fortunePos = 0;
+                for (const [sign, start] of Object.entries(signStarts)) {
+                    if (fortuneAbs >= start && fortuneAbs < start + 30) {
+                        fortuneSign = sign; fortunePos = fortuneAbs - start; break;
+                    }
+                }
+                if (!pointsBySign[fortuneSign]) pointsBySign[fortuneSign] = [];
+                pointsBySign[fortuneSign].push({name: 'Part of Fortune', sign_id: fortuneSign, pos: fortunePos, type: 'point'});
+            }
+
+            // Sabit yıldızlar
+            const fixedStars = [
+                {name:'Regulus', sign_id:'leo', degree:29},
+                {name:'Aldebaran', sign_id:'gemini', degree:9},
+                {name:'Antares', sign_id:'sagittarius', degree:9},
+                {name:'Spica', sign_id:'virgo', degree:23}
+            ];
+
+            const allCelestials = [...(chart.planets || []), ...Object.values(pointsBySign).flat()];
+            const starsBySign = {};
+
+            fixedStars.forEach(star => {
+                allCelestials.forEach(c => {
+                    if (c.sign_id === star.sign_id) {
+                        const orb = Math.abs(c.pos - star.degree);
+                        if (orb <= 6) {
+                            if (!starsBySign[star.sign_id]) starsBySign[star.sign_id] = [];
+                            starsBySign[star.sign_id].push({
+                                star: star.name, celestial: c.name,
+                                orb: orb.toFixed(2), type: orb <= 1 ? 'tam kavuşum' : 'yakın etki'
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Burçları oluştur
+            const allSigns = [
+                {id:'aries', name:'Koç', symbol:'♈'}, {id:'taurus', name:'Boğa', symbol:'♉'},
+                {id:'gemini', name:'İkizler', symbol:'♊'}, {id:'cancer', name:'Yengeç', symbol:'♋'},
+                {id:'leo', name:'Aslan', symbol:'♌'}, {id:'virgo', name:'Başak', symbol:'♍'},
+                {id:'libra', name:'Terazi', symbol:'♎'}, {id:'scorpio', name:'Akrep', symbol:'♏'},
+                {id:'sagittarius', name:'Yay', symbol:'♐'}, {id:'capricorn', name:'Oğlak', symbol:'♑'},
+                {id:'aquarius', name:'Kova', symbol:'♒'}, {id:'pisces', name:'Balık', symbol:'♓'}
+            ];
+
+            const houses = chart.houses || [];
+            let totalPlanets = 0, totalPoints = 0, totalStars = 0;
+
+            allSigns.forEach(sign => {
+                const signPlanets = planetsBySign[sign.id] || [];
+                const signPoints = pointsBySign[sign.id] || [];
+                const signStars = starsBySign[sign.id] || [];
+                const house = houses.find(h => h.sign_id === sign.id);
+
+                const pCount = signPlanets.length;
+                const ptCount = signPoints.length;
+                const sCount = signStars.length;
+                const total = pCount + ptCount + sCount;
+
+                if (total > 0) {
+                    totalPlanets += pCount;
+                    totalPoints += ptCount;
+                    totalStars += sCount;
+
+                    html += `
+                        <div class="sign-analysis-card">
+                            <div class="sign-analysis-header">
+                                <div class="sign-analysis-title">
+                                    <span class="sign-analysis-symbol">${sign.symbol}</span>
+                                    <span class="sign-analysis-name">${sign.name}</span>
+                                </div>
+                                ${house ? `<span class="sign-analysis-house">Ev ${house.house}</span>` : ''}
+                            </div>
+                            <div class="sign-analysis-counts">
+                                ${pCount > 0 ? `<span class="sign-count-badge sign-count-planets">🪐 ${pCount}</span>` : ''}
+                                ${ptCount > 0 ? `<span class="sign-count-badge sign-count-points">✨ ${ptCount}</span>` : ''}
+                                ${sCount > 0 ? `<span class="sign-count-badge sign-count-stars">⭐ ${sCount}</span>` : ''}
+                            </div>
+                            <div class="sign-analysis-items">
+                    `;
+
+                    signPlanets.forEach(p => {
+                        const retro = p.retrograde ? '<span class="sign-analysis-item-retro">R</span>' : '';
+                        html += `
+                            <div class="sign-analysis-item">
+                                <div class="sign-analysis-item-left">
+                                    <span class="sign-analysis-item-icon">${getCelestialSymbol(p.id)}</span>
+                                    <span class="sign-analysis-item-name">${p.name}${retro}</span>
+                                </div>
+                                <div class="sign-analysis-item-right">
+                                    <div class="sign-analysis-item-degree">${formatDegree(p.pos)}</div>
+                                    <div class="sign-analysis-item-detail">${p.house}. Ev</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    signPoints.forEach(p => {
+                        html += `
+                            <div class="sign-analysis-item">
+                                <div class="sign-analysis-item-left">
+                                    <span class="sign-analysis-item-icon">✨</span>
+                                    <span class="sign-analysis-item-name">${p.name}</span>
+                                </div>
+                                <div class="sign-analysis-item-right">
+                                    <div class="sign-analysis-item-degree">${formatDegree(p.pos)}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    signStars.forEach(s => {
+                        html += `
+                            <div class="sign-analysis-item">
+                                <div class="sign-analysis-item-left">
+                                    <span class="sign-analysis-item-icon">⭐</span>
+                                    <span class="sign-analysis-item-name">${s.star}</span>
+                                </div>
+                                <div class="sign-analysis-item-right">
+                                    <div class="sign-analysis-item-degree">${s.type}</div>
+                                    <div class="sign-analysis-item-detail">orb: ${s.orb}° · ${s.celestial}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    html += `
+                            </div>
+                            <div class="sign-analysis-total">Toplam: ${total}</div>
+                        </div>
+                    `;
+                }
+            });
+
+            // Genel özet
+            html += `
+                <div class="summary-card">
+                    <div class="summary-title">📊 Genel Özet</div>
+                    <div class="summary-grid">
+                        <div class="summary-item">
+                            <div class="summary-item-value">${totalPlanets}</div>
+                            <div class="summary-item-label">🪐 Gezegen</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-item-value">${totalPoints}</div>
+                            <div class="summary-item-label">✨ Nokta</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-item-value">${totalStars}</div>
+                            <div class="summary-item-label">⭐ Yıldız</div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-item-value">${totalPlanets + totalPoints + totalStars}</div>
+                            <div class="summary-item-label">📊 Toplam</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
         function getSignSymbol(signId) {
             const symbols = {
                 'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
