@@ -40,7 +40,7 @@
             align-items: center;
             gap: 14px;
         }
-        .house-icon {
+        .house-sign-icon {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -49,22 +49,25 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .house-degree {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+            width: 70px;
+            text-align: center;
             flex-shrink: 0;
         }
         .house-info {
             flex: 1;
+            text-align: right;
         }
-        .house-sign {
+        .house-name {
             font-size: 1rem;
             font-weight: 600;
             color: #1f2937;
-        }
-        .house-degree {
-            font-size: 0.8rem;
-            color: #9ca3af;
-            margin-top: 2px;
         }
         .house-cusp {
             font-size: 0.75rem;
@@ -76,7 +79,7 @@
             margin-left: 6px;
         }
 
-        /* === BURÇ KARTI (Gezegenler Gruplu) === */
+        /* === BURÇ KARTI (Gezegenler + Noktalar Gruplu) === */
         .sign-group-card {
             background-color: #ffffff;
             border-radius: 12px;
@@ -93,15 +96,8 @@
             border-bottom: 1px solid #f3f4f6;
         }
         .sign-group-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #000000;
+            font-size: 1.4rem;
             color: #d4af37;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
             flex-shrink: 0;
         }
         .sign-group-name {
@@ -115,39 +111,33 @@
             font-weight: 500;
             margin-left: auto;
         }
-        .planet-in-sign {
+        .celestial-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 8px 0;
             border-bottom: 1px solid #f9fafb;
         }
-        .planet-in-sign:last-child {
+        .celestial-item:last-child {
             border-bottom: none;
         }
-        .planet-in-sign-left {
+        .celestial-left {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .planet-in-sign-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
+        .celestial-symbol {
+            font-size: 1.1rem;
             color: #d4af37;
+            width: 24px;
+            text-align: center;
         }
-        .planet-in-sign-name {
+        .celestial-name {
             font-size: 0.9rem;
             font-weight: 500;
             color: #374151;
         }
-        .planet-in-sign-retro {
+        .celestial-retro {
             font-size: 0.65rem;
             color: #ef4444;
             font-weight: 600;
@@ -156,15 +146,15 @@
             border-radius: 6px;
             margin-left: 4px;
         }
-        .planet-in-sign-right {
+        .celestial-right {
             text-align: right;
         }
-        .planet-in-sign-degree {
+        .celestial-degree {
             font-size: 0.85rem;
             font-weight: 600;
             color: #1f2937;
         }
-        .planet-in-sign-house {
+        .celestial-house {
             font-size: 0.75rem;
             color: #9ca3af;
         }
@@ -324,19 +314,86 @@
                     if (isDc) label = '<span class="house-cusp">DC</span>';
                     html += `
                         <div class="house-card">
-                            <div class="house-icon">${getHouseIcon(h.house)}</div>
+                            <div class="house-sign-icon">${getSignSymbol(h.sign_id)}</div>
+                            <div class="house-degree">${formatDegree(h.pos)}</div>
                             <div class="house-info">
-                                <div class="house-sign">${h.sign} ${getSignSymbol(h.sign_id)} ${label}</div>
-                                <div class="house-degree">${formatDegree(h.pos)}</div>
+                                <span class="house-name">${h.sign} ${label}</span>
                             </div>
                         </div>
                     `;
                 });
             }
 
-            // === GEZEGENLER (Burçlara Göre Gruplu) ===
-            if (chart.planets && chart.planets.length > 0) {
-                html += '<div class="section-title">Gezegenler</div>';
+            // === GEZEGENLER + NOKTALAR (Burçlara Göre Gruplu) ===
+            const allCelestials = [];
+
+            // Gezegenleri ekle
+            if (chart.planets) {
+                chart.planets.forEach(p => {
+                    allCelestials.push({
+                        id: p.id,
+                        name: p.name,
+                        sign_id: p.sign_id,
+                        sign: p.sign,
+                        pos: p.pos,
+                        house: p.house,
+                        retrograde: p.retrograde || false,
+                        type: 'planet'
+                    });
+                });
+            }
+
+            // Noktaları ekle (angles_details)
+            if (chart.angles_details) {
+                const angleMap = {
+                    'asc': { name: 'Yükselen (ASC)', house: 1 },
+                    'mc': { name: 'MC (Ortay)', house: 10 },
+                    'ic': { name: 'IC (Gökyüzü)', house: 4 },
+                    'dc': { name: 'DC (Batı)', house: 7 },
+                    'vertex': { name: 'Vertex', house: null }
+                };
+
+                for (const [key, angle] of Object.entries(chart.angles_details)) {
+                    if (angleMap[key]) {
+                        allCelestials.push({
+                            id: key,
+                            name: angleMap[key].name,
+                            sign_id: angle.sign_id,
+                            sign: angle.sign,
+                            pos: angle.pos,
+                            house: angleMap[key].house || angle.house,
+                            retrograde: false,
+                            type: 'point'
+                        });
+                    }
+                }
+            }
+
+            // Lilith ve Chiron'u planets'ten zaten aldık, ekstra kontrol
+            if (chart.planets) {
+                const extraPoints = ['lilith', 'chiron', 'north_node'];
+                extraPoints.forEach(ep => {
+                    const exists = allCelestials.find(c => c.id === ep);
+                    if (!exists) {
+                        const p = chart.planets.find(pl => pl.id === ep);
+                        if (p) {
+                            allCelestials.push({
+                                id: p.id,
+                                name: p.name,
+                                sign_id: p.sign_id,
+                                sign: p.sign,
+                                pos: p.pos,
+                                house: p.house,
+                                retrograde: p.retrograde || false,
+                                type: 'point'
+                            });
+                        }
+                    }
+                });
+            }
+
+            if (allCelestials.length > 0) {
+                html += '<div class="section-title">Gezegenler ve Noktalar</div>';
 
                 // Tüm burçları tanımla (sıralı)
                 const allSigns = [
@@ -354,47 +411,51 @@
                     { id: 'pisces', name: 'Balık', symbol: '♓' }
                 ];
 
-                // Gezegenleri burçlara göre grupla
-                const planetsBySign = {};
-                chart.planets.forEach(p => {
-                    if (!planetsBySign[p.sign_id]) {
-                        planetsBySign[p.sign_id] = [];
+                // Gökcisimlerini burçlara göre grupla
+                const celestialsBySign = {};
+                allCelestials.forEach(c => {
+                    if (!celestialsBySign[c.sign_id]) {
+                        celestialsBySign[c.sign_id] = [];
                     }
-                    planetsBySign[p.sign_id].push(p);
+                    celestialsBySign[c.sign_id].push(c);
                 });
 
                 // Her burç için kart oluştur (boş burçlar da dahil)
                 allSigns.forEach(sign => {
-                    const planetsInSign = planetsBySign[sign.id] || [];
-                    const count = planetsInSign.length;
+                    const celestialsInSign = celestialsBySign[sign.id] || [];
+                    const count = celestialsInSign.length;
 
                     html += `
                         <div class="sign-group-card">
                             <div class="sign-group-header">
-                                <div class="sign-group-icon">${sign.symbol}</div>
-                                <div class="sign-group-name">${sign.name}</div>
-                                <div class="sign-group-count">${count > 0 ? count + ' gezegen' : 'Boş'}</div>
+                                <span class="sign-group-icon">${sign.symbol}</span>
+                                <span class="sign-group-name">${sign.name}</span>
+                                <span class="sign-group-count">${count > 0 ? count + ' gökcismi' : 'Boş'}</span>
                             </div>
                     `;
 
-                    if (planetsInSign.length > 0) {
-                        planetsInSign.forEach(p => {
-                            const retro = p.retrograde ? '<span class="planet-in-sign-retro">R</span>' : '';
+                    if (celestialsInSign.length > 0) {
+                        // Dereceye göre sırala
+                        celestialsInSign.sort((a, b) => a.pos - b.pos);
+
+                        celestialsInSign.forEach(c => {
+                            const retro = c.retrograde ? '<span class="celestial-retro">R</span>' : '';
+                            const houseInfo = c.house ? `<div class="celestial-house">${c.house}. Ev</div>` : '';
                             html += `
-                                <div class="planet-in-sign">
-                                    <div class="planet-in-sign-left">
-                                        <div class="planet-in-sign-icon">${getPlanetSymbol(p.id)}</div>
-                                        <span class="planet-in-sign-name">${p.name}${retro}</span>
+                                <div class="celestial-item">
+                                    <div class="celestial-left">
+                                        <span class="celestial-symbol">${getCelestialSymbol(c.id)}</span>
+                                        <span class="celestial-name">${c.name}${retro}</span>
                                     </div>
-                                    <div class="planet-in-sign-right">
-                                        <div class="planet-in-sign-degree">${formatDegree(p.pos)}</div>
-                                        <div class="planet-in-sign-house">${p.house}. Ev</div>
+                                    <div class="celestial-right">
+                                        <div class="celestial-degree">${formatDegree(c.pos)}</div>
+                                        ${houseInfo}
                                     </div>
                                 </div>
                             `;
                         });
                     } else {
-                        html += '<div class="empty-sign">Bu burçta gezegen yok</div>';
+                        html += '<div class="empty-sign">Bu burçta gökcismi yok</div>';
                     }
 
                     html += '</div>';
@@ -408,9 +469,9 @@
                     html += `
                         <div class="aspect-card">
                             <div class="aspect-planets">
-                                <span>${getPlanetSymbol(a.p1)} ${capitalize(a.p1)}</span>
+                                <span>${getCelestialSymbol(a.p1)} ${capitalize(a.p1)}</span>
                                 <span class="aspect-symbol">${getAspectSymbol(a.type)}</span>
-                                <span>${capitalize(a.p2)} ${getPlanetSymbol(a.p2)}</span>
+                                <span>${capitalize(a.p2)} ${getCelestialSymbol(a.p2)}</span>
                             </div>
                             <div class="aspect-details">
                                 <div class="aspect-type">${capitalize(a.type)} ${a.deg}°</div>
@@ -425,14 +486,6 @@
         }
 
         // Yardımcı fonksiyonlar
-        function getHouseIcon(houseNum) {
-            const icons = {
-                1: '⬆️', 2: '💰', 3: '💬', 4: '🏠', 5: '🎨', 6: '⚕️',
-                7: '⚖️', 8: '🔮', 9: '✈️', 10: '🏆', 11: '👥', 12: '🧘'
-            };
-            return icons[houseNum] || '🏠';
-        }
-
         function getSignSymbol(signId) {
             const symbols = {
                 'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
@@ -442,14 +495,15 @@
             return symbols[signId] || '';
         }
 
-        function getPlanetSymbol(planetId) {
+        function getCelestialSymbol(id) {
             const symbols = {
                 'sun': '☉', 'moon': '☽', 'mercury': '☿', 'venus': '♀',
                 'mars': '♂', 'jupiter': '♃', 'saturn': '♄', 'uranus': '♅',
                 'neptune': '♆', 'pluto': '♇', 'north_node': '☊', 'lilith': '⚸',
-                'chiron': '⚷'
+                'chiron': '⚷', 'asc': '⬆️', 'mc': '🔝', 'ic': '⬇️', 'dc': '➡️',
+                'vertex': '🔹'
             };
-            return symbols[planetId] || '●';
+            return symbols[id] || '●';
         }
 
         function getAspectSymbol(type) {
