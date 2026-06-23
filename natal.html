@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anasayfa | Astro Notlarım</title>
+    <title>Doğum Haritası | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -18,324 +18,189 @@
             -webkit-touch-callout: none;
         }
 
-        .greeting-section {
-            padding: 20px 20px 12px;
-            background-color: #ffffff;
-            border-bottom: 1px solid #f3f4f6;
-            flex-shrink: 0;
-            text-align: center;
-        }
-        .greeting-text {
-            font-size: 1.1rem;
-            color: #6b7280;
-            margin-bottom: 6px;
-        }
-        .user-name {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #d4af37;
-            letter-spacing: -0.5px;
-            min-height: 2.2rem;
-        }
-
-        .astro-icons {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 8px;
-        }
-        .astro-icon-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            transition: transform 0.2s;
-            outline: none;
-        }
-        .astro-icon-btn:active {
-            transform: scale(0.95);
-        }
-        .astro-icon-btn svg {
-            width: 48px;
-            height: 48px;
-            padding: 10px;
-            border-radius: 50%;
-            background-color: #f9fafb;
-            border: 2px solid #e5e7eb;
-            color: #d4af37;
-            transition: all 0.2s;
-        }
-        .astro-icon-btn:hover svg {
-            background-color: #000000;
-            border-color: #000000;
-            color: #d4af37;
-        }
-        .astro-icon-btn span {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .daily-horoscope-card {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            color: #1f2937;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border: 1px solid #f3f4f6;
-        }
-        .daily-horoscope-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .daily-horoscope-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #d4af37;
-        }
-        .daily-horoscope-date {
-            font-size: 0.8rem;
-            color: #9ca3af;
-        }
-        .daily-horoscope-text {
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: #374151;
-            margin-bottom: 16px;
-        }
-        .score-bars {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .score-bar-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .score-bar-label {
-            font-size: 0.8rem;
-            color: #6b7280;
-            width: 60px;
-            text-align: right;
-            font-weight: 500;
-        }
-        .score-bar-track {
-            flex: 1;
-            height: 8px;
-            background-color: #f3f4f6;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .score-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            background-color: #d4af37;
-            transition: width 0.5s ease;
-        }
-        .score-bar-value {
-            font-size: 0.8rem;
-            color: #d4af37;
-            width: 30px;
-            font-weight: 600;
-        }
-
-        .lucky-info {
-            display: flex;
-            gap: 16px;
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid #f3f4f6;
-        }
-        .lucky-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            color: #6b7280;
-        }
-        .lucky-item svg {
-            width: 16px;
-            height: 16px;
-            color: #d4af37;
-        }
-
-        .category-scroll-wrapper {
-            padding: 16px 0;
-            background-color: #ffffff;
-            border-top: 1px solid #f3f4f6;
-            flex-shrink: 0;
-        }
-        .category-scroll {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            padding: 0 20px;
-        }
-        .category-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 10px 18px;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 24px;
-            cursor: pointer;
-            transition: all 0.2s;
-            outline: none;
-            min-width: 70px;
-        }
-        .category-btn:active {
-            transform: scale(0.95);
-        }
-        .category-btn:hover {
-            background-color: #000000;
-            border-color: #000000;
-        }
-        .category-btn:hover .category-text {
-            color: #d4af37;
-        }
-        .category-text {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #374151;
-            white-space: nowrap;
-        }
-
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: flex-end;
-        }
-        .popup-overlay.show {
-            display: flex;
-        }
-        .popup-content {
-            background-color: #ffffff;
-            width: 100%;
-            max-width: 420px;
-            border-radius: 20px 20px 0 0;
-            padding: 24px 20px 32px;
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        .popup-overlay.show .popup-content {
-            transform: translateY(0);
-        }
-        .popup-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 12px;
-        }
-        .popup-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #000000;
-        }
-        .popup-close {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 4px;
-            outline: none;
-        }
-        .popup-body {
-            color: #4b5563;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        .popup-score {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .popup-score-bar {
-            flex: 1;
-            height: 10px;
-            background-color: #f3f4f6;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-        .popup-score-fill {
-            height: 100%;
-            border-radius: 5px;
-            background-color: #d4af37;
-        }
-        .popup-score-value {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #d4af37;
-            width: 40px;
-            text-align: right;
-        }
-
-        .astro-signs-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 16px;
-            padding: 0 16px;
-        }
-        .astro-sign-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 24px;
-            transition: all 0.2s;
-        }
-        .astro-sign-card svg {
-            width: 20px;
-            height: 20px;
-            color: #d4af37;
-            flex-shrink: 0;
-        }
-        .astro-sign-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #374151;
-            white-space: nowrap;
-        }
-
-        .dashboard-content {
+        .natal-content {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
             -webkit-overflow-scrolling: touch;
         }
-        .dashboard-content::-webkit-scrollbar {
+        .natal-content::-webkit-scrollbar {
             width: 4px;
         }
-        .dashboard-content::-webkit-scrollbar-track {
+        .natal-content::-webkit-scrollbar-track {
             background: transparent;
         }
-        .dashboard-content::-webkit-scrollbar-thumb {
+        .natal-content::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 4px;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d4af37;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .planet-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .planet-row:last-child {
+            border-bottom: none;
+        }
+        .planet-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+        .planet-detail {
+            font-size: 0.85rem;
+            color: #6b7280;
+            text-align: right;
+        }
+        .planet-sign {
+            color: #d4af37;
+            font-weight: 600;
+        }
+        .retrograde-badge {
+            display: inline-block;
+            background-color: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 600;
+        }
+
+        .house-row {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .house-row:last-child {
+            border-bottom: none;
+        }
+        .house-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #f9fafb;
+            border: 2px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #d4af37;
+            flex-shrink: 0;
+        }
+        .house-detail {
+            flex: 1;
+        }
+        .house-sign {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .house-pos {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .aspect-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .aspect-row:last-child {
+            border-bottom: none;
+        }
+        .aspect-planets {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .aspect-type {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .aspect-conjunction { background-color: #fef2f2; color: #991b1b; }
+        .aspect-sextile { background-color: #f0fdf4; color: #166534; }
+        .aspect-square { background-color: #fef3c7; color: #92400e; }
+        .aspect-trine { background-color: #eff6ff; color: #1e40af; }
+        .aspect-opposition { background-color: #f3f4f6; color: #374151; }
+        .aspect-angle {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-left: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            color: #d4af37;
+        }
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        .sign-summary {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .sign-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            min-width: 80px;
+        }
+        .sign-badge-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .sign-badge-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #d4af37;
         }
     </style>
 <base target="_blank">
@@ -343,75 +208,21 @@
 <body>
     <div class="app-container">
         <header class="brand-section">
-            <button class="btn-menu">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
+            <button class="btn-menu" onclick="window.history.back()">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
             </button>
-            <h1>Astro Notlarım</h1>
+            <h1>Doğum Haritası</h1>
         </header>
 
-        <div class="greeting-section">
-            <div class="greeting-text">Merhaba</div>
-            <div class="user-name" id="userName">...</div>
-
-            <div class="astro-signs-row" id="astroSignsRow">
-                <div class="astro-sign-card">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <line x1="12" y1="1" x2="12" y2="3"></line>
-                        <line x1="12" y1="21" x2="12" y2="23"></line>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                        <line x1="1" y1="12" x2="3" y2="12"></line>
-                        <line x1="21" y1="12" x2="23" y2="12"></line>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                    </svg>
-                    <span class="astro-sign-label" id="sunSign">...</span>
-                </div>
-                <div class="astro-sign-card">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="16 12 12 8 8 12"></polyline>
-                        <line x1="12" y1="16" x2="12" y2="8"></line>
-                    </svg>
-                    <span class="astro-sign-label" id="risingSign">...</span>
-                </div>
-                <div class="astro-sign-card">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                    </svg>
-                    <span class="astro-sign-label" id="moonSign">...</span>
-                </div>
+        <main class="natal-content" id="natalContent">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                <p>Doğum haritası yükleniyor...</p>
             </div>
-        </div>
-
-        <main class="dashboard-content">
-            <!-- Orta alan placeholder -->
         </main>
 
-        <div class="category-scroll-wrapper">
-            <div class="category-scroll">
-                <button class="category-btn">
-                    <span class="category-text">Sağlık</span>
-                </button>
-                <button class="category-btn">
-                    <span class="category-text">Aşk</span>
-                </button>
-                <button class="category-btn">
-                    <span class="category-text">Kariyer</span>
-                </button>
-                <button class="category-btn">
-                    <span class="category-text">Para</span>
-                </button>
-            </div>
-        </div>
-
         <footer class="bottom-navbar">
-            <a href="dashboard.html" class="nav-item active">
+            <a href="dashboard.html" class="nav-item">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span class="nav-label">Anasayfa</span>
             </a>
@@ -419,7 +230,7 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span class="nav-label">Sor</span>
             </a>
-            <a href="natal.html" class="nav-item">
+            <a href="natal.html" class="nav-item active">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
                 <span class="nav-label">Harita</span>
             </a>
@@ -427,32 +238,124 @@
     </div>
 
     <script>
+        let currentUser = null;
+
         AstroService.onAuthStateChanged((user) => {
-            if (!user) {
-                window.location.href = "login.html";
-                return;
+            if (user) {
+                currentUser = user;
+                loadNatalChart(user);
+            } else {
+                window.location.href = 'login.html';
             }
-            loadUserName(user);
         });
 
-        async function loadUserName(user) {
+        async function loadNatalChart(user) {
             try {
-                const data = await AstroService.getUserProfile(user.uid);
-                if (data) {
-                    const fullname = data.fullname || user.displayName || "Kullanıcı";
-                    document.getElementById('userName').textContent = fullname;
-
-                    const signs = await AstroService.getUserSigns(user.uid);
-                    if (signs.sunSign) document.getElementById('sunSign').textContent = signs.sunSign;
-                    if (signs.moonSign) document.getElementById('moonSign').textContent = signs.moonSign;
-                    if (signs.risingSign) document.getElementById('risingSign').textContent = signs.risingSign;
-                } else {
-                    document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                const chart = await AstroService.getNatalChart(user.uid);
+                if (!chart) {
+                    document.getElementById('natalContent').innerHTML = 
+                        '<div class="empty-state"><p>Doğum haritası verisi bulunamadı.</p></div>';
+                    return;
                 }
+                renderNatalChart(chart);
             } catch (err) {
-                console.error("İsim çekme hatası:", err);
-                document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                console.error("Harita çekme hatası:", err);
+                document.getElementById('natalContent').innerHTML = 
+                    '<div class="empty-state" style="color:#ef4444;"><p>Veri yüklenirken hata oluştu.</p></div>';
             }
+        }
+
+        function renderNatalChart(chart) {
+            const content = document.getElementById('natalContent');
+
+            // Güneş, Ay, Yükselen özet
+            const sunPlanet = chart.planets?.find(p => p.id === 'sun');
+            const moonPlanet = chart.planets?.find(p => p.id === 'moon');
+            const ascAngle = chart.angles_details?.asc;
+
+            let html = '';
+
+            // Özet badge'ler
+            html += '<div class="sign-summary">';
+            if (sunPlanet?.sign) {
+                html += '<div class="sign-badge"><span class="sign-badge-label">Güneş</span><span class="sign-badge-value">' + sunPlanet.sign + '</span></div>';
+            }
+            if (moonPlanet?.sign) {
+                html += '<div class="sign-badge"><span class="sign-badge-label">Ay</span><span class="sign-badge-value">' + moonPlanet.sign + '</span></div>';
+            }
+            if (ascAngle?.sign) {
+                html += '<div class="sign-badge"><span class="sign-badge-label">Yükselen</span><span class="sign-badge-value">' + ascAngle.sign + '</span></div>';
+            }
+            html += '</div>';
+
+            // Gezegenler
+            if (chart.planets && chart.planets.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"></line><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line></svg> Gezegenler & Noktalar</div>';
+
+                chart.planets.forEach(p => {
+                    const retro = p.retrograde ? '<span class="retrograde-badge">R</span>' : '';
+                    const houseText = p.house ? p.house + '. Ev' : '';
+                    html += '<div class="planet-row">';
+                    html += '<div><span class="planet-name">' + (p.name || p.id) + '</span>' + retro + '</div>';
+                    html += '<div class="planet-detail"><span class="planet-sign">' + (p.sign || '-') + '</span> ' + houseText + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Evler
+            if (chart.houses && chart.houses.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> Evler</div>';
+
+                chart.houses.forEach((h, i) => {
+                    html += '<div class="house-row">';
+                    html += '<div class="house-number">' + (i + 1) + '</div>';
+                    html += '<div class="house-detail"><div class="house-sign">' + (h.sign || '-') + '</div><div class="house-pos">' + (h.degree !== undefined ? h.degree.toFixed(1) + '°' : '') + '</div></div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Açılar
+            if (chart.aspects && chart.aspects.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m4.22-10.22l4.24-4.24M7.78 7.78L3.54 3.54M23 12h-6m-6 0H1m20.24 4.24l-4.24-4.24M7.78 16.22l-4.24 4.24"></path></svg> Açılar</div>';
+
+                chart.aspects.forEach(a => {
+                    let typeClass = 'aspect-conjunction';
+                    if (a.type === 'sextile') typeClass = 'aspect-sextile';
+                    else if (a.type === 'square') typeClass = 'aspect-square';
+                    else if (a.type === 'trine') typeClass = 'aspect-trine';
+                    else if (a.type === 'opposition') typeClass = 'aspect-opposition';
+
+                    html += '<div class="aspect-row">';
+                    html += '<div class="aspect-planets">' + (a.planet1 || a.p1 || '?') + ' - ' + (a.planet2 || a.p2 || '?') + '</div>';
+                    html += '<div><span class="aspect-type ' + typeClass + '">' + (a.type || '-') + '</span><span class="aspect-angle">' + (a.angle !== undefined ? a.angle.toFixed(1) + '°' : '') + '</span></div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Açı detayları (angles_details)
+            if (chart.angles_details) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Açı Detayları</div>';
+
+                const angleNames = { asc: 'Yükselen (ASC)', mc: 'Orta Gök (MC)', ic: 'Gökyüzü Altı (IC)', dc: 'Batı (DC)' };
+                for (const [key, angle] of Object.entries(chart.angles_details)) {
+                    if (angle) {
+                        html += '<div class="planet-row">';
+                        html += '<div class="planet-name">' + (angleNames[key] || key) + '</div>';
+                        html += '<div class="planet-detail"><span class="planet-sign">' + (angle.sign || '-') + '</span> ' + (angle.degree !== undefined ? angle.degree.toFixed(1) + '°' : '') + '</div>';
+                        html += '</div>';
+                    }
+                }
+                html += '</div>';
+            }
+
+            content.innerHTML = html;
         }
     </script>
 </body>
