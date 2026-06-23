@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-service.js"></script>
 
     <style>
         .section-title {
@@ -29,7 +30,6 @@
             border-radius: 2px;
         }
 
-        /* === EVLER KARTI === */
         .house-card {
             background-color: #ffffff;
             border-radius: 12px;
@@ -79,7 +79,6 @@
             margin-left: 6px;
         }
 
-        /* === BURÇ KARTI (Gezegenler + Noktalar Gruplu) === */
         .sign-group-card {
             background-color: #ffffff;
             border-radius: 12px;
@@ -166,7 +165,6 @@
             text-align: center;
         }
 
-        /* === AÇI KARTI === */
         .aspect-card {
             background-color: #ffffff;
             border-radius: 12px;
@@ -204,7 +202,6 @@
             margin-top: 2px;
         }
 
-        /* === BURÇ ANALİZ KARTI === */
         .sign-analysis-card {
             background-color: #ffffff;
             border-radius: 16px;
@@ -313,7 +310,6 @@
             border-top: 1px solid #f3f4f6;
         }
 
-        /* === GENEL ÖZET KARTI === */
         .summary-card {
             background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
             border-radius: 16px;
@@ -368,7 +364,6 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
     <div class="app-container">
@@ -400,20 +395,8 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         let currentUser = null;
-        firebase.auth().onAuthStateChanged((user) => {
+        AstroService.onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
                 loadNatalChart(user);
@@ -424,13 +407,7 @@
 
         async function loadNatalChart(user) {
             try {
-                const doc = await db.collection("user_profiles").doc(user.uid).get();
-                if (!doc.exists) {
-                    document.getElementById('natalContent').innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">Doğum bilgileriniz bulunamadı.</div>';
-                    return;
-                }
-                const data = doc.data();
-                const chart = data.natalChart;
+                const chart = await AstroService.getNatalChart(user.uid);
                 if (!chart) {
                     document.getElementById('natalContent').innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">Doğum haritası verisi bulunamadı.</div>';
                     return;
@@ -446,13 +423,8 @@
             const container = document.getElementById('natalContent');
             let html = '';
 
-            // === DOĞUM HARİTASI ANALİZİ ===
             html += renderNatalAnalysis(chart);
 
-            // === EVLER ===
-            html += '<div class="section-title">Evler</div>';
-
-            // === EVLER ===
             if (chart.houses && chart.houses.length > 0) {
                 html += '<div class="section-title">Evler</div>';
                 chart.houses.forEach(h => {
@@ -477,10 +449,7 @@
                 });
             }
 
-            // === GEZEGENLER + NOKTALAR (Burçlara Göre Gruplu) ===
             const allCelestials = [];
-
-            // Gezegenleri ekle
             if (chart.planets) {
                 chart.planets.forEach(p => {
                     allCelestials.push({
@@ -496,7 +465,6 @@
                 });
             }
 
-            // Noktaları ekle (angles_details)
             if (chart.angles_details) {
                 const angleMap = {
                     'asc': { name: 'Yükselen (ASC)', house: 1 },
@@ -505,7 +473,6 @@
                     'dc': { name: 'DC (Batı)', house: 7 },
                     'vertex': { name: 'Vertex', house: null }
                 };
-
                 for (const [key, angle] of Object.entries(chart.angles_details)) {
                     if (angleMap[key]) {
                         allCelestials.push({
@@ -522,7 +489,6 @@
                 }
             }
 
-            // Lilith ve Chiron'u planets'ten zaten aldık, ekstra kontrol
             if (chart.planets) {
                 const extraPoints = ['lilith', 'chiron', 'north_node'];
                 extraPoints.forEach(ep => {
@@ -547,8 +513,6 @@
 
             if (allCelestials.length > 0) {
                 html += '<div class="section-title">Gezegenler ve Noktalar</div>';
-
-                // Tüm burçları tanımla (sıralı)
                 const allSigns = [
                     { id: 'aries', name: 'Koç', symbol: '♈' },
                     { id: 'taurus', name: 'Boğa', symbol: '♉' },
@@ -564,16 +528,12 @@
                     { id: 'pisces', name: 'Balık', symbol: '♓' }
                 ];
 
-                // Gökcisimlerini burçlara göre grupla
                 const celestialsBySign = {};
                 allCelestials.forEach(c => {
-                    if (!celestialsBySign[c.sign_id]) {
-                        celestialsBySign[c.sign_id] = [];
-                    }
+                    if (!celestialsBySign[c.sign_id]) celestialsBySign[c.sign_id] = [];
                     celestialsBySign[c.sign_id].push(c);
                 });
 
-                // Her burç için kart oluştur (boş burçlar da dahil)
                 allSigns.forEach(sign => {
                     const celestialsInSign = celestialsBySign[sign.id] || [];
                     const count = celestialsInSign.length;
@@ -588,9 +548,7 @@
                     `;
 
                     if (celestialsInSign.length > 0) {
-                        // Dereceye göre sırala
                         celestialsInSign.sort((a, b) => a.pos - b.pos);
-
                         celestialsInSign.forEach(c => {
                             const retro = c.retrograde ? '<span class="celestial-retro">R</span>' : '';
                             const houseInfo = c.house ? `<div class="celestial-house">${c.house}. Ev</div>` : '';
@@ -610,12 +568,10 @@
                     } else {
                         html += '<div class="empty-sign">Bu burçta gökcismi yok</div>';
                     }
-
                     html += '</div>';
                 });
             }
 
-            // === AÇILAR ===
             if (chart.aspects && chart.aspects.length > 0) {
                 html += '<div class="section-title">Açılar</div>';
                 chart.aspects.forEach(a => {
@@ -638,11 +594,9 @@
             container.innerHTML = html;
         }
 
-        // Yardımcı fonksiyonlar
         function renderNatalAnalysis(chart) {
             let html = '<div class="section-title">📊 Burç Analizi</div>';
 
-            // Gezegenleri burçlara göre grupla
             const planetsBySign = {};
             if (chart.planets) {
                 chart.planets.forEach(p => {
@@ -651,18 +605,13 @@
                 });
             }
 
-            // Noktaları burçlara göre grupla
             const pointsBySign = {};
-
-            // Kuzey/Güney Düğüm
             const northNode = chart.planets?.find(p => p.id === 'north_node');
             if (northNode) {
                 const southSigns = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
                 const southIdx = (southSigns.indexOf(northNode.sign_id) + 6) % 12;
-
                 if (!pointsBySign[northNode.sign_id]) pointsBySign[northNode.sign_id] = [];
                 pointsBySign[northNode.sign_id].push({...northNode, name: 'North Node', type: 'point'});
-
                 if (!pointsBySign[southSigns[southIdx]]) pointsBySign[southSigns[southIdx]] = [];
                 pointsBySign[southSigns[southIdx]].push({
                     name: 'South Node', sign_id: southSigns[southIdx],
@@ -670,7 +619,6 @@
                 });
             }
 
-            // Lilith, Chiron
             ['lilith','chiron'].forEach(id => {
                 const p = chart.planets?.find(pl => pl.id === id);
                 if (p) {
@@ -679,7 +627,6 @@
                 }
             });
 
-            // Şans Noktası
             const sun = chart.planets?.find(p => p.id === 'sun');
             const moon = chart.planets?.find(p => p.id === 'moon');
             const asc = chart.angles_details?.asc;
@@ -688,7 +635,6 @@
                 let fortuneAbs = isDay ? 
                     (asc.abs_pos + moon.abs_pos - sun.abs_pos) % 360 :
                     (asc.abs_pos + sun.abs_pos - moon.abs_pos) % 360;
-
                 const signStarts = {aries:0,taurus:30,gemini:60,cancer:90,leo:120,virgo:150,libra:180,scorpio:210,sagittarius:240,capricorn:270,aquarius:300,pisces:330};
                 let fortuneSign = '', fortunePos = 0;
                 for (const [sign, start] of Object.entries(signStarts)) {
@@ -700,7 +646,6 @@
                 pointsBySign[fortuneSign].push({name: 'Part of Fortune', sign_id: fortuneSign, pos: fortunePos, type: 'point'});
             }
 
-            // Sabit yıldızlar
             const fixedStars = [
                 {name:'Regulus', sign_id:'leo', degree:29},
                 {name:'Aldebaran', sign_id:'gemini', degree:9},
@@ -710,7 +655,6 @@
 
             const allCelestials = [...(chart.planets || []), ...Object.values(pointsBySign).flat()];
             const starsBySign = {};
-
             fixedStars.forEach(star => {
                 allCelestials.forEach(c => {
                     if (c.sign_id === star.sign_id) {
@@ -726,7 +670,6 @@
                 });
             });
 
-            // Burçları oluştur
             const allSigns = [
                 {id:'aries', name:'Koç', symbol:'♈'}, {id:'taurus', name:'Boğa', symbol:'♉'},
                 {id:'gemini', name:'İkizler', symbol:'♊'}, {id:'cancer', name:'Yengeç', symbol:'♋'},
@@ -744,7 +687,6 @@
                 const signPoints = pointsBySign[sign.id] || [];
                 const signStars = starsBySign[sign.id] || [];
                 const house = houses.find(h => h.sign_id === sign.id);
-
                 const pCount = signPlanets.length;
                 const ptCount = signPoints.length;
                 const sCount = signStars.length;
@@ -825,7 +767,6 @@
                 }
             });
 
-            // Genel özet
             html += `
                 <div class="summary-card">
                     <div class="summary-title">📊 Genel Özet</div>
