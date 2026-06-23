@@ -40,8 +40,6 @@
             100% { transform: translateX(0); opacity: 1; }
         }
     </style>
-
-<base target="_blank">
 </head>
 <body>
 
@@ -102,7 +100,6 @@
     </div>
 
     <script>
-        // Butona event listener ile bağla (onclick yerine)
         document.getElementById('registerBtn').addEventListener('click', function() {
             handleRegister().catch(function(err) {
                 console.error('Kayıt hatası:', err);
@@ -185,7 +182,6 @@
                     language: navigator.language
                 });
 
-                // Yönlendirme
                 window.location.href = "terms.html";
             } catch (err) {
                 btn.disabled = false;
