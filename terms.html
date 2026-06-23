@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yasal Onay ve Gizlilik Politikası | Astro Notlarım</title>
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-service.js"></script>
 
     <style>
         * {
@@ -83,7 +84,6 @@
             margin-bottom: 12px;
         }
 
-        /* Yeni Doğrulama Bilgi Kutusu Tasarımı */
         .verification-alert-box {
             background-color: #f9fafb;
             border: 1px dashed #d1d5db;
@@ -145,11 +145,12 @@
             border: 1px solid #d1d5db;
         }
     </style>
+<base target="_blank">
 </head>
 <body>
 
     <div class="app-container">
-        
+
         <header class="page-header">
             <h1>Yasal Onay ve Gizlilik</h1>
         </header>
@@ -162,13 +163,13 @@
 
             <div class="terms-text">
                 <p>Lütfen Astro Notlarım platformunu kullanmaya başlamadan önce aşağıdaki kullanım şartlarını ve gizlilik politikasını dikkatlice okuyunuz.</p>
-                
+
                 <h2>1. Kullanım Şartları</h2>
                 <p>Astro Notlarım tarafından sunulan hizmetlerden faydalanarak, bu sayfada yer alan tüm maddeleri gayrikabili rücu kabul etmiş sayılırsınız.</p>
-                
+
                 <h2>2. Gizlilik Politikası ve KVKK</h2>
                 <p>Kişisel verilerinizin güvenliği bizim için son derece önemlidir. Kayıt esnasında paylaştığınız veriler 6698 sayılı KVKK kapsamında korunmaktadır.</p>
-                
+
                 <h2>3. Veri İşleme Amaçları</h2>
                 <p>Toplanan verileriniz hesap güvenliği ve deneyim kişiselleştirme amacıyla işlenmektedir.</p>
             </div>
@@ -184,170 +185,100 @@
     </div>
 
     <script>
-        // Astro Notlarım Orijinal Firebase Yapılandırması
-        const firebaseConfig = {
-          apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-          authDomain: "astro-notlarim.firebaseapp.com",
-          projectId: "astro-notlarim",
-          storageBucket: "astro-notlarim.firebasestorage.app",
-          messagingSenderId: "123654326926",
-          appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-          measurementId: "G-19BSBWLJ7X"
-        };
-
-        // Firebase Servislerini Başlat
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // OTOMATİK KONTROL SAYAÇ MEKANİZMASI (Interval)
-        // Her 3 saniyede bir arka planda e-posta onay durumunu günceller
-        const verificationCheckInterval = setInterval(() => {
-            const user = firebase.auth().currentUser;
-            
-            if (user) {
-                user.reload().then(() => {
-                    const updatedUser = firebase.auth().currentUser;
-                    
-                    // Eğer kullanıcı linke tıklamışsa kilidi kaldır
-                    if (updatedUser.emailVerified) {
-                        clearInterval(verificationCheckInterval); // Onay alındığı için sayacı durdur
-                        
-                        const approveBtn = document.getElementById('approveBtn');
-                        approveBtn.disabled = false;
-                        approveBtn.textContent = "Onayla ve Başla";
-                    }
-                }).catch((err) => console.log("Otomatik kontrol sorgu hatası:", err));
+        let verificationCheckInterval = setInterval(async () => {
+            try {
+                const isVerified = await AstroService.checkEmailVerified();
+                if (isVerified) {
+                    clearInterval(verificationCheckInterval);
+                    const approveBtn = document.getElementById('approveBtn');
+                    approveBtn.disabled = false;
+                    approveBtn.textContent = "Onayla ve Başla";
+                }
+            } catch (err) {
+                console.log("Otomatik kontrol sorgu hatası:", err);
             }
-        }, 3000); // 3 saniye aralık
-        
-        // ONAY BUTONUNA TIKLANDIĞINDA FIRESTORE KAYDI YAPILIR
-        function handleApprove() {
-            const user = firebase.auth().currentUser;
-        
+        }, 3000);
+
+        async function handleApprove() {
+            const user = AstroService.getCurrentUser();
             if (!user) {
                 alert("Oturum süresi dolmuş veya bulunamadı. Lütfen kayıt formunu tekrar doldurun.");
                 window.location.href = "register.html";
                 return;
             }
-        
+
             const approveBtn = document.getElementById('approveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
-        
-            // Arayüzü Geçici Olarak Kilitle
+
             approveBtn.disabled = true;
             approveBtn.textContent = "Profiliniz Oluşturuluyor...";
             cancelBtn.disabled = true;
-        
-            // Güvenlik amaçlı son bir kez daha durum kontrolü
-            user.reload()
-                .then(() => {
-                    const updatedUser = firebase.auth().currentUser;
-        
-                    if (!updatedUser.emailVerified) {
-                        alert("E-posta adresiniz henüz doğrulanmamış.");
-                        approveBtn.disabled = false;
-                        approveBtn.textContent = "Onayla ve Başla";
-                        cancelBtn.disabled = false;
-                        return;
-                    }
-                    
-                    const fullname = sessionStorage.getItem('temp_fullname') || updatedUser.displayName;
-                    const email = sessionStorage.getItem('temp_email') || updatedUser.email;
-                    const rawDeviceInfo = sessionStorage.getItem('temp_device_info');
-                    const deviceInfo = rawDeviceInfo ? JSON.parse(rawDeviceInfo) : {};
-        
-                    // Firestore Veritabanına Yazma İşlemi
-                    return db.collection("user_profiles").doc(updatedUser.uid).set({
-                        uid: updatedUser.uid,
-                        fullname: fullname,
-                        email: email,
-                        isTermsApproved: true,
-                        isEmailVerified: true, 
-                        deviceInfo: deviceInfo,
-                        approvedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                })
-                .then(() => {
-                    if (firebase.auth().currentUser && firebase.auth().currentUser.emailVerified) {
-                        clearInterval(verificationCheckInterval); 
-                        sessionStorage.clear();
-                        
-                        alert("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
-        
-                        // GÜNCELLEME: Oturumu kapatıp login sayfasına yönlendir
-                        firebase.auth().signOut().then(() => {
-                            window.location.href = "login.html";
-                        });
-                    }
-                })
-                .catch((error) => {
+
+            try {
+                const isVerified = await AstroService.checkEmailVerified();
+                if (!isVerified) {
+                    alert("E-posta adresiniz henüz doğrulanmamış.");
                     approveBtn.disabled = false;
                     approveBtn.textContent = "Onayla ve Başla";
                     cancelBtn.disabled = false;
-                    alert("Bir sorun oluştu: " + error.message);
+                    return;
+                }
+
+                const fullname = AstroService.SessionStore.get('temp_fullname') || user.displayName;
+                const email = AstroService.SessionStore.get('temp_email') || user.email;
+                const deviceInfo = AstroService.SessionStore.get('temp_device_info') || {};
+
+                await AstroService.saveUserProfile(user.uid, {
+                    uid: user.uid,
+                    fullname: fullname,
+                    email: email,
+                    isTermsApproved: true,
+                    isEmailVerified: true,
+                    deviceInfo: deviceInfo,
+                    approvedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-        }
 
-        // Doğrulama mailini tekrar tetikleyen fonksiyon
-        function handleResendEmail() {
-            const user = firebase.auth().currentUser;
-            if (user) {
-                user.sendEmailVerification()
-                    .then(() => {
-                        alert("Doğrulama e-postası adresinize tekrar gönderildi. Lütfen kontrol edin.");
-                    })
-                    .catch((error) => {
-                        alert("Mail gönderilirken bir hata oluştu: " + error.message);
-                    });
-            } else {
-                alert("Kullanıcı oturumu bulunamadı, lütfen kayıt sayfasına geri dönün.");
-            }
-        }
-
-        // İptal durumunda açılan geçici hesabı temizleyip geri gönderme
-        // ... üstteki tüm kodlar aynı kalsın (firebaseConfig, db vs.) ...
-
-        // İptal fonksiyonunun tek ve güncel hali:
-        function handleCancel() {
-            // Sayacı durdur
-            if (typeof verificationCheckInterval !== 'undefined') {
                 clearInterval(verificationCheckInterval);
+                AstroService.SessionStore.clear();
+                alert("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
+                await AstroService.logout();
+                window.location.href = "login.html";
+            } catch (error) {
+                approveBtn.disabled = false;
+                approveBtn.textContent = "Onayla ve Başla";
+                cancelBtn.disabled = false;
+                alert("Bir sorun oluştu: " + error.message);
             }
-        
+        }
+
+        async function handleResendEmail() {
+            try {
+                await AstroService.sendEmailVerification();
+                alert("Doğrulama e-postası adresinize tekrar gönderildi. Lütfen kontrol edin.");
+            } catch (error) {
+                alert("Mail gönderilirken bir hata oluştu: " + error.message);
+            }
+        }
+
+        async function handleCancel() {
+            clearInterval(verificationCheckInterval);
+
             const approveBtn = document.getElementById('approveBtn');
             const cancelBtn = document.getElementById('cancelBtn');
-        
-            // Butonları kilitle ve metni değiştir
             if(approveBtn) approveBtn.disabled = true;
             if(cancelBtn) {
                 cancelBtn.disabled = true;
                 cancelBtn.textContent = "İptal ediliyor...";
             }
-        
-            const user = firebase.auth().currentUser;
-        
-            if (user) {
-                user.delete().then(() => {
-                    finalizeCancel();
-                }).catch((error) => {
-                    console.error("Silme hatası:", error);
-                    finalizeCancel();
-                });
-            } else {
-                finalizeCancel();
+
+            try {
+                await AstroService.deleteCurrentUser();
+            } catch (error) {
+                console.error("Silme hatası:", error);
             }
-        }
-        
-        function finalizeCancel() {
-            sessionStorage.clear();
+            AstroService.SessionStore.clear();
             window.location.href = "register.html";
         }
-
-// Temizlik ve yönlendirme işlemini ortak bir yere aldık
-function finalizeCancel() {
-    sessionStorage.clear();
-    window.location.href = "register.html";
-}
     </script>
 
 </body>
