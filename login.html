@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giriş Yap | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
-    
+
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    
+    <script src="firebase-service.js"></script>
+
     <style>
         .btn-google { background-color: #ffffff; border: 1px solid #d1d5db; color: #374151; margin-top: 10px; width: 100%; padding: 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn-google:hover { background-color: #f9fafb; }
@@ -17,6 +18,7 @@
         .forgot-password a { font-size: 0.85rem; color: #6b7280; text-decoration: none; }
         .forgot-password a:hover { text-decoration: underline; }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -30,7 +32,7 @@
 
         <main class="scrollable-form-section">
             <form class="register-form" id="loginForm" onsubmit="return false;">
-                
+
                 <div class="form-group" id="group-email">
                     <div class="input-wrapper">
                         <input type="email" id="email" placeholder="E-posta">
@@ -63,18 +65,6 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             input.type = input.type === "password" ? "text" : "password";
@@ -86,9 +76,9 @@
             return re.test(email);
         }
 
-        function handleLogin() {
+        async function handleLogin() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
-            
+
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value.trim();
             let isValid = true;
@@ -108,59 +98,39 @@
             btn.disabled = true;
             btn.textContent = "Giriş yapılıyor...";
 
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
-                    // user_profiles koleksiyonuna bak (terms.html buraya kaydediyor)
-                    return db.collection("user_profiles").doc(user.uid).get()
-                        .then((doc) => {
-                            if (doc.exists && doc.data().birthYear) {
-                                window.location.href = "dashboard.html";
-                            } else {
-                                window.location.href = "birthinfo.html";
-                            }
-                        })
-                        .catch(() => {
-                            // Firestore hatası → güvenli taraf birthinfo
-                            window.location.href = "birthinfo.html";
-                        });
-                })
-                .catch(err => {
-                    alert("Hata: " + err.message);
-                    btn.disabled = false;
-                    btn.textContent = "Giriş Yap";
-                });
+            try {
+                const user = await AstroService.loginWithEmail(email, password);
+                await AstroService.redirectAfterLogin(user.uid);
+            } catch (err) {
+                const errorInfo = AstroService.translateAuthError(err.code);
+                alert(errorInfo.message);
+                btn.disabled = false;
+                btn.textContent = "Giriş Yap";
+            }
         }
 
-        function handleGoogleLogin() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    return db.collection("user_profiles").doc(user.uid).get()
-                        .then((doc) => {
-                            if (doc.exists && doc.data().birthYear) {
-                                window.location.href = "dashboard.html";
-                            } else {
-                                window.location.href = "birthinfo.html";
-                            }
-                        })
-                        .catch(() => {
-                            window.location.href = "birthinfo.html";
-                        });
-                })
-                .catch(err => alert("Google girişi başarısız: " + err.message));
+        async function handleGoogleLogin() {
+            try {
+                const user = await AstroService.loginWithGoogle();
+                await AstroService.redirectAfterLogin(user.uid);
+            } catch (err) {
+                const errorInfo = AstroService.translateAuthError(err.code);
+                alert(errorInfo.message);
+            }
         }
 
-        function handleForgotPassword() {
+        async function handleForgotPassword() {
             const email = document.getElementById('email').value.trim();
             if (!validateEmail(email)) { 
                 alert("Lütfen önce geçerli bir e-posta adresi girin."); 
                 return; 
             }
-            firebase.auth().sendPasswordResetEmail(email)
-                .then(() => alert("Şifre sıfırlama bağlantısı " + email + " adresine gönderildi."))
-                .catch(err => alert(err.message));
+            try {
+                await AstroService.sendPasswordReset(email);
+                alert("Şifre sıfırlama bağlantısı " + email + " adresine gönderildi.");
+            } catch (err) {
+                alert(err.message);
+            }
         }
     </script>
 </body>
