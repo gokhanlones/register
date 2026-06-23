@@ -8,8 +8,8 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <!-- Firestore kütüphanesi eklendi -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
 
     <style>
@@ -91,7 +91,7 @@
                     <div class="error-message">Şifreler eşleşmiyor.</div>
                 </div>
 
-                <button type="button" class="btn-submit" id="registerBtn" onclick="handleRegister()">Kayıt Ol</button>
+                <button type="button" class="btn-submit" id="registerBtn">Kayıt Ol</button>
             </form>
 
             <footer class="register-footer">
@@ -101,6 +101,17 @@
     </div>
 
     <script>
+        // Butona event listener ile bağla (onclick yerine)
+        document.getElementById('registerBtn').addEventListener('click', function() {
+            handleRegister().catch(function(err) {
+                console.error('Kayıt hatası:', err);
+                const btn = document.getElementById('registerBtn');
+                btn.disabled = false;
+                btn.textContent = "Kayıt Ol";
+                showFirebaseError('Beklenmeyen bir hata oluştu: ' + err.message);
+            });
+        });
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             input.type = input.type === "password" ? "text" : "password";
@@ -112,7 +123,7 @@
             return re.test(email);
         }
 
-        function showFirebaseError(message, isRedirect = false) {
+        function showFirebaseError(message, isRedirect) {
             const errorBox = document.getElementById('firebaseError');
             if (isRedirect) {
                 errorBox.innerHTML = message;
@@ -172,6 +183,8 @@
                     platform: navigator.platform,
                     language: navigator.language
                 });
+
+                // Yönlendirme
                 window.location.href = "terms.html";
             } catch (err) {
                 btn.disabled = false;
