@@ -24,9 +24,14 @@ if (!firebase.apps.length) {
 
 const db = firebase.firestore();
 const auth = firebase.auth();
-const remoteConfig = firebase.remoteConfig ? firebase.remoteConfig() : null;
-if (remoteConfig) {
-    remoteConfig.settings.minimumFetchIntervalMillis = 3600000;
+let remoteConfig = null;
+try {
+    if (typeof firebase !== 'undefined' && firebase.remoteConfig) {
+        remoteConfig = firebase.remoteConfig();
+        remoteConfig.settings.minimumFetchIntervalMillis = 3600000;
+    }
+} catch (e) {
+    console.warn('Remote Config SDK yüklenmemiş, fallback kullanılacak');
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -290,7 +295,13 @@ async function getUserSigns(uid) {
  * @returns {Promise<string>}
  */
 async function getRemoteConfigValue(key) {
-    if (!remoteConfig) throw new Error('Remote Config aktif değil');
+    if (!remoteConfig) {
+        // Fallback: Remote Config yoksa hardcoded API key kullan
+        if (key === 'astro_api_key') {
+            return '85a8865527abf55f25f8c5273d0d848f6df8cc15e9908397583b4acf9e59e0bf';
+        }
+        throw new Error('Remote Config aktif değil');
+    }
     await remoteConfig.fetchAndActivate();
     const value = remoteConfig.getString(key);
     if (!value) throw new Error(`Remote Config: '${key}' bulunamadı`);
