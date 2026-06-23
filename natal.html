@@ -3,362 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doğum Haritası | Astro Notlarım</title>
+    <title>Anasayfa | Astro Notlarım</title>
     <link rel="stylesheet" href="style.css">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
 
     <style>
-        .section-title {
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        .greeting-section {
+            padding: 20px 20px 12px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+            flex-shrink: 0;
+            text-align: center;
+        }
+        .greeting-text {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+        .user-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #d4af37;
+            letter-spacing: -0.5px;
+            min-height: 2.2rem;
+        }
+
+        .astro-icons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        .astro-icon-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            transition: transform 0.2s;
+            outline: none;
+        }
+        .astro-icon-btn:active {
+            transform: scale(0.95);
+        }
+        .astro-icon-btn svg {
+            width: 48px;
+            height: 48px;
+            padding: 10px;
+            border-radius: 50%;
+            background-color: #f9fafb;
+            border: 2px solid #e5e7eb;
+            color: #d4af37;
+            transition: all 0.2s;
+        }
+        .astro-icon-btn:hover svg {
+            background-color: #000000;
+            border-color: #000000;
+            color: #d4af37;
+        }
+        .astro-icon-btn span {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .daily-horoscope-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #1f2937;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+        }
+        .daily-horoscope-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .daily-horoscope-title {
             font-size: 1.1rem;
             font-weight: 700;
             color: #d4af37;
-            margin: 24px 0 12px 0;
-            padding: 0 4px;
+        }
+        .daily-horoscope-date {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        .daily-horoscope-text {
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: #374151;
+            margin-bottom: 16px;
+        }
+        .score-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .score-bar-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
         }
-        .section-title::before {
-            content: "";
-            width: 4px;
-            height: 20px;
+        .score-bar-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            width: 60px;
+            text-align: right;
+            font-weight: 500;
+        }
+        .score-bar-track {
+            flex: 1;
+            height: 8px;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 4px;
             background-color: #d4af37;
-            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+        .score-bar-value {
+            font-size: 0.8rem;
+            color: #d4af37;
+            width: 30px;
+            font-weight: 600;
         }
 
-        .house-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #f3f4f6;
+        .lucky-info {
+            display: flex;
+            gap: 16px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .lucky-item {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 6px;
+            font-size: 0.85rem;
+            color: #6b7280;
         }
-        .house-sign-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background-color: #000000;
+        .lucky-item svg {
+            width: 16px;
+            height: 16px;
             color: #d4af37;
+        }
+
+        .category-scroll-wrapper {
+            padding: 16px 0;
+            background-color: #ffffff;
+            border-top: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .category-scroll {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 0 20px;
+        }
+        .category-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            flex-shrink: 0;
+            padding: 10px 18px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+            min-width: 70px;
         }
-        .house-degree {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-            width: 70px;
-            text-align: center;
-            flex-shrink: 0;
+        .category-btn:active {
+            transform: scale(0.95);
         }
-        .house-info {
-            flex: 1;
-            text-align: right;
+        .category-btn:hover {
+            background-color: #000000;
+            border-color: #000000;
         }
-        .house-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .house-cusp {
-            font-size: 0.75rem;
+        .category-btn:hover .category-text {
             color: #d4af37;
-            font-weight: 500;
-            background-color: #fefce8;
-            padding: 2px 8px;
-            border-radius: 10px;
-            margin-left: 6px;
+        }
+        .category-text {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
         }
 
-        .sign-group-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 10px;
-            border: 1px solid #f3f4f6;
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: flex-end;
         }
-        .sign-group-header {
+        .popup-overlay.show {
             display: flex;
+        }
+        .popup-content {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 20px 32px;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .popup-overlay.show .popup-content {
+            transform: translateY(0);
+        }
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
+            margin-bottom: 16px;
             border-bottom: 1px solid #f3f4f6;
+            padding-bottom: 12px;
         }
-        .sign-group-icon {
-            font-size: 1.4rem;
+        .popup-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #000000;
+        }
+        .popup-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            outline: none;
+        }
+        .popup-body {
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .popup-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .popup-score-bar {
+            flex: 1;
+            height: 10px;
+            background-color: #f3f4f6;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .popup-score-fill {
+            height: 100%;
+            border-radius: 5px;
+            background-color: #d4af37;
+        }
+        .popup-score-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #d4af37;
+            width: 40px;
+            text-align: right;
+        }
+
+        .astro-signs-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 0 16px;
+        }
+        .astro-sign-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
+            transition: all 0.2s;
+        }
+        .astro-sign-card svg {
+            width: 20px;
+            height: 20px;
             color: #d4af37;
             flex-shrink: 0;
         }
-        .sign-group-name {
-            font-size: 1rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-        .sign-group-count {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            font-weight: 500;
-            margin-left: auto;
-        }
-        .celestial-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #f9fafb;
-        }
-        .celestial-item:last-child {
-            border-bottom: none;
-        }
-        .celestial-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .celestial-symbol {
-            font-size: 1.1rem;
-            color: #d4af37;
-            width: 24px;
-            text-align: center;
-        }
-        .celestial-name {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #374151;
-        }
-        .celestial-retro {
-            font-size: 0.65rem;
-            color: #ef4444;
-            font-weight: 600;
-            background-color: #fef2f2;
-            padding: 1px 5px;
-            border-radius: 6px;
-            margin-left: 4px;
-        }
-        .celestial-right {
-            text-align: right;
-        }
-        .celestial-degree {
+        .astro-sign-label {
             font-size: 0.85rem;
             font-weight: 600;
-            color: #1f2937;
-        }
-        .celestial-house {
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-        .empty-sign {
-            font-size: 0.85rem;
-            color: #d1d5db;
-            font-style: italic;
-            padding: 8px 0;
-            text-align: center;
-        }
-
-        .aspect-card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            border: 1px solid #f3f4f6;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .aspect-planets {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
             color: #374151;
-        }
-        .aspect-symbol {
-            font-size: 1.1rem;
-            color: #d4af37;
-            font-weight: 700;
-        }
-        .aspect-details {
-            text-align: right;
-        }
-        .aspect-type {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .aspect-orb {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 2px;
+            white-space: nowrap;
         }
 
-        .sign-analysis-card {
-            background-color: #ffffff;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            border: 1px solid #f3f4f6;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-        }
-        .sign-analysis-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f3f4f6;
-        }
-        .sign-analysis-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sign-analysis-symbol {
-            font-size: 1.5rem;
-        }
-        .sign-analysis-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #1f2937;
-        }
-        .sign-analysis-house {
-            font-size: 0.8rem;
-            color: #9ca3af;
-            background-color: #f9fafb;
-            padding: 4px 10px;
-            border-radius: 12px;
-        }
-        .sign-analysis-counts {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        .sign-count-badge {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.8rem;
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-weight: 500;
-        }
-        .sign-count-planets { background-color: #fef3c7; color: #92400e; }
-        .sign-count-points { background-color: #dbeafe; color: #1e40af; }
-        .sign-count-stars { background-color: #fce7f3; color: #9d174d; }
-        .sign-analysis-items {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .sign-analysis-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background-color: #f9fafb;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        .sign-analysis-item-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .sign-analysis-item-icon {
-            font-size: 1rem;
-        }
-        .sign-analysis-item-name {
-            font-weight: 500;
-            color: #374151;
-        }
-        .sign-analysis-item-retro {
-            font-size: 0.7rem;
-            color: #ef4444;
-            font-weight: 600;
-            background-color: #fef2f2;
-            padding: 1px 5px;
-            border-radius: 4px;
-        }
-        .sign-analysis-item-right {
-            text-align: right;
-        }
-        .sign-analysis-item-degree {
-            font-weight: 600;
-            color: #1f2937;
-        }
-        .sign-analysis-item-detail {
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-        .sign-analysis-total {
-            text-align: right;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #d4af37;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #f3f4f6;
-        }
-
-        .summary-card {
-            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-            color: #ffffff;
-        }
-        .summary-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #d4af37;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .summary-item {
-            text-align: center;
-            padding: 12px;
-            background-color: rgba(255,255,255,0.05);
-            border-radius: 12px;
-        }
-        .summary-item-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #d4af37;
-        }
-        .summary-item-label {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 4px;
-        }
-
-        .natal-content {
+        .dashboard-content {
             flex: 1;
             overflow-y: auto;
-            padding: 0 16px 16px;
+            padding: 20px;
             -webkit-overflow-scrolling: touch;
         }
-        .natal-content::-webkit-scrollbar {
+        .dashboard-content::-webkit-scrollbar {
             width: 4px;
         }
-        .natal-content::-webkit-scrollbar-track {
+        .dashboard-content::-webkit-scrollbar-track {
             background: transparent;
         }
-        .natal-content::-webkit-scrollbar-thumb {
+        .dashboard-content::-webkit-scrollbar-thumb {
             background: #d1d5db;
             border-radius: 4px;
         }
@@ -368,18 +343,75 @@
 <body>
     <div class="app-container">
         <header class="brand-section">
-            <button class="btn-menu" onclick="window.history.back()">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <button class="btn-menu">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
             </button>
-            <h1>Doğum Haritası</h1>
+            <h1>Astro Notlarım</h1>
         </header>
 
-        <main class="natal-content" id="natalContent">
-            <!-- İçerik JavaScript ile doldurulacak -->
+        <div class="greeting-section">
+            <div class="greeting-text">Merhaba</div>
+            <div class="user-name" id="userName">...</div>
+
+            <div class="astro-signs-row" id="astroSignsRow">
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <span class="astro-sign-label" id="sunSign">...</span>
+                </div>
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="16 12 12 8 8 12"></polyline>
+                        <line x1="12" y1="16" x2="12" y2="8"></line>
+                    </svg>
+                    <span class="astro-sign-label" id="risingSign">...</span>
+                </div>
+                <div class="astro-sign-card">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span class="astro-sign-label" id="moonSign">...</span>
+                </div>
+            </div>
+        </div>
+
+        <main class="dashboard-content">
+            <!-- Orta alan placeholder -->
         </main>
 
+        <div class="category-scroll-wrapper">
+            <div class="category-scroll">
+                <button class="category-btn">
+                    <span class="category-text">Sağlık</span>
+                </button>
+                <button class="category-btn">
+                    <span class="category-text">Aşk</span>
+                </button>
+                <button class="category-btn">
+                    <span class="category-text">Kariyer</span>
+                </button>
+                <button class="category-btn">
+                    <span class="category-text">Para</span>
+                </button>
+            </div>
+        </div>
+
         <footer class="bottom-navbar">
-            <a href="dashboard.html" class="nav-item">
+            <a href="dashboard.html" class="nav-item active">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span class="nav-label">Anasayfa</span>
             </a>
@@ -387,7 +419,7 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span class="nav-label">Sor</span>
             </a>
-            <a href="natal.html" class="nav-item active">
+            <a href="natal.html" class="nav-item">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
                 <span class="nav-label">Harita</span>
             </a>
@@ -395,441 +427,32 @@
     </div>
 
     <script>
-        let currentUser = null;
         AstroService.onAuthStateChanged((user) => {
-            if (user) {
-                currentUser = user;
-                loadNatalChart(user);
-            } else {
-                window.location.href = 'login.html';
+            if (!user) {
+                window.location.href = "login.html";
+                return;
             }
+            loadUserName(user);
         });
 
-        async function loadNatalChart(user) {
+        async function loadUserName(user) {
             try {
-                const chart = await AstroService.getNatalChart(user.uid);
-                if (!chart) {
-                    document.getElementById('natalContent').innerHTML = '<div style="text-align:center;padding:40px;color:#9ca3af;">Doğum haritası verisi bulunamadı.</div>';
-                    return;
+                const data = await AstroService.getUserProfile(user.uid);
+                if (data) {
+                    const fullname = data.fullname || user.displayName || "Kullanıcı";
+                    document.getElementById('userName').textContent = fullname;
+
+                    const signs = await AstroService.getUserSigns(user.uid);
+                    if (signs.sunSign) document.getElementById('sunSign').textContent = signs.sunSign;
+                    if (signs.moonSign) document.getElementById('moonSign').textContent = signs.moonSign;
+                    if (signs.risingSign) document.getElementById('risingSign').textContent = signs.risingSign;
+                } else {
+                    document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
                 }
-                renderNatalChart(chart);
             } catch (err) {
-                console.error("Harita çekme hatası:", err);
-                document.getElementById('natalContent').innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444;">Veri yüklenirken hata oluştu.</div>';
+                console.error("İsim çekme hatası:", err);
+                document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
             }
-        }
-
-        function renderNatalChart(chart) {
-            const container = document.getElementById('natalContent');
-            let html = '';
-
-            html += renderNatalAnalysis(chart);
-
-            if (chart.houses && chart.houses.length > 0) {
-                html += '<div class="section-title">Evler</div>';
-                chart.houses.forEach(h => {
-                    const isAsc = h.house === 1;
-                    const isMc = h.house === 10;
-                    const isIc = h.house === 4;
-                    const isDc = h.house === 7;
-                    let label = '';
-                    if (isAsc) label = '<span class="house-cusp">Yükselen</span>';
-                    if (isMc) label = '<span class="house-cusp">MC</span>';
-                    if (isIc) label = '<span class="house-cusp">IC</span>';
-                    if (isDc) label = '<span class="house-cusp">DC</span>';
-                    html += `
-                        <div class="house-card">
-                            <div class="house-sign-icon">${getSignSymbol(h.sign_id)}</div>
-                            <div class="house-degree">${formatDegree(h.pos)}</div>
-                            <div class="house-info">
-                                <span class="house-name">${h.sign} ${label}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            const allCelestials = [];
-            if (chart.planets) {
-                chart.planets.forEach(p => {
-                    allCelestials.push({
-                        id: p.id,
-                        name: p.name,
-                        sign_id: p.sign_id,
-                        sign: p.sign,
-                        pos: p.pos,
-                        house: p.house,
-                        retrograde: p.retrograde || false,
-                        type: 'planet'
-                    });
-                });
-            }
-
-            if (chart.angles_details) {
-                const angleMap = {
-                    'asc': { name: 'Yükselen (ASC)', house: 1 },
-                    'mc': { name: 'MC (Ortay)', house: 10 },
-                    'ic': { name: 'IC (Gökyüzü)', house: 4 },
-                    'dc': { name: 'DC (Batı)', house: 7 },
-                    'vertex': { name: 'Vertex', house: null }
-                };
-                for (const [key, angle] of Object.entries(chart.angles_details)) {
-                    if (angleMap[key]) {
-                        allCelestials.push({
-                            id: key,
-                            name: angleMap[key].name,
-                            sign_id: angle.sign_id,
-                            sign: angle.sign,
-                            pos: angle.pos,
-                            house: angleMap[key].house || angle.house,
-                            retrograde: false,
-                            type: 'point'
-                        });
-                    }
-                }
-            }
-
-            if (chart.planets) {
-                const extraPoints = ['lilith', 'chiron', 'north_node'];
-                extraPoints.forEach(ep => {
-                    const exists = allCelestials.find(c => c.id === ep);
-                    if (!exists) {
-                        const p = chart.planets.find(pl => pl.id === ep);
-                        if (p) {
-                            allCelestials.push({
-                                id: p.id,
-                                name: p.name,
-                                sign_id: p.sign_id,
-                                sign: p.sign,
-                                pos: p.pos,
-                                house: p.house,
-                                retrograde: p.retrograde || false,
-                                type: 'point'
-                            });
-                        }
-                    }
-                });
-            }
-
-            if (allCelestials.length > 0) {
-                html += '<div class="section-title">Gezegenler ve Noktalar</div>';
-                const allSigns = [
-                    { id: 'aries', name: 'Koç', symbol: '♈' },
-                    { id: 'taurus', name: 'Boğa', symbol: '♉' },
-                    { id: 'gemini', name: 'İkizler', symbol: '♊' },
-                    { id: 'cancer', name: 'Yengeç', symbol: '♋' },
-                    { id: 'leo', name: 'Aslan', symbol: '♌' },
-                    { id: 'virgo', name: 'Başak', symbol: '♍' },
-                    { id: 'libra', name: 'Terazi', symbol: '♎' },
-                    { id: 'scorpio', name: 'Akrep', symbol: '♏' },
-                    { id: 'sagittarius', name: 'Yay', symbol: '♐' },
-                    { id: 'capricorn', name: 'Oğlak', symbol: '♑' },
-                    { id: 'aquarius', name: 'Kova', symbol: '♒' },
-                    { id: 'pisces', name: 'Balık', symbol: '♓' }
-                ];
-
-                const celestialsBySign = {};
-                allCelestials.forEach(c => {
-                    if (!celestialsBySign[c.sign_id]) celestialsBySign[c.sign_id] = [];
-                    celestialsBySign[c.sign_id].push(c);
-                });
-
-                allSigns.forEach(sign => {
-                    const celestialsInSign = celestialsBySign[sign.id] || [];
-                    const count = celestialsInSign.length;
-
-                    html += `
-                        <div class="sign-group-card">
-                            <div class="sign-group-header">
-                                <span class="sign-group-icon">${sign.symbol}</span>
-                                <span class="sign-group-name">${sign.name}</span>
-                                <span class="sign-group-count">${count > 0 ? count + ' gökcismi' : 'Boş'}</span>
-                            </div>
-                    `;
-
-                    if (celestialsInSign.length > 0) {
-                        celestialsInSign.sort((a, b) => a.pos - b.pos);
-                        celestialsInSign.forEach(c => {
-                            const retro = c.retrograde ? '<span class="celestial-retro">R</span>' : '';
-                            const houseInfo = c.house ? `<div class="celestial-house">${c.house}. Ev</div>` : '';
-                            html += `
-                                <div class="celestial-item">
-                                    <div class="celestial-left">
-                                        <span class="celestial-symbol">${getCelestialSymbol(c.id)}</span>
-                                        <span class="celestial-name">${c.name}${retro}</span>
-                                    </div>
-                                    <div class="celestial-right">
-                                        <div class="celestial-degree">${formatDegree(c.pos)}</div>
-                                        ${houseInfo}
-                                    </div>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        html += '<div class="empty-sign">Bu burçta gökcismi yok</div>';
-                    }
-                    html += '</div>';
-                });
-            }
-
-            if (chart.aspects && chart.aspects.length > 0) {
-                html += '<div class="section-title">Açılar</div>';
-                chart.aspects.forEach(a => {
-                    html += `
-                        <div class="aspect-card">
-                            <div class="aspect-planets">
-                                <span>${getCelestialSymbol(a.p1)} ${capitalize(a.p1)}</span>
-                                <span class="aspect-symbol">${getAspectSymbol(a.type)}</span>
-                                <span>${capitalize(a.p2)} ${getCelestialSymbol(a.p2)}</span>
-                            </div>
-                            <div class="aspect-details">
-                                <div class="aspect-type">${capitalize(a.type)} ${a.deg}°</div>
-                                <div class="aspect-orb">Orb: ${a.orb}°</div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            container.innerHTML = html;
-        }
-
-        function renderNatalAnalysis(chart) {
-            let html = '<div class="section-title">📊 Burç Analizi</div>';
-
-            const planetsBySign = {};
-            if (chart.planets) {
-                chart.planets.forEach(p => {
-                    if (!planetsBySign[p.sign_id]) planetsBySign[p.sign_id] = [];
-                    planetsBySign[p.sign_id].push(p);
-                });
-            }
-
-            const pointsBySign = {};
-            const northNode = chart.planets?.find(p => p.id === 'north_node');
-            if (northNode) {
-                const southSigns = ['aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces'];
-                const southIdx = (southSigns.indexOf(northNode.sign_id) + 6) % 12;
-                if (!pointsBySign[northNode.sign_id]) pointsBySign[northNode.sign_id] = [];
-                pointsBySign[northNode.sign_id].push({...northNode, name: 'North Node', type: 'point'});
-                if (!pointsBySign[southSigns[southIdx]]) pointsBySign[southSigns[southIdx]] = [];
-                pointsBySign[southSigns[southIdx]].push({
-                    name: 'South Node', sign_id: southSigns[southIdx],
-                    pos: northNode.pos, retrograde: true, type: 'point'
-                });
-            }
-
-            ['lilith','chiron'].forEach(id => {
-                const p = chart.planets?.find(pl => pl.id === id);
-                if (p) {
-                    if (!pointsBySign[p.sign_id]) pointsBySign[p.sign_id] = [];
-                    pointsBySign[p.sign_id].push({...p, type: 'point'});
-                }
-            });
-
-            const sun = chart.planets?.find(p => p.id === 'sun');
-            const moon = chart.planets?.find(p => p.id === 'moon');
-            const asc = chart.angles_details?.asc;
-            if (sun && moon && asc) {
-                const isDay = sun.house > 6 && sun.house <= 12;
-                let fortuneAbs = isDay ? 
-                    (asc.abs_pos + moon.abs_pos - sun.abs_pos) % 360 :
-                    (asc.abs_pos + sun.abs_pos - moon.abs_pos) % 360;
-                const signStarts = {aries:0,taurus:30,gemini:60,cancer:90,leo:120,virgo:150,libra:180,scorpio:210,sagittarius:240,capricorn:270,aquarius:300,pisces:330};
-                let fortuneSign = '', fortunePos = 0;
-                for (const [sign, start] of Object.entries(signStarts)) {
-                    if (fortuneAbs >= start && fortuneAbs < start + 30) {
-                        fortuneSign = sign; fortunePos = fortuneAbs - start; break;
-                    }
-                }
-                if (!pointsBySign[fortuneSign]) pointsBySign[fortuneSign] = [];
-                pointsBySign[fortuneSign].push({name: 'Part of Fortune', sign_id: fortuneSign, pos: fortunePos, type: 'point'});
-            }
-
-            const fixedStars = [
-                {name:'Regulus', sign_id:'leo', degree:29},
-                {name:'Aldebaran', sign_id:'gemini', degree:9},
-                {name:'Antares', sign_id:'sagittarius', degree:9},
-                {name:'Spica', sign_id:'virgo', degree:23}
-            ];
-
-            const allCelestials = [...(chart.planets || []), ...Object.values(pointsBySign).flat()];
-            const starsBySign = {};
-            fixedStars.forEach(star => {
-                allCelestials.forEach(c => {
-                    if (c.sign_id === star.sign_id) {
-                        const orb = Math.abs(c.pos - star.degree);
-                        if (orb <= 6) {
-                            if (!starsBySign[star.sign_id]) starsBySign[star.sign_id] = [];
-                            starsBySign[star.sign_id].push({
-                                star: star.name, celestial: c.name,
-                                orb: orb.toFixed(2), type: orb <= 1 ? 'tam kavuşum' : 'yakın etki'
-                            });
-                        }
-                    }
-                });
-            });
-
-            const allSigns = [
-                {id:'aries', name:'Koç', symbol:'♈'}, {id:'taurus', name:'Boğa', symbol:'♉'},
-                {id:'gemini', name:'İkizler', symbol:'♊'}, {id:'cancer', name:'Yengeç', symbol:'♋'},
-                {id:'leo', name:'Aslan', symbol:'♌'}, {id:'virgo', name:'Başak', symbol:'♍'},
-                {id:'libra', name:'Terazi', symbol:'♎'}, {id:'scorpio', name:'Akrep', symbol:'♏'},
-                {id:'sagittarius', name:'Yay', symbol:'♐'}, {id:'capricorn', name:'Oğlak', symbol:'♑'},
-                {id:'aquarius', name:'Kova', symbol:'♒'}, {id:'pisces', name:'Balık', symbol:'♓'}
-            ];
-
-            const houses = chart.houses || [];
-            let totalPlanets = 0, totalPoints = 0, totalStars = 0;
-
-            allSigns.forEach(sign => {
-                const signPlanets = planetsBySign[sign.id] || [];
-                const signPoints = pointsBySign[sign.id] || [];
-                const signStars = starsBySign[sign.id] || [];
-                const house = houses.find(h => h.sign_id === sign.id);
-                const pCount = signPlanets.length;
-                const ptCount = signPoints.length;
-                const sCount = signStars.length;
-                const total = pCount + ptCount + sCount;
-
-                if (total > 0) {
-                    totalPlanets += pCount;
-                    totalPoints += ptCount;
-                    totalStars += sCount;
-
-                    html += `
-                        <div class="sign-analysis-card">
-                            <div class="sign-analysis-header">
-                                <div class="sign-analysis-title">
-                                    <span class="sign-analysis-symbol">${sign.symbol}</span>
-                                    <span class="sign-analysis-name">${sign.name}</span>
-                                </div>
-                                ${house ? `<span class="sign-analysis-house">Ev ${house.house}</span>` : ''}
-                            </div>
-                            <div class="sign-analysis-counts">
-                                ${pCount > 0 ? `<span class="sign-count-badge sign-count-planets">🪐 ${pCount}</span>` : ''}
-                                ${ptCount > 0 ? `<span class="sign-count-badge sign-count-points">✨ ${ptCount}</span>` : ''}
-                                ${sCount > 0 ? `<span class="sign-count-badge sign-count-stars">⭐ ${sCount}</span>` : ''}
-                            </div>
-                            <div class="sign-analysis-items">
-                    `;
-
-                    signPlanets.forEach(p => {
-                        const retro = p.retrograde ? '<span class="sign-analysis-item-retro">R</span>' : '';
-                        html += `
-                            <div class="sign-analysis-item">
-                                <div class="sign-analysis-item-left">
-                                    <span class="sign-analysis-item-icon">${getCelestialSymbol(p.id)}</span>
-                                    <span class="sign-analysis-item-name">${p.name}${retro}</span>
-                                </div>
-                                <div class="sign-analysis-item-right">
-                                    <div class="sign-analysis-item-degree">${formatDegree(p.pos)}</div>
-                                    <div class="sign-analysis-item-detail">${p.house}. Ev</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    signPoints.forEach(p => {
-                        html += `
-                            <div class="sign-analysis-item">
-                                <div class="sign-analysis-item-left">
-                                    <span class="sign-analysis-item-icon">✨</span>
-                                    <span class="sign-analysis-item-name">${p.name}</span>
-                                </div>
-                                <div class="sign-analysis-item-right">
-                                    <div class="sign-analysis-item-degree">${formatDegree(p.pos)}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    signStars.forEach(s => {
-                        html += `
-                            <div class="sign-analysis-item">
-                                <div class="sign-analysis-item-left">
-                                    <span class="sign-analysis-item-icon">⭐</span>
-                                    <span class="sign-analysis-item-name">${s.star}</span>
-                                </div>
-                                <div class="sign-analysis-item-right">
-                                    <div class="sign-analysis-item-degree">${s.type}</div>
-                                    <div class="sign-analysis-item-detail">orb: ${s.orb}° · ${s.celestial}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                            </div>
-                            <div class="sign-analysis-total">Toplam: ${total}</div>
-                        </div>
-                    `;
-                }
-            });
-
-            html += `
-                <div class="summary-card">
-                    <div class="summary-title">📊 Genel Özet</div>
-                    <div class="summary-grid">
-                        <div class="summary-item">
-                            <div class="summary-item-value">${totalPlanets}</div>
-                            <div class="summary-item-label">🪐 Gezegen</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-item-value">${totalPoints}</div>
-                            <div class="summary-item-label">✨ Nokta</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-item-value">${totalStars}</div>
-                            <div class="summary-item-label">⭐ Yıldız</div>
-                        </div>
-                        <div class="summary-item">
-                            <div class="summary-item-value">${totalPlanets + totalPoints + totalStars}</div>
-                            <div class="summary-item-label">📊 Toplam</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            return html;
-        }
-
-        function getSignSymbol(signId) {
-            const symbols = {
-                'aries': '♈', 'taurus': '♉', 'gemini': '♊', 'cancer': '♋',
-                'leo': '♌', 'virgo': '♍', 'libra': '♎', 'scorpio': '♏',
-                'sagittarius': '♐', 'capricorn': '♑', 'aquarius': '♒', 'pisces': '♓'
-            };
-            return symbols[signId] || '';
-        }
-
-        function getCelestialSymbol(id) {
-            const symbols = {
-                'sun': '☉', 'moon': '☽', 'mercury': '☿', 'venus': '♀',
-                'mars': '♂', 'jupiter': '♃', 'saturn': '♄', 'uranus': '♅',
-                'neptune': '♆', 'pluto': '♇', 'north_node': '☊', 'lilith': '⚸',
-                'chiron': '⚷', 'asc': '⬆️', 'mc': '🔝', 'ic': '⬇️', 'dc': '➡️',
-                'vertex': '🔹'
-            };
-            return symbols[id] || '●';
-        }
-
-        function getAspectSymbol(type) {
-            const symbols = {
-                'conjunction': '☌', 'sextile': '⚹', 'square': '□',
-                'trine': '△', 'opposition': '☍'
-            };
-            return symbols[type] || '◆';
-        }
-
-        function formatDegree(pos) {
-            const deg = Math.floor(pos);
-            const min = Math.floor((pos - deg) * 60);
-            return `${deg}° ${min.toString().padStart(2, '0')}'`;
-        }
-
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1).replace(/_/g, ' ');
         }
     </script>
 </body>
