@@ -9,6 +9,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-service.js"></script>
 
     <style>
         * {
@@ -78,7 +79,6 @@
             font-weight: 500;
         }
 
-        /* === GÜNLÜK YORUM KARTI === */
         .daily-horoscope-card {
             background-color: #ffffff;
             border-radius: 16px;
@@ -338,7 +338,6 @@
         }
     </style>
 <base target="_blank">
-<base target="_blank">
 </head>
 <body>
     <div class="app-container">
@@ -390,6 +389,8 @@
         </div>
 
         <main class="dashboard-content">
+            <!-- Orta alan placeholder -->
+        </main>
 
         <div class="category-scroll-wrapper">
             <div class="category-scroll">
@@ -425,20 +426,7 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        // Sadece kullanıcı adını çek
-        firebase.auth().onAuthStateChanged((user) => {
+        AstroService.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "login.html";
                 return;
@@ -448,20 +436,15 @@
 
         async function loadUserName(user) {
             try {
-                const doc = await db.collection("user_profiles").doc(user.uid).get();
-                if (doc.exists) {
-                    const data = doc.data();
+                const data = await AstroService.getUserProfile(user.uid);
+                if (data) {
                     const fullname = data.fullname || user.displayName || "Kullanıcı";
                     document.getElementById('userName').textContent = fullname;
 
-                    // Burçları göster
-                    const sunSign = data.sunSign || data.natalChart?.planets?.find(p => p.id === "sun")?.sign;
-                    const moonSign = data.moonSign || data.natalChart?.planets?.find(p => p.id === "moon")?.sign;
-                    const risingSign = data.risingSign || data.natalChart?.angles_details?.asc?.sign;
-
-                    if (sunSign) document.getElementById('sunSign').textContent = sunSign;
-                    if (moonSign) document.getElementById('moonSign').textContent = moonSign;
-                    if (risingSign) document.getElementById('risingSign').textContent = risingSign;
+                    const signs = await AstroService.getUserSigns(user.uid);
+                    if (signs.sunSign) document.getElementById('sunSign').textContent = signs.sunSign;
+                    if (signs.moonSign) document.getElementById('moonSign').textContent = signs.moonSign;
+                    if (signs.risingSign) document.getElementById('risingSign').textContent = signs.risingSign;
                 } else {
                     document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
                 }
