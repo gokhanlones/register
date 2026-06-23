@@ -8,9 +8,9 @@
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="firebase-service.js"></script>
 
     <style>
-        /* Inline hata mesajı kutusu */
         .inline-error {
             display: none;
             background-color: #fef2f2;
@@ -38,6 +38,7 @@
             100% { transform: translateX(0); opacity: 1; }
         }
     </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -52,7 +53,6 @@
         <main class="scrollable-form-section">
             <form class="register-form" id="registerForm" onsubmit="return false;">
 
-                <!-- Firebase Hata Mesajı Alanı -->
                 <div class="inline-error" id="firebaseError"></div>
 
                 <div class="form-group" id="group-fullname">
@@ -99,17 +99,6 @@
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAFRhlbnY4Fq67Wl-E8yis5msD6K-QZjbU",
-            authDomain: "astro-notlarim.firebaseapp.com",
-            projectId: "astro-notlarim",
-            storageBucket: "astro-notlarim.firebasestorage.app",
-            messagingSenderId: "123654326926",
-            appId: "1:123654326926:web:44ba9bf34fcea3bf5ad7df",
-            measurementId: "G-19BSBWLJ7X"
-        };
-        firebase.initializeApp(firebaseConfig);
-
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             input.type = input.type === "password" ? "text" : "password";
@@ -121,7 +110,6 @@
             return re.test(email);
         }
 
-        // ─── HATA MESAJI YÖNETİMİ ───
         function showFirebaseError(message, isRedirect = false) {
             const errorBox = document.getElementById('firebaseError');
             if (isRedirect) {
@@ -138,31 +126,7 @@
             errorBox.innerHTML = '';
         }
 
-        // Firebase hata kodlarını Türkçe mesajlara çevir
-        function getFirebaseErrorMessage(errorCode) {
-            const errorMessages = {
-                'auth/email-already-in-use': {
-                    message: 'Bu e-posta adresi zaten kayıtlı. Giriş yapmak ister misiniz?',
-                    redirect: true,
-                    redirectText: 'Giriş yap'
-                },
-                'auth/invalid-email': 'Geçersiz e-posta adresi. Lütfen kontrol edin.',
-                'auth/weak-password': 'Şifre çok zayıf. En az 6 karakter kullanın.',
-                'auth/operation-not-allowed': 'E-posta/şifre girişi Firebase konsolda aktif değil.',
-                'auth/network-request-failed': 'İnternet bağlantınızı kontrol edin.',
-                'auth/too-many-requests': 'Çok fazla deneme yaptınız. Lütfen biraz bekleyin.',
-                'auth/invalid-api-key': 'Uygulama yapılandırmasında hata var.',
-                'auth/app-not-authorized': 'Bu domain için yetki verilmemiş.'
-            };
-
-            return errorMessages[errorCode] || {
-                message: 'Bir hata oluştu: ' + errorCode,
-                redirect: false
-            };
-        }
-
-        function handleRegister() {
-            // Önceki hataları temizle
+        async function handleRegister() {
             document.querySelectorAll('.form-group').forEach(el => el.classList.remove('has-error'));
             hideFirebaseError();
 
@@ -194,43 +158,32 @@
             btn.disabled = true;
             btn.textContent = "Kayıt oluşturuluyor...";
 
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
+            try {
+                const user = await AstroService.registerWithEmail(email, password);
+                await AstroService.updateUserProfile({ displayName: fullname });
+                await AstroService.sendEmailVerification();
 
-                    return user.updateProfile({ displayName: fullname })
-                        .then(() => user.sendEmailVerification())
-                        .then(() => {
-                            sessionStorage.setItem('temp_fullname', fullname);
-                            sessionStorage.setItem('temp_email', email);
-                            sessionStorage.setItem('temp_device_info', JSON.stringify({
-                                userAgent: navigator.userAgent,
-                                platform: navigator.platform,
-                                language: navigator.language
-                            }));
-                            window.location.href = "terms.html";
-                        });
-                })
-                .catch(err => {
-                    // Butonu eski haline getir
-                    btn.disabled = false;
-                    btn.textContent = "Kayıt Ol";
-
-                    const errorInfo = getFirebaseErrorMessage(err.code);
-
-                    if (errorInfo.redirect) {
-                        // Yönlendirme linki içeren hata mesajı
-                        showFirebaseError(
-                            errorInfo.message + ' <a href="login.html">' + errorInfo.redirectText + '</a>',
-                            true
-                        );
-                    } else {
-                        // Normal hata mesajı
-                        showFirebaseError(
-                            typeof errorInfo === 'string' ? errorInfo : errorInfo.message
-                        );
-                    }
+                AstroService.SessionStore.set('temp_fullname', fullname);
+                AstroService.SessionStore.set('temp_email', email);
+                AstroService.SessionStore.set('temp_device_info', {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    language: navigator.language
                 });
+                window.location.href = "terms.html";
+            } catch (err) {
+                btn.disabled = false;
+                btn.textContent = "Kayıt Ol";
+                const errorInfo = AstroService.translateAuthError(err.code);
+                if (errorInfo.redirect) {
+                    showFirebaseError(
+                        errorInfo.message + ' <a href="login.html">' + errorInfo.redirectText + '</a>',
+                        true
+                    );
+                } else {
+                    showFirebaseError(errorInfo.message);
+                }
+            }
         }
     </script>
 </body>
