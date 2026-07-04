@@ -565,17 +565,21 @@
         function renderDailyHoroscope(data) {
             const content = document.getElementById('dashboardContent');
             
+            const esc = AstroService.escapeHtml;
             let scoresHtml = '';
             const scoreLabels = { love: 'Aşk', career: 'Kariyer', money: 'Para', health: 'Sağlık' };
-            
-            for (const [key, value] of Object.entries(data.scores || {})) {
+
+            for (const [key, rawValue] of Object.entries(data.scores || {})) {
+                // Skor değeri API'den geliyor; hem sayısal olmayan değerlere
+                // hem de CSS injection'a karşı 0-100 arası tam sayıya sabitleniyor.
+                const numValue = Math.max(0, Math.min(100, parseInt(rawValue, 10) || 0));
                 scoresHtml += `
                     <div class="score-bar-item">
-                        <span class="score-bar-label">${scoreLabels[key] || key}</span>
+                        <span class="score-bar-label">${esc(scoreLabels[key] || key)}</span>
                         <div class="score-bar-track">
-                            <div class="score-bar-fill" style="width: ${value}%"></div>
+                            <div class="score-bar-fill" style="width: ${numValue}%"></div>
                         </div>
-                        <span class="score-bar-value">${value}</span>
+                        <span class="score-bar-value">${numValue}</span>
                     </div>
                 `;
             }
@@ -584,24 +588,24 @@
                 <div class="daily-horoscope-card">
                     <div class="daily-horoscope-header">
                         <div class="daily-horoscope-title">Bugünün Gök Günlüğü</div>
-                        <div class="daily-horoscope-date">${data.date}</div>
+                        <div class="daily-horoscope-date">${esc(data.date)}</div>
                     </div>
-                    <div class="daily-horoscope-text">${data.horoscope}</div>
+                    <div class="daily-horoscope-text">${esc(data.horoscope)}</div>
                     <div class="score-bars">
                         ${scoresHtml}
                     </div>
                     <div class="lucky-info">
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                            <span>Şanslı Sayı: ${data.luckyNumber}</span>
+                            <span>Şanslı Sayı: ${esc(data.luckyNumber)}</span>
                         </div>
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
-                            <span>Şanslı Renk: ${data.luckyColor}</span>
+                            <span>Şanslı Renk: ${esc(data.luckyColor)}</span>
                         </div>
                         <div class="lucky-item">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                            <span>Şanslı Saat: ${data.luckyTime}</span>
+                            <span>Şanslı Saat: ${esc(data.luckyTime)}</span>
                         </div>
                     </div>
                 </div>
