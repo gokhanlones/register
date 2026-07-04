@@ -37,46 +37,34 @@
             min-height: 2.2rem;
         }
 
-        .astro-icons {
+        .astro-signs-row {
             display: flex;
             justify-content: center;
-            gap: 16px;
-            margin-top: 8px;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 0 16px;
         }
-        .astro-icon-btn {
+        .astro-sign-card {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 6px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 8px;
-            transition: transform 0.2s;
-            outline: none;
-        }
-        .astro-icon-btn:active {
-            transform: scale(0.95);
-        }
-        .astro-icon-btn svg {
-            width: 48px;
-            height: 48px;
-            padding: 10px;
-            border-radius: 50%;
+            gap: 8px;
+            padding: 10px 16px;
             background-color: #f9fafb;
-            border: 2px solid #e5e7eb;
-            color: #d4af37;
+            border: 1px solid #e5e7eb;
+            border-radius: 24px;
             transition: all 0.2s;
         }
-        .astro-icon-btn:hover svg {
-            background-color: #000000;
-            border-color: #000000;
+        .astro-sign-card svg {
+            width: 20px;
+            height: 20px;
             color: #d4af37;
+            flex-shrink: 0;
         }
-        .astro-icon-btn span {
-            font-size: 0.75rem;
-            color: #6b7280;
-            font-weight: 500;
+        .astro-sign-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            white-space: nowrap;
         }
 
         .daily-horoscope-card {
@@ -290,36 +278,6 @@
             text-align: right;
         }
 
-        .astro-signs-row {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 16px;
-            padding: 0 16px;
-        }
-        .astro-sign-card {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 24px;
-            transition: all 0.2s;
-        }
-        .astro-sign-card svg {
-            width: 20px;
-            height: 20px;
-            color: #d4af37;
-            flex-shrink: 0;
-        }
-        .astro-sign-label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #374151;
-            white-space: nowrap;
-        }
-
         .dashboard-content {
             flex: 1;
             overflow-y: auto;
@@ -336,12 +294,28 @@
             background: #d1d5db;
             border-radius: 4px;
         }
+
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .loading-spinner svg {
+            width: 40px;
+            height: 40px;
+            color: #d4af37;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <header class="brand-section">
-            <button class="btn-menu">
+        <header class="brand-section app-header">
+            <button class="btn-menu" onclick="toggleMenu()">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -387,36 +361,135 @@
             </div>
         </div>
 
-        <main class="dashboard-content">
-            <!-- Orta alan placeholder -->
+        <div class="category-scroll-wrapper">
+            <div class="category-scroll">
+                <button class="category-btn" onclick="showCategory('love')">
+                    <span class="category-text">Aşk</span>
+                </button>
+                <button class="category-btn" onclick="showCategory('career')">
+                    <span class="category-text">Kariyer</span>
+                </button>
+                <button class="category-btn" onclick="showCategory('money')">
+                    <span class="category-text">Para</span>
+                </button>
+                <button class="category-btn" onclick="showCategory('health')">
+                    <span class="category-text">Sağlık</span>
+                </button>
+            </div>
+        </div>
+
+        <main class="dashboard-content" id="dashboardContent">
+            <div class="loading-spinner" id="loadingSpinner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                </svg>
+                <p style="margin-top: 12px;">Günlük yorum yükleniyor...</p>
+            </div>
         </main>
 
         <footer class="bottom-navbar">
-            <a href="dashboard.html" class="nav-item active">
+            <button class="nav-item active" onclick="goToPage('dashboard.html')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span class="nav-label">Anasayfa</span>
-            </a>
-            <a href="ask.html" class="nav-item">
+            </button>
+            <button class="nav-item" onclick="goToPage('ask.html')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span class="nav-label">Sor</span>
-            </a>
-            <a href="natal.html" class="nav-item">
+            </button>
+            <button class="nav-item" onclick="goToPage('natal.html')">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
                 <span class="nav-label">Harita</span>
-            </a>
+            </button>
         </footer>
     </div>
 
+    <!-- Popup Overlay -->
+    <div id="popupOverlay" class="popup-overlay" onclick="closePopup(event)">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <div class="popup-header">
+                <div class="popup-title" id="popupTitle">Kategori</div>
+                <button class="popup-close" onclick="closePopup()">×</button>
+            </div>
+            <div class="popup-body" id="popupBody">
+                <!-- İçerik dinamik olarak doldurulacak -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Menu -->
+    <div id="sideMenu" class="side-menu" onclick="toggleMenu()">
+        <div class="side-menu-panel" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+                <h2 style="color:#d4af37;font-size:1.2rem;margin:0;">Menü</h2>
+                <button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">×</button>
+            </div>
+            <nav style="display:flex;flex-direction:column;gap:16px;">
+                <a onclick="goToPage('dashboard.html')" style="color:#d4af37;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;background:#2d2d44;cursor:pointer;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    Anasayfa
+                </a>
+                <a onclick="goToPage('natal.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                    Doğum Haritası
+                </a>
+                <a onclick="goToPage('ask.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Sor
+                </a>
+                <a onclick="goToPage('profile.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    Profil
+                </a>
+                <a onclick="AstroService.logout(); window.location.href='login.html';" style="color:#ef4444;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Çıkış Yap
+                </a>
+            </nav>
+        </div>
+    </div>
+
     <script>
+        function goToPage(page) {
+            window.location.href = page;
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            menu.classList.toggle('show');
+        }
+
+        function showCategory(category) {
+            const popup = document.getElementById('popupOverlay');
+            const title = document.getElementById('popupTitle');
+            const body = document.getElementById('popupBody');
+
+            const titles = {
+                love: 'Aşk',
+                career: 'Kariyer',
+                money: 'Para',
+                health: 'Sağlık'
+            };
+
+            title.textContent = titles[category] || 'Kategori';
+            body.innerHTML = '<p>Bu kategori için yorumlar yakında eklenecek.</p>';
+            popup.classList.add('show');
+        }
+
+        function closePopup(event) {
+            if (!event || event.target.id === 'popupOverlay') {
+                document.getElementById('popupOverlay').classList.remove('show');
+            }
+        }
+
         AstroService.onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = "login.html";
                 return;
             }
-            loadUserName(user);
+            loadUserData(user);
         });
 
-        async function loadUserName(user) {
+        async function loadUserData(user) {
             try {
                 const data = await AstroService.getUserProfile(user.uid);
                 if (data) {
@@ -427,13 +500,112 @@
                     if (signs.sunSign) document.getElementById('sunSign').textContent = signs.sunSign;
                     if (signs.moonSign) document.getElementById('moonSign').textContent = signs.moonSign;
                     if (signs.risingSign) document.getElementById('risingSign').textContent = signs.risingSign;
+
+                    // Günlük yorumu yükle
+                    loadDailyHoroscope(user.uid, data);
                 } else {
                     document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
+                    document.getElementById('loadingSpinner').innerHTML = '<p>Doğum bilgileriniz eksik.</p>';
                 }
             } catch (err) {
-                console.error("İsim çekme hatası:", err);
+                console.error("Veri çekme hatası:", err);
                 document.getElementById('userName').textContent = user.displayName || "Kullanıcı";
             }
+        }
+
+        async function loadDailyHoroscope(uid, userData) {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const cached = await AstroService.getDailyHoroscope(uid, today);
+
+                if (cached) {
+                    renderDailyHoroscope(cached);
+                    return;
+                }
+
+                // API'den çek
+                const apiKey = await AstroService.getAstroApiKey();
+                const requestBody = {
+                    year: userData.birthYear,
+                    month: userData.birthMonth,
+                    day: userData.birthDay,
+                    hour: userData.birthHour,
+                    minute: userData.birthMinute,
+                    lat: userData.latitude,
+                    lng: userData.longitude,
+                    tz_str: "AUTO"
+                };
+
+                const response = await AstroService.fetchDailyTransit(apiKey, requestBody);
+                const transitData = response.data || response;
+
+                const dailyData = {
+                    date: today,
+                    horoscope: transitData.daily_horoscope || transitData.horoscope || 'Bugün için özel bir yorum bulunamadı.',
+                    scores: transitData.scores || {
+                        love: Math.floor(Math.random() * 40) + 60,
+                        career: Math.floor(Math.random() * 40) + 60,
+                        money: Math.floor(Math.random() * 40) + 60,
+                        health: Math.floor(Math.random() * 40) + 60
+                    },
+                    luckyNumber: transitData.lucky_number || Math.floor(Math.random() * 99) + 1,
+                    luckyColor: transitData.lucky_color || 'Altın',
+                    luckyTime: transitData.lucky_time || '10:00 - 12:00'
+                };
+
+                await AstroService.saveDailyHoroscope(uid, dailyData);
+                renderDailyHoroscope(dailyData);
+            } catch (err) {
+                console.error("Günlük yorum hatası:", err);
+                document.getElementById('dashboardContent').innerHTML = 
+                    '<div style="text-align:center;padding:40px;color:#9ca3af;"><p>Günlük yorum yüklenirken hata oluştu.</p></div>';
+            }
+        }
+
+        function renderDailyHoroscope(data) {
+            const content = document.getElementById('dashboardContent');
+            
+            let scoresHtml = '';
+            const scoreLabels = { love: 'Aşk', career: 'Kariyer', money: 'Para', health: 'Sağlık' };
+            
+            for (const [key, value] of Object.entries(data.scores || {})) {
+                scoresHtml += `
+                    <div class="score-bar-item">
+                        <span class="score-bar-label">${scoreLabels[key] || key}</span>
+                        <div class="score-bar-track">
+                            <div class="score-bar-fill" style="width: ${value}%"></div>
+                        </div>
+                        <span class="score-bar-value">${value}</span>
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <div class="daily-horoscope-card">
+                    <div class="daily-horoscope-header">
+                        <div class="daily-horoscope-title">Bugünün Gök Günlüğü</div>
+                        <div class="daily-horoscope-date">${data.date}</div>
+                    </div>
+                    <div class="daily-horoscope-text">${data.horoscope}</div>
+                    <div class="score-bars">
+                        ${scoresHtml}
+                    </div>
+                    <div class="lucky-info">
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <span>Şanslı Sayı: ${data.luckyNumber}</span>
+                        </div>
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+                            <span>Şanslı Renk: ${data.luckyColor}</span>
+                        </div>
+                        <div class="lucky-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>Şanslı Saat: ${data.luckyTime}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     </script>
 </body>
