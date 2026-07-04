@@ -11,13 +11,15 @@ html, body {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
-    overflow-y: hidden;
+    /* overflow-y: hidden; KALDIRILDI - Sayfalar kaydırılamıyordu */
     background-color: #ffffff;
     color: #000000;
 }
 
-/* Ana Gövdeyi Ortala (Masaüstü için) */
-body {
+/* Ana Gövdeyi Ortala (Masaüstü için) - SADECE login/register sayfaları için */
+body.login-page,
+body.register-page,
+body.terms-page {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -48,11 +50,11 @@ body {
     position: relative;
 }
 
-/* Eğer header içinde hamburger menü (.btn-menu) varsa (Uygulama İçi Banner) */
-.brand-section:has(.btn-menu) {
+/* Uygulama İçi Banner (Hamburger menü varsa) */
+.brand-section.app-header {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Butonu KESİN olarak en sola yapıştırır */
+    justify-content: flex-start;
     padding: 0 20px;
     height: 65px;
     border-bottom: 1px solid #f3f4f6;
@@ -67,8 +69,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px 5px 5px 0; /* Sol boşluğu sıfırlayarak tam kenara alıyoruz */
-    z-index: 11; /* Tıklanma önceliği */
+    padding: 5px 5px 5px 0;
+    z-index: 11;
 }
 
 /* Varsayılan Başlık (Login Sayfası) */
@@ -79,14 +81,14 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Hamburger Menülü Banner'daki Ortalanmış Başlık */
-.brand-section:has(.btn-menu) h1 {
+/* Uygulama İçi Banner'daki Ortalanmış Başlık */
+.brand-section.app-header h1 {
     font-size: 1.25rem;
     position: absolute;
     left: 50%;
-    transform: translateX(-50%); /* Kusursuz ortalama */
+    transform: translateX(-50%);
     margin: 0;
-    pointer-events: none; /* Metin kutusunun buton tıklamasını engellememesi için */
+    pointer-events: none;
     white-space: nowrap;
 }
 
@@ -141,6 +143,10 @@ body {
     justify-content: center;
     transition: color 0.2s;
     width: 33%;
+    cursor: pointer;
+    background: none;
+    border: none;
+    outline: none;
 }
 
 .nav-item svg {
@@ -153,7 +159,7 @@ body {
 }
 
 .nav-item.active {
-    color: #d4af37; /* Aktif sayfa altın rengi */
+    color: #d4af37;
 }
 
 /* =========================================
@@ -273,6 +279,7 @@ body {
     text-decoration: none;
     font-weight: 700;
     margin-left: 4px;
+    cursor: pointer;
 }
 
 .register-footer a:hover {
@@ -290,4 +297,38 @@ body {
 .register-link:hover {
     opacity: 0.8;
     text-decoration: underline;
+}
+
+/* =========================================
+   SIDE MENU STYLES
+   ========================================= */
+.side-menu {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.side-menu.show {
+    display: flex;
+}
+
+.side-menu-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background: #1a1a2e;
+    padding: 20px;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.side-menu.show .side-menu-panel {
+    transform: translateX(0);
 }
