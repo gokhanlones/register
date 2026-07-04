@@ -41,7 +41,7 @@
         }
     </style>
 </head>
-<body>
+<body class="register-page">
 
     <div class="app-container">
         <header class="brand-section">
@@ -94,12 +94,16 @@
             </form>
 
             <footer class="register-footer">
-                <p>Zaten üye misin? <a href="login.html">Giriş yap</a></p>
+                <p>Zaten üye misin? <a onclick="goToLogin()" style="cursor:pointer;">Giriş yap</a></p>
             </footer>
         </main>
     </div>
 
     <script>
+        function goToLogin() {
+            window.location.href = 'login.html';
+        }
+
         document.getElementById('registerBtn').addEventListener('click', function() {
             handleRegister().catch(function(err) {
                 console.error('Kayıt hatası:', err);
@@ -189,7 +193,7 @@
                 const errorInfo = AstroService.translateAuthError(err.code);
                 if (errorInfo.redirect) {
                     showFirebaseError(
-                        errorInfo.message + ' <a href="login.html">' + errorInfo.redirectText + '</a>',
+                        errorInfo.message + ' <a onclick="goToLogin()" style="cursor:pointer;">' + errorInfo.redirectText + '</a>',
                         true
                     );
                 } else {
