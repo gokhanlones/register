@@ -203,29 +203,61 @@
         const birthPlaceInput = document.getElementById('birthPlace');
         const suggestionsBox = document.getElementById('placeSuggestions');
 
-        birthPlaceInput.addEventListener('input', async (e) => {
+        // NOT: GEONAMES_USERNAME client tarafında görünür durumda. GeoNames'in
+        // ücretsiz katmanı zaten kullanıcı adını public API çağrılarında bekler,
+        // ancak kötüye kullanım/kota tükenme riskini azaltmak için:
+        // 1) İstekler debounce edilir (kullanıcı yazmayı bitirene kadar beklenir)
+        // 2) Aynı sorgu tekrar tekrar istek atmaz (basit önbellek)
+        // Kalıcı çözüm: bu isteği kendi backend/Cloud Function proxy'niz üzerinden
+        // yapıp GEONAMES_USERNAME'i sunucu tarafında saklamaktır.
+        let geoDebounceTimer = null;
+        const geoQueryCache = new Map();
+
+        birthPlaceInput.addEventListener('input', (e) => {
             const query = e.target.value.trim();
-            if (query.length < 2) { suggestionsBox.style.display = 'none'; return; }
+            if (query.length < 2) {
+                suggestionsBox.style.display = 'none';
+                if (geoDebounceTimer) clearTimeout(geoDebounceTimer);
+                return;
+            }
+
+            if (geoDebounceTimer) clearTimeout(geoDebounceTimer);
+            geoDebounceTimer = setTimeout(() => runGeoSearch(query), 400);
+        });
+
+        async function runGeoSearch(query) {
             try {
+                if (geoQueryCache.has(query)) {
+                    renderGeoSuggestions(geoQueryCache.get(query));
+                    return;
+                }
                 const response = await fetch(`https://secure.geonames.org/searchJSON?q=${encodeURIComponent(query)}&maxRows=5&featureClass=P&lang=tr&country=TR&username=${GEONAMES_USERNAME}`);
                 const data = await response.json();
-                suggestionsBox.innerHTML = '';
-                if (data.geonames && data.geonames.length > 0) {
-                    data.geonames.forEach(place => {
-                        const item = document.createElement('div');
-                        item.className = 'suggestion-item';
-                        item.textContent = `${place.name}, ${place.adminName1 || place.countryName}`;
-                        item.onclick = () => { 
-                            birthPlaceInput.value = item.textContent; 
-                            selectedLocation = { name: item.textContent, lat: place.lat, lng: place.lng };
-                            suggestionsBox.style.display = 'none'; 
-                        };
-                        suggestionsBox.appendChild(item);
-                    });
-                    suggestionsBox.style.display = 'block';
-                }
+                const results = data.geonames || [];
+                geoQueryCache.set(query, results);
+                renderGeoSuggestions(results);
             } catch (err) { console.error(err); }
-        });
+        }
+
+        function renderGeoSuggestions(geonames) {
+            suggestionsBox.innerHTML = '';
+            if (geonames && geonames.length > 0) {
+                geonames.forEach(place => {
+                    const item = document.createElement('div');
+                    item.className = 'suggestion-item';
+                    item.textContent = `${place.name}, ${place.adminName1 || place.countryName}`;
+                    item.onclick = () => {
+                        birthPlaceInput.value = item.textContent;
+                        selectedLocation = { name: item.textContent, lat: place.lat, lng: place.lng };
+                        suggestionsBox.style.display = 'none';
+                    };
+                    suggestionsBox.appendChild(item);
+                });
+                suggestionsBox.style.display = 'block';
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        }
 
         document.addEventListener('click', (e) => {
             if (!document.getElementById('group-birthplace').contains(e.target)) {
