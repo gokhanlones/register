@@ -199,7 +199,30 @@ async function saveBirthInfo(uid, birthData) {
         ...birthData,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
+
+    // Doğum bilgisi değiştiğinde (örn. profil ekranından güncelleme), eski
+    // günlük yorum önbelleği artık yanlış burca/haritaya dayanır. Bayat veri
+    // gösterilmesini önlemek için önbelleği temizliyoruz.
+    await clearDailyCache(uid);
     return docRef;
+}
+
+/**
+ * Kullanıcının günlük yorum önbelleğini (daily_cache alt koleksiyonu) temizler.
+ * Doğum bilgisi güncellendiğinde eski/bayat verinin gösterilmesini önler.
+ * @param {string} uid
+ */
+async function clearDailyCache(uid) {
+    try {
+        const snapshot = await db.collection('user_profiles').doc(uid).collection('daily_cache').get();
+        if (snapshot.empty) return;
+        const batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+    } catch (err) {
+        // Önbellek temizleme başarısız olsa bile ana işlemi bloklamayalım.
+        console.warn('Günlük yorum önbelleği temizlenemedi:', err);
+    }
 }
 
 /**
@@ -238,6 +261,19 @@ async function getUserProfile(uid) {
 async function hasBirthInfo(uid) {
     const data = await getUserProfile(uid);
     return !!(data && data.birthYear);
+}
+
+/**
+ * Kullanıcının KVKK/Kullanım Şartları onayını verip vermediğini kontrol et.
+ * redirectAfterLogin ve checkSessionAndRedirect bu fonksiyonu tek kaynak
+ * olarak kullanır; böylece Google ile giren kullanıcılar da terms.html'i
+ * atlayamaz (e-posta kaydında olduğu gibi).
+ * @param {string} uid
+ * @returns {Promise<boolean>}
+ */
+async function hasApprovedTerms(uid) {
+    const data = await getUserProfile(uid);
+    return !!(data && data.isTermsApproved === true);
 }
 
 /**
@@ -296,15 +332,14 @@ async function getUserSigns(uid) {
  */
 async function getRemoteConfigValue(key) {
     if (!remoteConfig) {
-        // Fallback: Remote Config yoksa hardcoded API key kullan
-        if (key === 'astro_api_key') {
-            return '85a8865527abf55f25f8c5273d0d848f6df8cc15e9908397583b4acf9e59e0bf';
-        }
-        throw new Error('Remote Config aktif değil');
+        // GÜVENLİK: Buraya asla hardcoded API anahtarı yazılmamalı.
+        // Client-side kod herkese açıktır; sabit bir anahtar burada tutulursa
+        // tarayıcı konsolundan/kaynak koddan doğrudan çalınabilir.
+        throw new Error('Uygulama yapılandırması yüklenemedi. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.');
     }
     await remoteConfig.fetchAndActivate();
     const value = remoteConfig.getString(key);
-    if (!value) throw new Error(`Remote Config: '${key}' bulunamadı`);
+    if (!value) throw new Error('Uygulama yapılandırmasında eksik bir ayar var. Lütfen daha sonra tekrar deneyin.');
     return value;
 }
 
@@ -334,6 +369,9 @@ async function calculateNatalChart(apiKey, requestBody) {
         },
         body: JSON.stringify(requestBody)
     });
+    if (!response.ok) {
+        throw new Error(`Doğum haritası hesaplanamadı (HTTP ${response.status})`);
+    }
     const data = await response.json();
     if (data.error) throw new Error(data.message || 'Doğum haritası hesaplanamadı');
     return data.data || data;
@@ -353,7 +391,12 @@ async function fetchDailyTransit(apiKey, requestBody) {
         },
         body: JSON.stringify(requestBody)
     });
-    return await response.json();
+    if (!response.ok) {
+        throw new Error(`Günlük gökyüzü verisi alınamadı (HTTP ${response.status})`);
+    }
+    const data = await response.json();
+    if (data.error) throw new Error(data.message || 'Günlük gökyüzü verisi alınamadı');
+    return data;
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -366,6 +409,11 @@ async function fetchDailyTransit(apiKey, requestBody) {
  * @param {string} uid
  */
 async function redirectAfterLogin(uid) {
+    const approved = await hasApprovedTerms(uid);
+    if (!approved) {
+        window.location.href = 'terms.html';
+        return;
+    }
     const hasBirth = await hasBirthInfo(uid);
     window.location.href = hasBirth ? 'dashboard.html' : 'birthinfo.html';
 }
@@ -377,6 +425,12 @@ async function checkSessionAndRedirect() {
     return new Promise((resolve) => {
         auth.onAuthStateChanged(async (user) => {
             if (user) {
+                const approved = await hasApprovedTerms(user.uid);
+                if (!approved) {
+                    window.location.replace('terms.html');
+                    resolve('terms.html');
+                    return;
+                }
                 const hasBirth = await hasBirthInfo(user.uid);
                 const target = hasBirth ? 'dashboard.html' : 'birthinfo.html';
                 window.location.replace(target);
@@ -446,11 +500,38 @@ function translateAuthError(errorCode) {
             redirect: false
         }
     };
-    return errors[errorCode] || { message: 'Bir hata oluştu: ' + errorCode, redirect: false };
+    if (!errors[errorCode]) {
+        console.warn('Bilinmeyen auth hata kodu:', errorCode);
+    }
+    return errors[errorCode] || { message: 'Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.', redirect: false };
 }
 
 // ──────────────────────────────────────────────────────────────
-// 10. OTURUM DEPOLAMA YARDIMCILARI
+// 10. GÜVENLİK YARDIMCILARI
+// ──────────────────────────────────────────────────────────────
+
+/**
+ * Üçüncü parti API'lerden (freeastroapi.com vb.) gelen metinler dashboard.html
+ * ve natal.html içinde innerHTML ile DOM'a yazılıyor. Bu metinler escape
+ * edilmeden yazılırsa, API yanıtı manipüle edildiğinde (MITM, tedarik zinciri
+ * saldırısı, API'nin kendisinin ele geçirilmesi vb.) script injection (XSS)
+ * mümkün olur. Bu yüzden dışarıdan gelen her metin DOM'a yazılmadan önce
+ * bu fonksiyondan geçirilmelidir.
+ * @param {*} str
+ * @returns {string}
+ */
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// ──────────────────────────────────────────────────────────────
+// 11. OTURUM DEPOLAMA YARDIMCILARI
 // ──────────────────────────────────────────────────────────────
 
 const SessionStore = {
@@ -494,10 +575,12 @@ window.AstroService = {
     saveUserProfile,
     saveBirthInfo,
     saveDailyHoroscope,
+    clearDailyCache,
 
     // Firestore Okuma
     getUserProfile,
     hasBirthInfo,
+    hasApprovedTerms,
     getUserName,
     getDailyHoroscope,
     getNatalChart,
@@ -517,6 +600,9 @@ window.AstroService = {
 
     // Hata
     translateAuthError,
+
+    // Güvenlik
+    escapeHtml,
 
     // Session
     SessionStore
