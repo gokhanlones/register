@@ -20,7 +20,7 @@
         .forgot-password a:hover { text-decoration: underline; }
     </style>
 </head>
-<body>
+<body class="login-page">
 
     <div class="app-container">
         <header class="brand-section">
@@ -51,7 +51,7 @@
                 </div>
 
                 <div class="forgot-password">
-                    <a href="#" onclick="handleForgotPassword()">Şifremi unuttum</a>
+                    <a href="#" onclick="handleForgotPassword(); return false;">Şifremi unuttum</a>
                 </div>
 
                 <button type="button" class="btn-submit" id="loginBtn" onclick="handleLogin()">Giriş Yap</button>
@@ -59,12 +59,16 @@
             </form>
 
             <footer class="register-footer">
-                <p>Üye değil misin? <a href="register.html">Kayıt ol</a></p>
+                <p>Üye değil misin? <a onclick="goToRegister()" style="cursor:pointer;">Kayıt ol</a></p>
             </footer>
         </main>
     </div>
 
     <script>
+        function goToRegister() {
+            window.location.href = 'register.html';
+        }
+
         function togglePasswordVisibility(inputId, button) {
             const input = document.getElementById(inputId);
             input.type = input.type === "password" ? "text" : "password";
