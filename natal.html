@@ -265,6 +265,22 @@
     </div>
 
     <script>
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            const isOpen = menu.style.display === 'block';
+            if (isOpen) {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'block';
+                const panel = menu.querySelector('.side-menu-panel');
+                if (panel) requestAnimationFrame(() => { panel.style.transform = 'translateX(0)'; });
+            }
+            if (isOpen) {
+                const panel = menu.querySelector('.side-menu-panel');
+                if (panel) panel.style.transform = 'translateX(-100%)';
+            }
+        }
+
         let currentUser = null;
 
         AstroService.onAuthStateChanged((user) => {
@@ -294,6 +310,12 @@
 
         function renderNatalChart(chart) {
             const content = document.getElementById('natalContent');
+            // NOT: chart verisi harici bir API'den (freeastroapi.com) geliyor.
+            // API yanıtı manipüle edilirse (MITM, tedarik zinciri saldırısı vb.)
+            // escape edilmeden innerHTML'e yazılan metinler script injection'a
+            // (XSS) yol açabilir. Bu yüzden tüm dinamik metinler esc() ile
+            // kaçırılıyor.
+            const esc = AstroService.escapeHtml;
 
             // Güneş, Ay, Yükselen özet
             const sunPlanet = chart.planets?.find(p => p.id === 'sun');
@@ -305,20 +327,23 @@
             // Özet badge'ler
             html += '<div class="sign-summary">';
             if (sunPlanet?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">Güneş</span><span class="sign-badge-value">' + sunPlanet.sign + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">Güneş</span><span class="sign-badge-value">' + esc(sunPlanet.sign) + '</span></div>';
             }
             if (moonPlanet?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">Ay</span><span class="sign-badge-value">' + moonPlanet.sign + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">Ay</span><span class="sign-badge-value">' + esc(moonPlanet.sign) + '</span></div>';
             }
             if (ascAngle?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">Yükselen</span><span class="sign-badge-value">' + ascAngle.sign + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">Yükselen</span><span class="sign-badge-value">' + esc(ascAngle.sign) + '</span></div>';
             }
             html += '</div>';
 
             // Harita Görseli (Eğer chart_image varsa veya API'den alınabilirse)
-            if (chart.chart_image || chart.image_url) {
+            const imageUrl = chart.chart_image || chart.image_url;
+            // Sadece http(s) ile başlayan URL'lere izin ver (javascript:/data: gibi
+            // şemalarla src enjeksiyonunu engellemek için).
+            if (imageUrl && /^https?:\/\//i.test(imageUrl)) {
                 html += '<div class="chart-image-wrapper">';
-                html += '<img src="' + (chart.chart_image || chart.image_url) + '" alt="Doğum Haritası">';
+                html += '<img src="' + esc(imageUrl) + '" alt="Doğum Haritası">';
                 html += '</div>';
             } else {
                 // Placeholder - görsel yoksa bilgilendirme
@@ -335,11 +360,11 @@
 
                 chart.planets.forEach(p => {
                     const retro = p.retrograde ? '<span class="retrograde-badge">R</span>' : '';
-                    const houseText = p.house ? p.house + '. Ev' : '';
-                    const degreeText = p.degree !== undefined ? p.degree.toFixed(1) + '°' : '';
+                    const houseText = p.house ? esc(p.house) + '. Ev' : '';
+                    const degreeText = typeof p.degree === 'number' ? p.degree.toFixed(1) + '°' : '';
                     html += '<div class="planet-row">';
-                    html += '<div><span class="planet-name">' + (p.name || p.id) + '</span>' + retro + '</div>';
-                    html += '<div class="planet-detail"><span class="planet-sign">' + (p.sign || '-') + '</span> ' + degreeText + ' ' + houseText + '</div>';
+                    html += '<div><span class="planet-name">' + esc(p.name || p.id) + '</span>' + retro + '</div>';
+                    html += '<div class="planet-detail"><span class="planet-sign">' + esc(p.sign || '-') + '</span> ' + degreeText + ' ' + houseText + '</div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -353,7 +378,7 @@
                 chart.houses.forEach((h, i) => {
                     html += '<div class="house-row">';
                     html += '<div class="house-number">' + (i + 1) + '</div>';
-                    html += '<div class="house-detail"><div class="house-sign">' + (h.sign || '-') + '</div><div class="house-pos">' + (h.degree !== undefined ? h.degree.toFixed(1) + '°' : '') + '</div></div>';
+                    html += '<div class="house-detail"><div class="house-sign">' + esc(h.sign || '-') + '</div><div class="house-pos">' + (typeof h.degree === 'number' ? h.degree.toFixed(1) + '°' : '') + '</div></div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -372,8 +397,8 @@
                     else if (a.type === 'opposition') typeClass = 'aspect-opposition';
 
                     html += '<div class="aspect-row">';
-                    html += '<div class="aspect-planets">' + (a.planet1 || a.p1 || '?') + ' - ' + (a.planet2 || a.p2 || '?') + '</div>';
-                    html += '<div><span class="aspect-type ' + typeClass + '">' + (a.type || '-') + '</span><span class="aspect-angle">' + (a.angle !== undefined ? a.angle.toFixed(1) + '°' : '') + '</span></div>';
+                    html += '<div class="aspect-planets">' + esc(a.planet1 || a.p1 || '?') + ' - ' + esc(a.planet2 || a.p2 || '?') + '</div>';
+                    html += '<div><span class="aspect-type ' + typeClass + '">' + esc(a.type || '-') + '</span><span class="aspect-angle">' + (typeof a.angle === 'number' ? a.angle.toFixed(1) + '°' : '') + '</span></div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -388,8 +413,8 @@
                 for (const [key, angle] of Object.entries(chart.angles_details)) {
                     if (angle) {
                         html += '<div class="planet-row">';
-                        html += '<div class="planet-name">' + (angleNames[key] || key) + '</div>';
-                        html += '<div class="planet-detail"><span class="planet-sign">' + (angle.sign || '-') + '</span> ' + (angle.degree !== undefined ? angle.degree.toFixed(1) + '°' : '') + '</div>';
+                        html += '<div class="planet-name">' + esc(angleNames[key] || key) + '</div>';
+                        html += '<div class="planet-detail"><span class="planet-sign">' + esc(angle.sign || '-') + '</span> ' + (typeof angle.degree === 'number' ? angle.degree.toFixed(1) + '°' : '') + '</div>';
                         html += '</div>';
                     }
                 }
@@ -403,8 +428,8 @@
                 
                 chart.interpretations.forEach((interp, idx) => {
                     html += '<div class="interpretation-text" style="' + (idx > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;' : '') + '">';
-                    html += '<strong style="color:#d4af37;">' + (interp.title || 'Yorum ' + (idx + 1)) + '</strong><br>';
-                    html += (interp.text || interp);
+                    html += '<strong style="color:#d4af37;">' + esc(interp.title || ('Yorum ' + (idx + 1))) + '</strong><br>';
+                    html += esc(interp.text || interp);
                     html += '</div>';
                 });
                 html += '</div>';
