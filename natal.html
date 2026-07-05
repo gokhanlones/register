@@ -15,218 +15,90 @@
 
     <style>
         * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
-        
-        .natal-content { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 20px; 
-            -webkit-overflow-scrolling: touch; 
-        }
+        .natal-content { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
         .natal-content::-webkit-scrollbar { width: 4px; }
         .natal-content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-
-        .section-card { 
-            background-color: #ffffff; 
-            border-radius: 16px; 
-            padding: 20px; 
-            margin-bottom: 16px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
-            border: 1px solid #f3f4f6; 
-        }
-        .section-title { 
-            font-size: 1.1rem; 
-            font-weight: 700; 
-            color: #d4af37; 
-            margin-bottom: 12px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-        }
-
-        .chart-image-wrapper { 
-            width: 100%; 
-            display: flex; 
-            justify-content: center; 
-            margin-bottom: 16px; 
-            background-color: #f9fafb; 
-            border-radius: 16px; 
-            padding: 16px; 
-            border: 1px solid #f3f4f6; 
-        }
-        .chart-image-wrapper img { 
-            max-width: 100%; 
-            height: auto; 
-            border-radius: 12px; 
-        }
-
-        .planet-row { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 12px 0; 
-            border-bottom: 1px solid #f3f4f6; 
-            cursor: pointer; 
-            transition: background-color 0.15s;
-            margin: 0 -8px;
-            padding-left: 8px;
-            padding-right: 8px;
-            border-radius: 8px;
-        }
+        .section-card { background-color: #ffffff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f3f4f6; }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: #d4af37; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .chart-image-wrapper { width: 100%; display: flex; justify-content: center; margin-bottom: 16px; background-color: #f9fafb; border-radius: 16px; padding: 16px; border: 1px solid #f3f4f6; }
+        .chart-image-wrapper img { max-width: 100%; height: auto; border-radius: 12px; }
+        .planet-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
         .planet-row:last-child { border-bottom: none; }
-        .planet-row:active { background-color: #f3f4f6; }
-        .planet-row:hover { background-color: #f9fafb; }
+        .house-row { padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.95rem; color: #374151; }
+        .sign-header { font-weight: 700; color: #d4af37; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #d4af37; font-size: 1rem; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #9ca3af; }
+        
+        /* Tıklanabilir satırlar */
+        .clickable-row {
+            cursor: pointer;
+            transition: background-color 0.15s;
+            border-radius: 8px;
+            padding: 10px 8px;
+            margin: 2px -8px;
+            user-select: none;
+        }
+        .clickable-row:hover { background-color: #f3f4f6; }
+        .clickable-row:active { background-color: #e5e7eb; }
 
-        .planet-name-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .planet-icon {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #d4af37;
-            flex-shrink: 0;
-        }
-        .planet-name {
-            font-weight: 600;
-            color: #111827;
-            font-size: 0.95rem;
-        }
-        .planet-details {
-            color: #6b7280;
-            font-size: 0.85rem;
-            text-align: right;
-        }
-        .planet-chevron {
-            width: 16px;
-            height: 16px;
-            color: #d1d5db;
-            margin-left: 4px;
-            flex-shrink: 0;
-        }
-
-        .house-row { 
-            padding: 10px 0; 
-            border-bottom: 1px solid #f3f4f6; 
-            font-size: 0.95rem; 
-            color: #374151; 
-        }
-        .house-row:last-child { border-bottom: none; }
-
-        .sign-header { 
-            font-weight: 700; 
-            color: #d4af37; 
-            margin: 16px 0 8px 0; 
-            padding-bottom: 4px; 
-            border-bottom: 1px solid #d4af37; 
-            font-size: 1rem; 
-        }
-
-        .empty-state { 
-            text-align: center; 
-            padding: 40px 20px; 
-            color: #9ca3af; 
-        }
-
-        /* ─── BOTTOM SHEET ─── */
-        .bottom-sheet-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: flex-end;
-        }
-        .bottom-sheet-overlay.show {
-            display: flex;
-        }
+        /* Bottom Sheet */
         .bottom-sheet {
-            background-color: #ffffff;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .bottom-sheet.show { display: flex; opacity: 1; }
+        .bottom-sheet-overlay { position: absolute; inset: 0; }
+        .bottom-sheet-content {
+            position: relative;
+            background: #ffffff;
             width: 100%;
-            max-width: 420px;
-            border-radius: 20px 20px 0 0;
-            max-height: 75vh;
-            display: flex;
-            flex-direction: column;
+            max-height: 80vh;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
             transform: translateY(100%);
-            transition: transform 0.3s ease-out;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         }
-        .bottom-sheet-overlay.show .bottom-sheet {
-            transform: translateY(0);
-        }
-
+        .bottom-sheet.show .bottom-sheet-content { transform: translateY(0); }
         .bottom-sheet-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 20px 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #f3f4f6;
-            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            background: #fff;
+            z-index: 10;
         }
-        .bottom-sheet-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #111827;
+        .bottom-sheet-header h3 { margin: 0; font-size: 1.1rem; color: #111827; font-weight: 700; }
+        .bottom-sheet-header button {
+            background: #f3f4f6; border: none; font-size: 1.3rem; color: #6b7280;
+            cursor: pointer; padding: 0; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: all 0.2s;
         }
-        .bottom-sheet-close {
-            background: none;
-            border: none;
-            font-size: 1.6rem;
-            color: #9ca3af;
-            cursor: pointer;
-            padding: 4px;
-            line-height: 1;
+        .bottom-sheet-header button:hover { background: #e5e7eb; color: #374151; }
+        .bs-category { margin-bottom: 20px; }
+        .bs-category-title {
+            font-size: 0.8rem; font-weight: 700; color: #d4af37;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 10px; padding: 6px 10px;
+            background: #fef9e7; border-radius: 8px; display: inline-block;
         }
-
-        .bottom-sheet-body {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 20px 24px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .category-section {
-            margin-bottom: 20px;
-        }
-        .category-section-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #d4af37;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .interp-card {
-            background-color: #f9fafb;
-            border-radius: 12px;
-            padding: 14px 16px;
-            margin-bottom: 10px;
-            border: 1px solid #f3f4f6;
-        }
-        .interp-card-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 6px;
-        }
-        .interp-card-body {
-            font-size: 0.9rem;
-            color: #4b5563;
-            line-height: 1.6;
-        }
-        .no-interpretation {
-            text-align: center;
-            padding: 30px 20px;
-            color: #9ca3af;
-            font-size: 0.95rem;
-        }
+        .bs-item { background: #f9fafb; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid #f3f4f6; }
+        .bs-item-title { font-weight: 700; color: #374151; margin-bottom: 6px; font-size: 0.95rem; }
+        .bs-item-body { font-size: 0.9rem; color: #4b5563; line-height: 1.6; }
+        .bs-empty { text-align: center; padding: 40px 20px; color: #6b7280; font-size: 0.95rem; }
     </style>
 </head>
 <body>
@@ -260,16 +132,15 @@
         </footer>
     </div>
 
-    <!-- ─── BOTTOM SHEET ─── -->
-    <div id="bottomSheetOverlay" class="bottom-sheet-overlay" onclick="closeBottomSheet(event)">
-        <div class="bottom-sheet" onclick="event.stopPropagation()">
+    <!-- Bottom Sheet -->
+    <div id="bottomSheet" class="bottom-sheet" onclick="closeBottomSheet(event)">
+        <div class="bottom-sheet-overlay"></div>
+        <div class="bottom-sheet-content" onclick="event.stopPropagation()">
             <div class="bottom-sheet-header">
-                <div class="bottom-sheet-title" id="bottomSheetTitle">Yorumlar</div>
-                <button class="bottom-sheet-close" onclick="closeBottomSheet()">&times;</button>
+                <h3 id="bsTitle">Yorum</h3>
+                <button onclick="closeBottomSheet()">&times;</button>
             </div>
-            <div class="bottom-sheet-body" id="bottomSheetBody">
-                <!-- İçerik dinamik -->
-            </div>
+            <div id="bsBody" class="bottom-sheet-body"></div>
         </div>
     </div>
 
@@ -306,28 +177,6 @@
     </div>
 
     <script>
-        // ─── GLOBALS ───
-        let currentChart = null;
-
-        const CATEGORY_LABELS = {
-            coreSelf:        'dashboard.coreSelf',
-            mind:            'dashboard.mind',
-            loveRelating:    'dashboard.loveRelating',
-            workPath:        'dashboard.workPath',
-            socialCollective:'dashboard.socialCollective',
-            karmicHealing:   'dashboard.karmicHealing'
-        };
-
-        // JSON key'leri ile bizim key'ler arası mapping
-        const JSON_TO_CAT_KEY = {
-            core_self: 'coreSelf',
-            mind: 'mind',
-            love_relating: 'loveRelating',
-            work_path: 'workPath',
-            social_collective: 'socialCollective',
-            karmic_healing: 'karmicHealing'
-        };
-
         function goToPage(page) { window.location.href = page; }
         function toggleMenu() { document.getElementById('sideMenu').classList.toggle('show'); }
 
@@ -342,128 +191,14 @@
                     document.getElementById('natalContent').innerHTML = '<div class="empty-state"><p>' + i18n.t('natal.notFound') + '</p></div>';
                     return;
                 }
-                currentChart = chart;
                 renderNatalChart(chart);
             } catch (err) {
                 document.getElementById('natalContent').innerHTML = '<div class="empty-state" style="color:#ef4444;"><p>' + i18n.t('natal.loadingError') + '</p></div>';
             }
         }
 
-        // ─── BOTTOM SHEET ───
-        function openBottomSheet(title) {
-            document.getElementById('bottomSheetTitle').textContent = title;
-            document.getElementById('bottomSheetOverlay').classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeBottomSheet(event) {
-            if (!event || event.target.id === 'bottomSheetOverlay') {
-                document.getElementById('bottomSheetOverlay').classList.remove('show');
-                document.body.style.overflow = '';
-            }
-        }
-
-        // ─── TEKRARLANAN GEZEGENLERİ FİLTRELE ───
-        /**
-         * Aynı ID'li gezegenleri tekilleştirir.
-         * north_node mean ve true varyantları varsa, sadece birini tutar (true'yu tercih eder).
-         */
-        function deduplicatePlanets(planets) {
-            if (!Array.isArray(planets)) return [];
-            
-            const seen = new Map(); // id -> { planet, index }
-            
-            planets.forEach((p, idx) => {
-                const id = (p.id || p.name || '').toLowerCase().trim();
-                if (!id) return;
-                
-                // Eğer bu ID daha önce görülmediyse ekle
-                if (!seen.has(id)) {
-                    seen.set(id, { planet: p, index: idx });
-                } else {
-                    // Daha önce görüldüyse, variant kontrolü yap
-                    // "true" varyantını "mean" üzerine tercih et
-                    const existing = seen.get(id);
-                    const existingVariant = (existing.planet.variant || '').toLowerCase();
-                    const newVariant = (p.variant || '').toLowerCase();
-                    
-                    if (newVariant === 'true' && existingVariant !== 'true') {
-                        seen.set(id, { planet: p, index: idx });
-                    }
-                    // Aksi halde ilk görüleni tut (daha düşük index = daha önce)
-                }
-            });
-            
-            // Orijinal sıralamayı koru (index'e göre sırala)
-            return Array.from(seen.values())
-                .sort((a, b) => a.index - b.index)
-                .map(item => item.planet);
-        }
-
-        // ─── YORUM FİLTRELEME ───
-        function getPlanetInterpretations(planetId) {
-            const result = {};
-            const sections = currentChart?.interpretation?.sections;
-            if (!sections) return result;
-
-            const planetKey = planetId.toLowerCase().trim();
-
-            for (const [jsonKey, items] of Object.entries(sections)) {
-                const catKey = JSON_TO_CAT_KEY[jsonKey];
-                if (!catKey) continue;
-                if (!Array.isArray(items)) continue;
-
-                const matched = items.filter(item => {
-                    const itemKey = (item.key || '').toLowerCase();
-                    const tags = (item.tags || []).map(t => t.toLowerCase());
-                    return itemKey.includes('planet.' + planetKey + '.') || tags.includes(planetKey);
-                });
-
-                if (matched.length > 0) {
-                    result[catKey] = matched;
-                }
-            }
-
-            return result;
-        }
-
-        function showPlanetBottomSheet(planetId, planetDisplayName) {
-            const interpretations = getPlanetInterpretations(planetId);
-            const body = document.getElementById('bottomSheetBody');
-
-            let html = '';
-            let hasAny = false;
-
-            for (const [catKey, items] of Object.entries(interpretations)) {
-                hasAny = true;
-                const catTitle = i18n.t(CATEGORY_LABELS[catKey]);
-
-                html += `<div class="category-section">`;
-                html += `<div class="category-section-title">${AstroService.escapeHtml(catTitle)}</div>`;
-
-                items.forEach(item => {
-                    html += `<div class="interp-card">`;
-                    if (item.title) {
-                        html += `<div class="interp-card-title">${AstroService.escapeHtml(item.title)}</div>`;
-                    }
-                    html += `<div class="interp-card-body">${AstroService.escapeHtml(item.body)}</div>`;
-                    html += `</div>`;
-                });
-
-                html += `</div>`;
-            }
-
-            if (!hasAny) {
-                html = `<div class="no-interpretation">
-                    <p>${AstroService.escapeHtml(planetDisplayName)} için yorum bulunamadı.</p>
-                </div>`;
-            }
-
-            body.innerHTML = html;
-            openBottomSheet(planetDisplayName);
-        }
-
         function renderNatalChart(chart) {
+            window.currentChart = chart;
             const content = document.getElementById('natalContent');
             const esc = AstroService.escapeHtml;
             let html = '';
@@ -480,87 +215,111 @@
                 const houseSuffix = i18n.t('natal.houseSuffix');
                 chart.houses.forEach((h, i) => {
                     const signName = i18n.translateSign(h.sign) || '-';
-                    const deg = typeof h.degree === 'number' ? h.degree.toFixed(1) + '°' : '';
+                    const deg = typeof h.degree === 'number' ? h.degree.toFixed(1) + '°' : (typeof h.pos === 'number' ? h.pos.toFixed(1) + '°' : '');
                     html += `<div class="house-row">${esc((i + 1) + houseSuffix)} ${esc(signName)} ${deg}</div>`;
                 });
                 html += '</div>';
             }
 
-            // 3. AÇI NOKTALARI
+            // 2b. AÇI NOKTALARI
             if (chart.angles_details) {
                 const angleDefs = [
-                    { key: 'asc', label: i18n.t('natal.angleAsc') },
-                    { key: 'mc', label: i18n.t('natal.angleMc') },
-                    { key: 'ic', label: i18n.t('natal.angleIc') },
-                    { key: 'dc', label: i18n.t('natal.angleDc') },
-                    { key: 'vertex', label: i18n.t('natal.angleVertex') }
+                    { key: 'asc', label: i18n.t('natal.angleAsc') || 'ASC' },
+                    { key: 'mc', label: i18n.t('natal.angleMc') || 'MC' },
+                    { key: 'ic', label: i18n.t('natal.angleIc') || 'IC' },
+                    { key: 'dc', label: i18n.t('natal.angleDc') || 'DC' }
                 ];
-                const rows = angleDefs
-                    .map(a => ({ ...a, data: chart.angles_details[a.key] }))
-                    .filter(a => a.data);
-
+                const rows = angleDefs.map(a => ({ ...a, data: chart.angles_details[a.key] })).filter(a => a.data);
                 if (rows.length > 0) {
-                    html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.angleDetails'))}</div>`;
+                    html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.angleDetails') || 'Aci Noktalari')}</div>`;
                     rows.forEach(a => {
                         const signName = i18n.translateSign(a.data.sign) || '-';
-                        const deg = typeof a.data.degree === 'number' ? a.data.degree.toFixed(1) + '°' : '';
-                        html += `<div class="planet-row" style="cursor:default;">
-                                    <span style="font-weight:600;">${esc(a.label)}</span>
-                                    <span style="color:#6b7280;">${esc(signName)} ${deg}</span>
-                                 </div>`;
+                        const deg = typeof a.data.degree === 'number' ? a.data.degree.toFixed(1) + '°' : (typeof a.data.pos === 'number' ? a.data.pos.toFixed(1) + '°' : '');
+                        html += `<div class="planet-row" style="font-size:0.9rem;"><span>${esc(a.label)}</span><span style="color:#6b7280;">${esc(signName)} ${deg}</span></div>`;
                     });
                     html += '</div>';
                 }
             }
 
-            // 4. GEZEGENLER — TEKRARLARI FİLTRELE
+            // Gezegen derece bilgisi için unique map (tekrarlı north_node önlenir)
+            const planetMap = {};
+            if (chart.planets) {
+                chart.planets.forEach(p => {
+                    const id = (p.id || p.name || '').toLowerCase();
+                    if (!id) return;
+                    if (!planetMap[id]) planetMap[id] = p;
+                });
+            }
+
             const houseSuffixShort = i18n.t('natal.houseSuffix');
             const retroMark = i18n.t('natal.retrograde');
 
-            // TEKRARLANANLARI TEMİZLE (örn: north_node mean+true)
-            const uniquePlanets = deduplicatePlanets(chart.planets || []);
+            // 3. GEZEGENLER - index.placements kullanarak (unique, key'li, tıklanabilir)
+            if (chart.interpretation?.index?.placements && chart.interpretation.index.placements.length > 0) {
+                const bySign = {};
+                chart.interpretation.index.placements.forEach(pl => {
+                    const pData = planetMap[pl.planet];
+                    const signKey = pData?.sign_id || pData?.sign?.toLowerCase() || '';
+                    if (!bySign[signKey]) bySign[signKey] = [];
+                    bySign[signKey].push({ ...pl, _data: pData });
+                });
 
-            // Burçlara göre grupla
-            const planetsBySign = {};
-            uniquePlanets.forEach(p => {
-                const s = p.sign || 'Bilinmiyor';
-                if (!planetsBySign[s]) planetsBySign[s] = [];
-                planetsBySign[s].push(p);
-            });
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
+                Object.keys(bySign).forEach(signKey => {
+                    if (!signKey) return;
+                    html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
+                    bySign[signKey].forEach(pl => {
+                        const pData = pl._data;
+                        const name = esc(i18n.translatePlanet(pl.planet));
+                        const retro = pData?.retrograde ? ` (${esc(retroMark)})` : '';
+                        const deg = typeof pData?.pos === 'number' ? pData.pos.toFixed(1) + '°' : '';
+                        const house = pData?.house ? ` - ${esc(pData.house + houseSuffixShort)}` : '';
+                        html += `<div class="planet-row clickable-row" onclick="openBottomSheet('${esc(pl.key)}', '${name}')">
+                                    <span>${name}${retro}</span>
+                                    <span style="color:#6b7280;">${deg}${house}</span>
+                                 </div>`;
+                    });
+                });
+                html += '</div>';
+            } else {
+                // Fallback: index.placements yoksa planets'ten unique göster
+                const planetsBySign = {};
+                Object.values(planetMap).forEach(p => {
+                    const s = p.sign || 'Bilinmiyor';
+                    if (!planetsBySign[s]) planetsBySign[s] = [];
+                    planetsBySign[s].push(p);
+                });
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
+                Object.keys(planetsBySign).forEach(signKey => {
+                    html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
+                    planetsBySign[signKey].forEach(p => {
+                        const name = esc(i18n.translatePlanet(p.id || p.name));
+                        const retro = p.retrograde ? ` (${esc(retroMark)})` : '';
+                        const deg = typeof p.pos === 'number' ? p.pos.toFixed(1) + '°' : '';
+                        const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
+                        html += `<div class="planet-row"><span>${name}${retro}</span><span style="color:#6b7280;">${deg}${house}</span></div>`;
+                    });
+                });
+                html += '</div>';
+            }
 
-            html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
-
-            Object.keys(planetsBySign).forEach(signKey => {
-                html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
-
-                planetsBySign[signKey].forEach(p => {
-                    const planetId = p.id || p.name;
-                    const planetName = esc(i18n.translatePlanet(planetId));
-                    // retrograde kontrolü: boolean true ise R ekle
-                    const retro = p.retrograde === true ? ` ${esc(retroMark)}` : '';
-                    const deg = typeof p.degree === 'number' ? p.degree.toFixed(0) + '°' : '';
-                    const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
-
-                    html += `<div class="planet-row" onclick="showPlanetBottomSheet('${esc(planetId)}', '${planetName}')">
-                                <div class="planet-name-group">
-                                    <div class="planet-icon"></div>
-                                    <span class="planet-name">${planetName}${retro}</span>
-                                </div>
-                                <div style="display:flex;align-items:center;gap:4px;">
-                                    <span class="planet-details">${deg}${house}</span>
-                                    <svg class="planet-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                                </div>
+            // 4. AÇILAR - index.aspects kullanarak (unique, key'li, tıklanabilir)
+            if (chart.interpretation?.index?.aspects && chart.interpretation.index.aspects.length > 0) {
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.aspects'))}</div>`;
+                chart.interpretation.index.aspects.forEach(a => {
+                    const p1Name = esc(i18n.translatePlanet(a.p1));
+                    const p2Name = esc(i18n.translatePlanet(a.p2));
+                    const aspectName = esc(i18n.translateAspect(a.type));
+                    html += `<div class="planet-row clickable-row" onclick="openBottomSheet('${esc(a.key)}', '${p1Name} - ${p2Name}')">
+                                <span>${p1Name} - ${p2Name}</span>
+                                <span style="color:#d4af37; font-weight:600;">${aspectName}</span>
                              </div>`;
                 });
-            });
-
-            html += '</div>';
-
-            // 5. AÇILAR
-            if (chart.aspects && chart.aspects.length > 0) {
+                html += '</div>';
+            } else if (chart.aspects && chart.aspects.length > 0) {
                 html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.aspects'))}</div>`;
                 chart.aspects.forEach(a => {
-                    html += `<div class="planet-row" style="cursor:default;">
+                    html += `<div class="planet-row" style="font-size:0.9rem;">
                                 <span>${esc(i18n.translatePlanet(a.planet1 || a.p1))} - ${esc(i18n.translatePlanet(a.planet2 || a.p2))}</span>
                                 <span style="color:#d4af37; font-weight:600;">${esc(i18n.translateAspect(a.type))}</span>
                              </div>`;
@@ -569,6 +328,65 @@
             }
 
             content.innerHTML = html;
+        }
+
+        // Bottom Sheet Fonksiyonları
+        function openBottomSheet(key, title) {
+            const chart = window.currentChart;
+            const bs = document.getElementById('bottomSheet');
+            const bsTitle = document.getElementById('bsTitle');
+            const bsBody = document.getElementById('bsBody');
+            const esc = AstroService.escapeHtml;
+            if (!bs || !bsTitle || !bsBody) return;
+
+            bsTitle.textContent = title || 'Yorum';
+
+            if (!chart?.interpretation?.sections) {
+                bsBody.innerHTML = '<div class="bs-empty">Yorum verisi bulunamadı.</div>';
+                bs.classList.add('show');
+                document.body.style.overflow = 'hidden';
+                return;
+            }
+
+            const categories = {
+                core_self: 'Temel Benlik & Kişilik',
+                mind: 'Zihin & İletişim',
+                love_relating: 'Aşk & İlişkiler',
+                work_path: 'İş & Kariyer Yolu',
+                social_collective: 'Sosyal & Toplumsal',
+                karmic_healing: 'Karmik & Şifa'
+            };
+
+            let found = false;
+            let html = '';
+
+            for (const [catKey, catLabel] of Object.entries(categories)) {
+                const items = chart.interpretation.sections[catKey] || [];
+                const matches = items.filter(item => item.key === key);
+                if (matches.length > 0) {
+                    found = true;
+                    html += `<div class="bs-category"><div class="bs-category-title">${esc(catLabel)}</div><div class="bs-category-items">`;
+                    matches.forEach(item => {
+                        html += `<div class="bs-item"><div class="bs-item-title">${esc(item.title)}</div><div class="bs-item-body">${esc(item.body)}</div></div>`;
+                    });
+                    html += `</div></div>`;
+                }
+            }
+
+            if (!found) {
+                html = `<div class="bs-empty">Bu konfigürasyon için yorum bulunamadı.<br><small style="color:#9ca3af; display:block; margin-top:8px;">${esc(key)}</small></div>`;
+            }
+
+            bsBody.innerHTML = html;
+            bs.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomSheet(e) {
+            if (e && e.target.closest('.bottom-sheet-content')) return;
+            const bs = document.getElementById('bottomSheet');
+            if (bs) bs.classList.remove('show');
+            document.body.style.overflow = '';
         }
     </script>
 </body>
