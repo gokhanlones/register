@@ -59,7 +59,6 @@
             border-radius: 12px; 
         }
 
-        /* ─── TIKLANABİLİR GEZEGEN SATIRLARI ─── */
         .planet-row { 
             display: flex; 
             justify-content: space-between; 
@@ -191,7 +190,6 @@
             -webkit-overflow-scrolling: touch;
         }
 
-        /* ─── KATEGORİ YORUM KARTLARI ─── */
         .category-section {
             margin-bottom: 20px;
         }
@@ -309,10 +307,8 @@
 
     <script>
         // ─── GLOBALS ───
-        let currentChart = null; // Yüklenen natal chart verisi
+        let currentChart = null;
 
-        // Her gezegen ID'sinin hangi 6 kategoriye ait yorumları içerebileceği
-        // (Bir gezegen birden fazla kategoride yorumlanabilir)
         const CATEGORY_LABELS = {
             coreSelf:        'dashboard.coreSelf',
             mind:            'dashboard.mind',
@@ -320,6 +316,16 @@
             workPath:        'dashboard.workPath',
             socialCollective:'dashboard.socialCollective',
             karmicHealing:   'dashboard.karmicHealing'
+        };
+
+        // JSON key'leri ile bizim key'ler arası mapping
+        const JSON_TO_CAT_KEY = {
+            core_self: 'coreSelf',
+            mind: 'mind',
+            love_relating: 'loveRelating',
+            work_path: 'workPath',
+            social_collective: 'socialCollective',
+            karmic_healing: 'karmicHealing'
         };
 
         function goToPage(page) { window.location.href = page; }
@@ -357,11 +363,44 @@
             }
         }
 
-        // ─── YORUM FİLTRELEME ───
+        // ─── TEKRARLANAN GEZEGENLERİ FİLTRELE ───
         /**
-         * Bir gezegen ID'sine (sun, moon, mercury...) göre tüm 6 kategorideki
-         * ilgili yorumları bulur ve kategori başlıklarıyla gruplar.
+         * Aynı ID'li gezegenleri tekilleştirir.
+         * north_node mean ve true varyantları varsa, sadece birini tutar (true'yu tercih eder).
          */
+        function deduplicatePlanets(planets) {
+            if (!Array.isArray(planets)) return [];
+            
+            const seen = new Map(); // id -> { planet, index }
+            
+            planets.forEach((p, idx) => {
+                const id = (p.id || p.name || '').toLowerCase().trim();
+                if (!id) return;
+                
+                // Eğer bu ID daha önce görülmediyse ekle
+                if (!seen.has(id)) {
+                    seen.set(id, { planet: p, index: idx });
+                } else {
+                    // Daha önce görüldüyse, variant kontrolü yap
+                    // "true" varyantını "mean" üzerine tercih et
+                    const existing = seen.get(id);
+                    const existingVariant = (existing.planet.variant || '').toLowerCase();
+                    const newVariant = (p.variant || '').toLowerCase();
+                    
+                    if (newVariant === 'true' && existingVariant !== 'true') {
+                        seen.set(id, { planet: p, index: idx });
+                    }
+                    // Aksi halde ilk görüleni tut (daha düşük index = daha önce)
+                }
+            });
+            
+            // Orijinal sıralamayı koru (index'e göre sırala)
+            return Array.from(seen.values())
+                .sort((a, b) => a.index - b.index)
+                .map(item => item.planet);
+        }
+
+        // ─── YORUM FİLTRELEME ───
         function getPlanetInterpretations(planetId) {
             const result = {};
             const sections = currentChart?.interpretation?.sections;
@@ -369,22 +408,14 @@
 
             const planetKey = planetId.toLowerCase().trim();
 
-            for (const [catKey, catLabelKey] of Object.entries(CATEGORY_LABELS)) {
-                const jsonKey = catKey === 'coreSelf' ? 'core_self'
-                             : catKey === 'loveRelating' ? 'love_relating'
-                             : catKey === 'workPath' ? 'work_path'
-                             : catKey === 'socialCollective' ? 'social_collective'
-                             : catKey === 'karmicHealing' ? 'karmic_healing'
-                             : catKey;
-
-                const items = sections[jsonKey];
+            for (const [jsonKey, items] of Object.entries(sections)) {
+                const catKey = JSON_TO_CAT_KEY[jsonKey];
+                if (!catKey) continue;
                 if (!Array.isArray(items)) continue;
 
-                // Bu kategoride bu gezegenle ilgili yorumları filtrele
                 const matched = items.filter(item => {
                     const itemKey = (item.key || '').toLowerCase();
                     const tags = (item.tags || []).map(t => t.toLowerCase());
-                    // key: "planet.sun.sign.pisces" veya tags: ["sun", "pisces"]
                     return itemKey.includes('planet.' + planetKey + '.') || tags.includes(planetKey);
                 });
 
@@ -455,7 +486,7 @@
                 html += '</div>';
             }
 
-            // 3. AÇI NOKTALARI (ASC / MC / IC / DC / Vertex)
+            // 3. AÇI NOKTALARI
             if (chart.angles_details) {
                 const angleDefs = [
                     { key: 'asc', label: i18n.t('natal.angleAsc') },
@@ -482,19 +513,20 @@
                 }
             }
 
-            // 4. GEZEGENLER (TIKLANABİLİR)
+            // 4. GEZEGENLER — TEKRARLARI FİLTRELE
             const houseSuffixShort = i18n.t('natal.houseSuffix');
             const retroMark = i18n.t('natal.retrograde');
 
+            // TEKRARLANANLARI TEMİZLE (örn: north_node mean+true)
+            const uniquePlanets = deduplicatePlanets(chart.planets || []);
+
             // Burçlara göre grupla
             const planetsBySign = {};
-            if (chart.planets) {
-                chart.planets.forEach(p => {
-                    const s = p.sign || 'Bilinmiyor';
-                    if (!planetsBySign[s]) planetsBySign[s] = [];
-                    planetsBySign[s].push(p);
-                });
-            }
+            uniquePlanets.forEach(p => {
+                const s = p.sign || 'Bilinmiyor';
+                if (!planetsBySign[s]) planetsBySign[s] = [];
+                planetsBySign[s].push(p);
+            });
 
             html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
 
@@ -504,11 +536,11 @@
                 planetsBySign[signKey].forEach(p => {
                     const planetId = p.id || p.name;
                     const planetName = esc(i18n.translatePlanet(planetId));
-                    const retro = p.retrograde ? ` ${esc(retroMark)}` : '';
+                    // retrograde kontrolü: boolean true ise R ekle
+                    const retro = p.retrograde === true ? ` ${esc(retroMark)}` : '';
                     const deg = typeof p.degree === 'number' ? p.degree.toFixed(0) + '°' : '';
                     const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
 
-                    // TIKLANABİLİR SATIR
                     html += `<div class="planet-row" onclick="showPlanetBottomSheet('${esc(planetId)}', '${planetName}')">
                                 <div class="planet-name-group">
                                     <div class="planet-icon"></div>
