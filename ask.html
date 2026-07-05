@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sor | Astro Notlarım</title>
+    <title data-i18n-page-title="ask.title">Sor | Astro Notlarim</title>
     <link rel="stylesheet" href="style.css">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -11,45 +11,86 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
+    <script src="i18n.js"></script>
 </head>
 <body>
     <div class="app-container">
         <header class="brand-section">
-            <button class="btn-menu">
+            <button class="btn-menu" onclick="toggleMenu()">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>
                     <line x1="3" y1="18" x2="21" y2="18"></line>
                 </svg>
             </button>
-            <h1>Astro Notlarım</h1>
+            <h1>Astro Notlarim</h1>
         </header>
 
         <main class="scrollable-form-section">
             <div style="padding: 20px; text-align: center;">
-                <h2 style="color: #d4af37;">Sor</h2>
-                <p>Chat ekranı buraya gelecek.</p>
+                <h2 style="color: #d4af37;" data-i18n="ask.title">Sor</h2>
+                <p data-i18n="ask.comingSoon">Chat ekrani buraya gelecek.</p>
             </div>
         </main>
 
         <footer class="bottom-navbar">
-            <a href="dashboard.html" class="nav-item">
+            <a href="dashboard.html" class="nav-item" onclick="event.preventDefault(); goToPage('dashboard.html');">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                <span class="nav-label">Anasayfa</span>
+                <span class="nav-label" data-i18n="nav.home">Anasayfa</span>
             </a>
-            <a href="ask.html" class="nav-item active">
+            <a href="ask.html" class="nav-item active" onclick="event.preventDefault(); goToPage('ask.html');">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                <span class="nav-label">Sor</span>
+                <span class="nav-label" data-i18n="nav.ask">Sor</span>
             </a>
-            <a href="natal.html" class="nav-item">
+            <a href="natal.html" class="nav-item" onclick="event.preventDefault(); goToPage('natal.html');">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
-                <span class="nav-label">Harita</span>
+                <span class="nav-label" data-i18n="nav.chart">Harita</span>
             </a>
         </footer>
     </div>
 
+    <!-- Side Menu Overlay -->
+    <div id="sideMenu" class="side-menu" onclick="toggleMenu()">
+        <div class="side-menu-panel" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+                <h2 style="color:#d4af37;font-size:1.2rem;margin:0;" data-i18n="nav.menu">Menu</h2>
+                <button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+            </div>
+            <nav style="display:flex;flex-direction:column;gap:16px;">
+                <a onclick="goToPage('dashboard.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span data-i18n="menu.home">Anasayfa</span>
+                </a>
+                <a onclick="goToPage('natal.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                    <span data-i18n="menu.natalChart">Dogum Haritasi</span>
+                </a>
+                <a onclick="goToPage('ask.html')" style="color:#d4af37;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;background:#2d2d44;cursor:pointer;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span data-i18n="menu.ask">Sor</span>
+                </a>
+                <a onclick="goToPage('profile.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span data-i18n="menu.profile">Profil</span>
+                </a>
+                <a href="#" onclick="AstroService.logout(); window.location.href='login.html'; return false;" style="color:#ef4444;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span data-i18n="nav.logout">Cikis Yap</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+
     <script>
-        // Diğer tüm iç sayfalarda olduğu gibi oturum kontrolü eklendi.
+        function goToPage(page) {
+            window.location.href = page;
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            menu.classList.toggle('show');
+        }
+
         AstroService.onAuthStateChanged(() => {}, () => {
             window.location.href = 'login.html';
         });
