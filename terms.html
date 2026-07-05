@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yasal Onay ve Gizlilik Politikası | Astro Notlarım</title>
+    <title data-i18n-page-title="terms.title">Yasal Onay ve Gizlilik Politikasi | Astro Notlarim</title>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
+    <script src="i18n.js"></script>
 
     <style>
         * {
@@ -152,33 +153,33 @@
     <div class="app-container">
 
         <header class="page-header">
-            <h1>Yasal Onay ve Gizlilik</h1>
+            <h1 data-i18n="terms.pageTitle">Yasal Onay ve Gizlilik</h1>
         </header>
 
         <main class="scrollable-terms-section">
             <div class="verification-alert-box">
-                <p>⚠️ Devam etmeden önce e-posta kutunuza gönderilen doğrulama linkine tıklamış olmanız gerekmektedir.</p>
-                <button type="button" class="resend-link" onclick="handleResendEmail()">Doğrulama mailini tekrar gönder</button>
+                <p data-i18n="terms.verificationAlert">Devam etmeden once e-posta kutunuza gonderilen dogrulama linkine tiklamis olmaniz gerekmektedir.</p>
+                <button type="button" class="resend-link" onclick="handleResendEmail()" data-i18n="terms.resend">Dogrulama mailini tekrar gonder</button>
             </div>
 
             <div class="terms-text">
-                <p>Lütfen Astro Notlarım platformunu kullanmaya başlamadan önce aşağıdaki kullanım şartlarını ve gizlilik politikasını dikkatlice okuyunuz.</p>
+                <p data-i18n="terms.intro">Lutfen Astro Notlarim platformunu kullanmaya baslamadan once asagidaki kullanim sartlarini ve gizlilik politikasini dikkatlice okuyunuz.</p>
 
-                <h2>1. Kullanım Şartları</h2>
-                <p>Astro Notlarım tarafından sunulan hizmetlerden faydalanarak, bu sayfada yer alan tüm maddeleri gayrikabili rücu kabul etmiş sayılırsınız.</p>
+                <h2 data-i18n="terms.section1Title">1. Kullanim Sartlari</h2>
+                <p data-i18n="terms.section1Text">Astro Notlarim tarafindan sunulan hizmetlerden faydalanarak, bu sayfada yer alan tum maddeleri gayrikabili rucu kabul etmissayilirsiniz.</p>
 
-                <h2>2. Gizlilik Politikası ve KVKK</h2>
-                <p>Kişisel verilerinizin güvenliği bizim için son derece önemlidir. Kayıt esnasında paylaştığınız veriler 6698 sayılı KVKK kapsamında korunmaktadır.</p>
+                <h2 data-i18n="terms.section2Title">2. Gizlilik Politikasi ve KVKK</h2>
+                <p data-i18n="terms.section2Text">Kisisel verilerinizin guvenligi bizim icin son derece onemlidir. Kayit esnasinda paylastiginiz veriler 6698 sayili KVKK kapsaminda korunmaktadir.</p>
 
-                <h2>3. Veri İşleme Amaçları</h2>
-                <p>Toplanan verileriniz hesap güvenliği ve deneyim kişiselleştirme amacıyla işlenmektedir.</p>
+                <h2 data-i18n="terms.section3Title">3. Veri Isleme Amaclari</h2>
+                <p data-i18n="terms.section3Text">Toplanan verileriniz hesap guvenligi ve deneyim kisisellestirme amaciyla islenmektedir.</p>
             </div>
         </main>
 
         <footer class="button-group">
-            <button type="button" class="btn btn-cancel" id="cancelBtn" onclick="handleCancel()">İptal</button>
-            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()" disabled>
-                E-posta Doğrulaması Bekleniyor...
+            <button type="button" class="btn btn-cancel" id="cancelBtn" onclick="handleCancel()" data-i18n="terms.btnCancel">Iptal</button>
+            <button type="button" class="btn btn-approve" id="approveBtn" onclick="handleApprove()" disabled data-i18n="terms.btnWaiting">
+                E-posta Dogrulamasi Bekleniyor...
             </button>
         </footer>
 
@@ -192,17 +193,17 @@
                     clearInterval(verificationCheckInterval);
                     const approveBtn = document.getElementById('approveBtn');
                     approveBtn.disabled = false;
-                    approveBtn.textContent = "Onayla ve Başla";
+                    approveBtn.textContent = i18n.t('terms.btnApprove');
                 }
             } catch (err) {
-                console.log("Otomatik kontrol sorgu hatası:", err);
+                console.log("Otomatik kontrol sorgu hatasi:", err);
             }
         }, 3000);
 
         async function handleApprove() {
             const user = AstroService.getCurrentUser();
             if (!user) {
-                alert("Oturum süresi dolmuş veya bulunamadı. Lütfen kayıt formunu tekrar doldurun.");
+                alert(i18n.t('terms.sessionExpired'));
                 window.location.href = "register.html";
                 return;
             }
@@ -211,15 +212,15 @@
             const cancelBtn = document.getElementById('cancelBtn');
 
             approveBtn.disabled = true;
-            approveBtn.textContent = "Profiliniz Oluşturuluyor...";
+            approveBtn.textContent = i18n.t('terms.creatingProfile');
             cancelBtn.disabled = true;
 
             try {
                 const isVerified = await AstroService.checkEmailVerified();
                 if (!isVerified) {
-                    alert("E-posta adresiniz henüz doğrulanmamış.");
+                    alert(i18n.t('terms.emailNotVerified'));
                     approveBtn.disabled = false;
-                    approveBtn.textContent = "Onayla ve Başla";
+                    approveBtn.textContent = i18n.t('terms.btnApprove');
                     cancelBtn.disabled = false;
                     return;
                 }
@@ -240,23 +241,23 @@
 
                 clearInterval(verificationCheckInterval);
                 AstroService.SessionStore.clear();
-                alert("Hesabınız başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz.");
+                alert(i18n.t('terms.success'));
                 await AstroService.logout();
                 window.location.href = "login.html";
             } catch (error) {
                 approveBtn.disabled = false;
-                approveBtn.textContent = "Onayla ve Başla";
+                approveBtn.textContent = i18n.t('terms.btnApprove');
                 cancelBtn.disabled = false;
-                alert("Bir sorun oluştu: " + error.message);
+                alert(i18n.t('error.generic') + ": " + error.message);
             }
         }
 
         async function handleResendEmail() {
             try {
                 await AstroService.sendEmailVerification();
-                alert("Doğrulama e-postası adresinize tekrar gönderildi. Lütfen kontrol edin.");
+                alert(i18n.t('terms.resendSuccess'));
             } catch (error) {
-                alert("Mail gönderilirken bir hata oluştu: " + error.message);
+                alert(i18n.t('terms.resendError', { error: error.message }));
             }
         }
 
@@ -268,13 +269,13 @@
             if(approveBtn) approveBtn.disabled = true;
             if(cancelBtn) {
                 cancelBtn.disabled = true;
-                cancelBtn.textContent = "İptal ediliyor...";
+                cancelBtn.textContent = i18n.t('terms.canceling');
             }
 
             try {
                 await AstroService.deleteCurrentUser();
             } catch (error) {
-                console.error("Silme hatası:", error);
+                console.error("Silme hatasi:", error);
             }
             AstroService.SessionStore.clear();
             window.location.href = "register.html";
