@@ -46,15 +46,50 @@
 
         <footer class="bottom-navbar">
             <a href="dashboard.html" class="nav-item" onclick="event.preventDefault(); goToPage('dashboard.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                 <span class="nav-label" data-i18n="nav.home">Anasayfa</span>
             </a>
             <a href="ask.html" class="nav-item" onclick="event.preventDefault(); goToPage('ask.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <span class="nav-label" data-i18n="nav.ask">Sor</span>
             </a>
             <a href="natal.html" class="nav-item active" onclick="event.preventDefault(); goToPage('natal.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
                 <span class="nav-label" data-i18n="nav.chart">Harita</span>
             </a>
         </footer>
+    </div>
+
+    <!-- Side Menu (eksikti - toggleMenu() null hatasi veriyordu) -->
+    <div id="sideMenu" class="side-menu" onclick="toggleMenu()">
+        <div class="side-menu-panel" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+                <h2 style="color:#d4af37;font-size:1.2rem;margin:0;" data-i18n="nav.menu">Menu</h2>
+                <button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+            </div>
+            <nav style="display:flex;flex-direction:column;gap:16px;">
+                <a onclick="goToPage('dashboard.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span data-i18n="menu.home">Anasayfa</span>
+                </a>
+                <a onclick="goToPage('natal.html')" style="color:#d4af37;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;background:#2d2d44;cursor:pointer;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                    <span data-i18n="menu.natalChart">Dogum Haritasi</span>
+                </a>
+                <a onclick="goToPage('ask.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span data-i18n="menu.ask">Sor</span>
+                </a>
+                <a onclick="goToPage('profile.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span data-i18n="menu.profile">Profil</span>
+                </a>
+                <a href="#" onclick="AstroService.logout().then(() => window.location.href='login.html'); return false;" style="color:#ef4444;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span data-i18n="nav.logout">Cikis Yap</span>
+                </a>
+            </nav>
+        </div>
     </div>
 
     <script>
@@ -91,13 +126,40 @@
 
             // 2. EVLER (Format: 1. Ev Terazi 7°)
             if (chart.houses && chart.houses.length > 0) {
-                html += '<div class="section-card"><div class="section-title">Evler</div>';
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.houses'))}</div>`;
+                const houseSuffix = i18n.t('natal.houseSuffix');
                 chart.houses.forEach((h, i) => {
                     const signName = i18n.translateSign(h.sign) || '-';
                     const deg = typeof h.degree === 'number' ? h.degree.toFixed(1) + '°' : '';
-                    html += `<div class="house-row">${i + 1}. Ev ${signName} ${deg}</div>`;
+                    html += `<div class="house-row">${esc((i + 1) + houseSuffix)} ${esc(signName)} ${deg}</div>`;
                 });
                 html += '</div>';
+            }
+
+            // 2b. ACI NOKTALARI (ASC / MC / IC / DC) - varsa goster
+            if (chart.angles_details) {
+                const angleDefs = [
+                    { key: 'asc', label: i18n.t('natal.angleAsc') },
+                    { key: 'mc', label: i18n.t('natal.angleMc') },
+                    { key: 'ic', label: i18n.t('natal.angleIc') },
+                    { key: 'dc', label: i18n.t('natal.angleDc') }
+                ];
+                const rows = angleDefs
+                    .map(a => ({ ...a, data: chart.angles_details[a.key] }))
+                    .filter(a => a.data);
+
+                if (rows.length > 0) {
+                    html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.angleDetails'))}</div>`;
+                    rows.forEach(a => {
+                        const signName = i18n.translateSign(a.data.sign) || '-';
+                        const deg = typeof a.data.degree === 'number' ? a.data.degree.toFixed(1) + '°' : '';
+                        html += `<div class="planet-row" style="font-size:0.9rem;">
+                                    <span>${esc(a.label)}</span>
+                                    <span style="color:#6b7280;">${esc(signName)} ${deg}</span>
+                                 </div>`;
+                    });
+                    html += '</div>';
+                }
             }
 
             // Veriyi Burçlara Göre Grupla (Gezegenler için)
@@ -111,16 +173,18 @@
             }
 
             // 3. GEZEGENLER (Format: Burç -> Gezegen Derece-Ev)
-            html += '<div class="section-card"><div class="section-title">Gezegenler</div>';
+            const houseSuffixShort = i18n.t('natal.houseSuffix');
+            const retroMark = i18n.t('natal.retrograde');
+            html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
             Object.keys(planetsBySign).forEach(signKey => {
                 html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
                 planetsBySign[signKey].forEach(p => {
                     const name = esc(i18n.translatePlanet(p.id || p.name));
-                    const retro = p.retrograde ? ' (Rx)' : '';
+                    const retro = p.retrograde ? ` (${esc(retroMark)})` : '';
                     const deg = typeof p.degree === 'number' ? p.degree.toFixed(0) + '°' : '';
-                    const house = p.house ? ` - ${p.house}. Ev` : '';
-                    const extra = p.extra ? ` (${p.extra})` : ''; // DC, ASC vb bilgisi varsa
-                    
+                    const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
+                    const extra = p.extra ? ` (${esc(p.extra)})` : ''; // DC, ASC vb bilgisi varsa
+
                     html += `<div class="planet-row" style="font-size:0.9rem;">
                                 <span>${name}${retro}</span>
                                 <span style="color:#6b7280;">${deg}${house}${extra}</span>
@@ -131,7 +195,7 @@
 
             // 4. AÇILAR
             if (chart.aspects && chart.aspects.length > 0) {
-                html += '<div class="section-card"><div class="section-title">Açılar</div>';
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.aspects'))}</div>`;
                 chart.aspects.forEach(a => {
                     html += `<div class="planet-row" style="font-size:0.9rem;">
                                 <span>${esc(i18n.translatePlanet(a.planet1 || a.p1))} - ${esc(i18n.translatePlanet(a.planet2 || a.p2))}</span>
@@ -139,6 +203,24 @@
                              </div>`;
                 });
                 html += '</div>';
+            }
+
+            // 5. YORUMLAR (API'den interpretation.enable=true ile geliyorsa)
+            const interpretations = chart.interpretations || chart.interpretation;
+            if (Array.isArray(interpretations) && interpretations.length > 0) {
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.interpretations'))}</div>`;
+                interpretations.forEach((text, idx) => {
+                    const title = i18n.t('natal.commentTitle', { number: idx + 1 });
+                    html += `<div style="margin-bottom:12px;">
+                                <div style="font-weight:600;color:#374151;margin-bottom:4px;font-size:0.9rem;">${esc(title)}</div>
+                                <div style="font-size:0.9rem;color:#4b5563;line-height:1.5;">${esc(text)}</div>
+                             </div>`;
+                });
+                html += '</div>';
+            } else if (typeof interpretations === 'string' && interpretations.trim() !== '') {
+                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.interpretations'))}</div>
+                            <div style="font-size:0.9rem;color:#4b5563;line-height:1.6;">${esc(interpretations)}</div>
+                          </div>`;
             }
 
             content.innerHTML = html;
