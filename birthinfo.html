@@ -244,7 +244,36 @@
             document.getElementById('formError').classList.remove('show');
         }
 
-        // Kayit Fonksiyonu
+        // ─── BURÇ BİLGİLERİNİ API RESPONSE'UNDAN ÇIKAR ───
+        function extractSignsFromChart(chartData) {
+            const signs = { sunSign: null, moonSign: null, risingSign: null };
+
+            if (!chartData) return signs;
+
+            // 1. planets array'inden sun ve moon
+            if (chartData.planets && Array.isArray(chartData.planets)) {
+                const sun = chartData.planets.find(p => p.id === 'sun' || p.name === 'Sun');
+                const moon = chartData.planets.find(p => p.id === 'moon' || p.name === 'Moon');
+                if (sun) signs.sunSign = i18n.translateSign(sun.sign_id || sun.sign);
+                if (moon) signs.moonSign = i18n.translateSign(moon.sign_id || moon.sign);
+            }
+
+            // 2. angles_details'dan rising (asc)
+            if (chartData.angles_details && chartData.angles_details.asc) {
+                const asc = chartData.angles_details.asc;
+                signs.risingSign = i18n.translateSign(asc.sign_id || asc.sign);
+            }
+
+            // 3. Fallback: planets array'inden house 1 (ascendant gezegeni)
+            if (!signs.risingSign && chartData.planets) {
+                const ascPlanet = chartData.planets.find(p => p.house === 1);
+                if (ascPlanet) signs.risingSign = i18n.translateSign(ascPlanet.sign_id || ascPlanet.sign);
+            }
+
+            return signs;
+        }
+
+        // ─── KAYIT FONKSİYONU ───
         async function handleSave() {
             hideError();
 
@@ -293,7 +322,10 @@
                         "mean_node",
                         "pholus",
                         "ceres",
-                        "pallas"
+                        "pallas",
+                        "juno",
+                        "vesta",
+                        "vertex"
                     ],
                     "zodiac_type": "tropical",
                     "interpretation": {
@@ -303,6 +335,9 @@
                 };
 
                 const chartData = await AstroService.calculateNatalChart(apiKey, requestBody);
+
+                // ─── BURÇ BİLGİLERİNİ ÇIKAR ───
+                const signs = extractSignsFromChart(chartData);
 
                 const birthData = {
                     fullname: fullName,
@@ -314,7 +349,11 @@
                     birthPlace: birthPlace,
                     latitude: parseFloat(selectedLocation.lat),
                     longitude: parseFloat(selectedLocation.lng),
-                    natalChart: chartData
+                    natalChart: chartData,
+                    // Ayrıca kolay erişim için:
+                    sunSign: signs.sunSign,
+                    moonSign: signs.moonSign,
+                    risingSign: signs.risingSign
                 };
 
                 await AstroService.saveBirthInfo(currentUser.uid, birthData);
