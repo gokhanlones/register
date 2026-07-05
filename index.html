@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astro Notlarım</title>
+    <title>Astro Notlarim</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: '-apple-system', sans-serif; }
         html, body { width: 100%; height: 100%; background-color: #ffffff; overflow: hidden; display: flex; justify-content: center; align-items: center; }
@@ -18,10 +18,10 @@
 <body>
 
     <div class="splash-container">
-        <img src="logo.png" alt="Astro Notlarım Logo" class="splash-logo">
-        <h1 class="splash-title">Astro Notlarım</h1>
-        <div class="loading-text" id="loadingText">Başlatılıyor...</div>
-        <div class="connection-status" id="statusText">İnternet bağlantısı bekleniyor...</div>
+        <img src="logo.png" alt="Astro Notlarim Logo" class="splash-logo">
+        <h1 class="splash-title">Astro Notlarim</h1>
+        <div class="loading-text" id="loadingText" data-i18n="splash.loading">Baslatiliyor...</div>
+        <div class="connection-status" id="statusText" data-i18n="splash.offline">Internet baglantisi bekleniyor...</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -29,6 +29,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
+    <script src="i18n.js"></script>
 
     <script>
         function checkAppConnection() {
@@ -40,7 +41,7 @@
                 });
                 return;
             }
-            document.getElementById('loadingText').textContent = 'Oturum kontrol ediliyor...';
+            document.getElementById('loadingText').textContent = i18n.t('splash.checking');
             AstroService.checkSessionAndRedirect();
         }
 
