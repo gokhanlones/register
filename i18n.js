@@ -162,6 +162,7 @@ const TRANSLATIONS = {
         'natal.angleIc': 'Gökyüzü Altı (IC)',
         'natal.angleDc': 'Batı (DC)',
         'natal.commentTitle': 'Yorum {number}',
+        'natal.noPlanetInSign': 'Bu burçta gezegen yok',
         'natal.angleVertex': 'Vertex',
 
         // API'den gelen burc kodlari (her zaman Ingilizce gelir: pisces, aries, vb.)
@@ -401,6 +402,7 @@ const TRANSLATIONS = {
         'natal.angleIc': 'Imum Coeli (IC)',
         'natal.angleDc': 'Descendant (DC)',
         'natal.commentTitle': 'Comment {number}',
+        'natal.noPlanetInSign': 'No planet in this sign',
         'natal.angleVertex': 'Vertex',
 
         // Sign codes coming from the API (always in English: pisces, aries, etc.)
