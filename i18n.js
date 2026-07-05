@@ -160,8 +160,47 @@ const TRANSLATIONS = {
         'natal.angleIc': 'Gokyuzu Alti (IC)',
         'natal.angleDc': 'Bati (DC)',
         'natal.commentTitle': 'Yorum {number}',
+        'natal.angleVertex': 'Vertex',
 
-        // ask.html (Sor)
+        // API'den gelen burc kodlari (her zaman Ingilizce gelir: pisces, aries, vb.)
+        'sign.aries': 'Koc',
+        'sign.taurus': 'Boga',
+        'sign.gemini': 'Ikizler',
+        'sign.cancer': 'Yengec',
+        'sign.leo': 'Aslan',
+        'sign.virgo': 'Basak',
+        'sign.libra': 'Terazi',
+        'sign.scorpio': 'Akrep',
+        'sign.sagittarius': 'Yay',
+        'sign.capricorn': 'Oglak',
+        'sign.aquarius': 'Kova',
+        'sign.pisces': 'Balik',
+
+        // API'den gelen gezegen/nokta id'leri (her zaman Ingilizce gelir: sun, moon, vb.)
+        'planet.sun': 'Gunes',
+        'planet.moon': 'Ay',
+        'planet.mercury': 'Merkur',
+        'planet.venus': 'Venus',
+        'planet.mars': 'Mars',
+        'planet.jupiter': 'Jupiter',
+        'planet.saturn': 'Saturn',
+        'planet.uranus': 'Uranus',
+        'planet.neptune': 'Neptun',
+        'planet.pluto': 'Pluton',
+        'planet.north_node': 'Kuzey Ay Dugumu',
+        'planet.lilith': 'Lilith',
+        'planet.chiron': 'Chiron',
+        'planet.pholus': 'Pholus',
+        'planet.ceres': 'Ceres',
+        'planet.pallas': 'Pallas',
+
+        // API'den gelen aci (aspect) tipleri (her zaman Ingilizce gelir: sextile, trine, vb.)
+        'aspect.conjunction': 'Kavusum',
+        'aspect.sextile': 'Altmislik',
+        'aspect.square': 'Kare',
+        'aspect.trine': 'Ucgen',
+        'aspect.opposition': 'Karsitlik',
+
         'ask.title': 'Sor',
         'ask.comingSoon': 'Chat ekrani buraya gelecek.',
 
@@ -358,8 +397,47 @@ const TRANSLATIONS = {
         'natal.angleIc': 'Imum Coeli (IC)',
         'natal.angleDc': 'Descendant (DC)',
         'natal.commentTitle': 'Comment {number}',
+        'natal.angleVertex': 'Vertex',
 
-        // ask.html (Ask)
+        // Sign codes coming from the API (always in English: pisces, aries, etc.)
+        'sign.aries': 'Aries',
+        'sign.taurus': 'Taurus',
+        'sign.gemini': 'Gemini',
+        'sign.cancer': 'Cancer',
+        'sign.leo': 'Leo',
+        'sign.virgo': 'Virgo',
+        'sign.libra': 'Libra',
+        'sign.scorpio': 'Scorpio',
+        'sign.sagittarius': 'Sagittarius',
+        'sign.capricorn': 'Capricorn',
+        'sign.aquarius': 'Aquarius',
+        'sign.pisces': 'Pisces',
+
+        // Planet/point ids coming from the API (always in English: sun, moon, etc.)
+        'planet.sun': 'Sun',
+        'planet.moon': 'Moon',
+        'planet.mercury': 'Mercury',
+        'planet.venus': 'Venus',
+        'planet.mars': 'Mars',
+        'planet.jupiter': 'Jupiter',
+        'planet.saturn': 'Saturn',
+        'planet.uranus': 'Uranus',
+        'planet.neptune': 'Neptune',
+        'planet.pluto': 'Pluto',
+        'planet.north_node': 'North Node',
+        'planet.lilith': 'Lilith',
+        'planet.chiron': 'Chiron',
+        'planet.pholus': 'Pholus',
+        'planet.ceres': 'Ceres',
+        'planet.pallas': 'Pallas',
+
+        // Aspect types coming from the API (always in English: sextile, trine, etc.)
+        'aspect.conjunction': 'Conjunction',
+        'aspect.sextile': 'Sextile',
+        'aspect.square': 'Square',
+        'aspect.trine': 'Trine',
+        'aspect.opposition': 'Opposition',
+
         'ask.title': 'Ask',
         'ask.comingSoon': 'Chat screen will be here.',
 
@@ -410,6 +488,19 @@ const TRANSLATIONS = {
         // Months (used in profile.html)
         'months': ['January','February','March','April','May','June','July','August','September','October','November','December']
     }
+};
+
+// ============================================================
+// 1b. API KISALTMA ESLESTIRMELERI
+// FreeAstroAPI gibi servisler burc bilgisini 3 harfli kisaltma
+// olarak dondurebilir (Ari, Tau, Gem, ...). Bunu sign_id'ye
+// (aries, taurus, gemini, ...) cevirip TRANSLATIONS'tan okuyoruz.
+// ============================================================
+
+const SIGN_ABBR_MAP = {
+    ari: 'aries', tau: 'taurus', gem: 'gemini', can: 'cancer',
+    leo: 'leo', vir: 'virgo', lib: 'libra', sco: 'scorpio',
+    sag: 'sagittarius', cap: 'capricorn', aqu: 'aquarius', pis: 'pisces'
 };
 
 // ============================================================
@@ -507,6 +598,47 @@ const i18n = {
      */
     getMonths() {
         return this.t('months');
+    },
+
+    /**
+     * Ic yardimci: prefix.normalizedKey seklinde sozlukten arar.
+     * Bulunamazsa varsayilan dile, o da yoksa orijinal (API'den gelen)
+     * degere duser - boylece bilinmeyen bir kod bile ekranda bos kalmaz.
+     */
+    _lookupApiTerm(prefix, rawValue) {
+        if (!rawValue) return rawValue;
+        const normalized = String(rawValue).toLowerCase().trim().replace(/\s+/g, '_');
+        const fullKey = prefix + '.' + normalized;
+        const dict = TRANSLATIONS[this._currentLang] || TRANSLATIONS[I18N_CONFIG.defaultLang];
+        const defaultDict = TRANSLATIONS[I18N_CONFIG.defaultLang];
+        return dict[fullKey] || defaultDict[fullKey] || rawValue;
+    },
+
+    /**
+     * API'den gelen burc degerini (kisaltma "Ari" veya tam "aries")
+     * aktif dile cevirir.
+     */
+    translateSign(signOrSignId) {
+        if (!signOrSignId) return signOrSignId;
+        const normalized = String(signOrSignId).toLowerCase().trim();
+        const signId = SIGN_ABBR_MAP[normalized] || normalized;
+        return this._lookupApiTerm('sign', signId);
+    },
+
+    /**
+     * API'den gelen gezegen/nokta id'sini ("sun", "north_node", vb.)
+     * aktif dile cevirir.
+     */
+    translatePlanet(planetIdOrName) {
+        return this._lookupApiTerm('planet', planetIdOrName);
+    },
+
+    /**
+     * API'den gelen aci (aspect) tipini ("sextile", "trine", vb.)
+     * aktif dile cevirir.
+     */
+    translateAspect(aspectType) {
+        return this._lookupApiTerm('aspect', aspectType);
     },
 
     /**
