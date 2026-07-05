@@ -177,15 +177,12 @@
         // klavyenin arkasinda kalmamasi icin visualViewport'u dinliyoruz.
         (function setupKeyboardHandling() {
             const appContainer = document.querySelector('.app-container');
+            const bottomNavbar = document.querySelector('.bottom-navbar');
+            const askInput = document.getElementById('askInput');
 
             function adjustLayout() {
-                if (window.visualViewport) {
-                    // Klavye acildiginda gorunur viewport kuculur; container'i
-                    // buna gore yeniden boyutlandiriyoruz ki input+footer gorunur kalsin.
-                    appContainer.style.height = window.visualViewport.height + 'px';
-                } else {
-                    appContainer.style.height = window.innerHeight + 'px';
-                }
+                const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+                appContainer.style.height = vh + 'px';
             }
 
             if (window.visualViewport) {
@@ -196,12 +193,18 @@
             }
             adjustLayout();
 
-            // Ek guvence: input'a odaklaninca gorunume kaydir (Android/eski tarayicilar icin)
-            const askInput = document.getElementById('askInput');
+            // Input'a odaklanildiginda alt navbar'i gizle ki en altta SADECE
+            // input cubugu kalsin ve klavyenin hemen ustunde o gorunsun.
             askInput.addEventListener('focus', () => {
+                bottomNavbar.style.display = 'none';
                 setTimeout(() => {
-                    askInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    askInput.scrollIntoView({ block: 'end', behavior: 'smooth' });
                 }, 300);
+            });
+
+            askInput.addEventListener('blur', () => {
+                bottomNavbar.style.display = '';
+                adjustLayout();
             });
         })();
 
