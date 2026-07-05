@@ -27,7 +27,7 @@
         .house-row { padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.95rem; color: #374151; }
         .sign-header { font-weight: 700; color: #d4af37; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #d4af37; font-size: 1rem; }
         .empty-state { text-align: center; padding: 40px 20px; color: #9ca3af; }
-        
+
         /* Tıklanabilir satırlar */
         .clickable-row {
             cursor: pointer;
@@ -254,54 +254,61 @@
             const houseSuffixShort = i18n.t('natal.houseSuffix');
             const retroMark = i18n.t('natal.retrograde');
 
-            // 3. GEZEGENLER - index.placements kullanarak (unique, key'li, tıklanabilir)
-            if (chart.interpretation?.index?.placements && chart.interpretation.index.placements.length > 0) {
-                const bySign = {};
-                chart.interpretation.index.placements.forEach(pl => {
-                    const pData = planetMap[pl.planet];
-                    const signKey = pData?.sign_id || pData?.sign?.toLowerCase() || '';
-                    if (!bySign[signKey]) bySign[signKey] = [];
-                    bySign[signKey].push({ ...pl, _data: pData });
-                });
+            // 3. GEZEGENLER - 12 burç sırasıyla, boş burçlarda "gezegen yok" mesajı
+            const allSigns = [
+                'aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo',
+                'libra', 'scorpio', 'sagittarius', 'capricorn', 'aquarius', 'pisces'
+            ];
 
-                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
-                Object.keys(bySign).forEach(signKey => {
-                    if (!signKey) return;
-                    html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
-                    bySign[signKey].forEach(pl => {
-                        const pData = pl._data;
-                        const name = esc(i18n.translatePlanet(pl.planet));
-                        const retro = pData?.retrograde ? ` (${esc(retroMark)})` : '';
-                        const deg = typeof pData?.pos === 'number' ? pData.pos.toFixed(1) + '°' : '';
-                        const house = pData?.house ? ` - ${esc(pData.house + houseSuffixShort)}` : '';
-                        html += `<div class="planet-row clickable-row" onclick="openBottomSheet('${esc(pl.key)}', '${name}')">
-                                    <span>${name}${retro}</span>
-                                    <span style="color:#6b7280;">${deg}${house}</span>
-                                 </div>`;
-                    });
+            // Gezegen verilerini sign_id bazında grupla
+            const planetsBySign = {};
+            Object.values(planetMap).forEach(p => {
+                const signId = (p.sign_id || p.sign || '').toLowerCase().trim();
+                const mapped = SIGN_ABBR_MAP[signId] || signId; // 3 harfli kısaltmayı da normalize et
+                if (!mapped) return;
+                if (!planetsBySign[mapped]) planetsBySign[mapped] = [];
+                planetsBySign[mapped].push(p);
+            });
+
+            // index.placements'tan key bilgisi al (tıklama için)
+            const placementKeyMap = {};
+            if (chart.interpretation?.index?.placements) {
+                chart.interpretation.index.placements.forEach(pl => {
+                    if (pl.planet && pl.key) {
+                        placementKeyMap[pl.planet] = pl.key;
+                    }
                 });
-                html += '</div>';
-            } else {
-                // Fallback: index.placements yoksa planets'ten unique göster
-                const planetsBySign = {};
-                Object.values(planetMap).forEach(p => {
-                    const s = p.sign || 'Bilinmiyor';
-                    if (!planetsBySign[s]) planetsBySign[s] = [];
-                    planetsBySign[s].push(p);
-                });
-                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
-                Object.keys(planetsBySign).forEach(signKey => {
-                    html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
-                    planetsBySign[signKey].forEach(p => {
-                        const name = esc(i18n.translatePlanet(p.id || p.name));
+            }
+
+            html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
+
+            allSigns.forEach(signId => {
+                html += `<div class="sign-header">${esc(i18n.translateSign(signId))}</div>`;
+                const planets = planetsBySign[signId] || [];
+
+                if (planets.length === 0) {
+                    html += `<div class="planet-row" style="color:#9ca3af; font-style:italic; font-size:0.85rem;">${esc(i18n.t('natal.noPlanetInSign'))}</div>`;
+                } else {
+                    planets.forEach(p => {
+                        const pid = (p.id || p.name || '').toLowerCase();
+                        const name = esc(i18n.translatePlanet(pid));
                         const retro = p.retrograde ? ` (${esc(retroMark)})` : '';
                         const deg = typeof p.pos === 'number' ? p.pos.toFixed(1) + '°' : '';
                         const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
-                        html += `<div class="planet-row"><span>${name}${retro}</span><span style="color:#6b7280;">${deg}${house}</span></div>`;
+                        const pKey = placementKeyMap[pid];
+
+                        if (pKey) {
+                            html += `<div class="planet-row clickable-row" onclick="openBottomSheet('${esc(pKey)}', '${name}')">
+                                        <span>${name}${retro}</span>
+                                        <span style="color:#6b7280;">${deg}${house}</span>
+                                     </div>`;
+                        } else {
+                            html += `<div class="planet-row"><span>${name}${retro}</span><span style="color:#6b7280;">${deg}${house}</span></div>`;
+                        }
                     });
-                });
-                html += '</div>';
-            }
+                }
+            });
+            html += '</div>';
 
             // 4. AÇILAR - index.aspects kullanarak (unique, key'li, tıklanabilir)
             if (chart.interpretation?.index?.aspects && chart.interpretation.index.aspects.length > 0) {
