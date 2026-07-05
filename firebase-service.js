@@ -552,7 +552,12 @@ const SessionStore = {
 // Tüm fonksiyonlari global scope'a export et (modul sistemi yoksa)
 window.AstroService = {
     // i18n erisimi
-    i18n: typeof window !== 'undefined' ? window.i18n : null,
+    // NOT: bu dosya i18n.js'den ONCE yuklendigi icin window.i18n burada henuz
+    // tanimli olmuyordu ve deger sonsuza kadar null kaliyordu. Getter kullanarak
+    // her erisimde guncel window.i18n'i donduruyoruz.
+    get i18n() {
+        return typeof window !== 'undefined' ? window.i18n : null;
+    },
 
     // Firebase ref'leri
     db,
