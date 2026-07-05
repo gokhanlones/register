@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kayıt Ol | Astro Notlarım</title>
+    <title data-i18n-page-title="register.title">Kayit Ol | Astro Notlarim</title>
     <link rel="stylesheet" href="style.css">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
     <script src="firebase-service.js"></script>
+    <script src="i18n.js"></script>
 
     <style>
         .inline-error {
@@ -46,9 +47,9 @@
     <div class="app-container">
         <header class="brand-section">
             <div class="logo-wrapper">
-                <img src="logo.png" alt="Astro Notlarım Logo" class="logo-img">
+                <img src="logo.png" alt="Astro Notlarim Logo" class="logo-img">
             </div>
-            <h1>Astro Notlarım</h1>
+            <h1>Astro Notlarim</h1>
         </header>
 
         <main class="scrollable-form-section">
@@ -58,43 +59,43 @@
 
                 <div class="form-group" id="group-fullname">
                     <div class="input-wrapper">
-                        <input type="text" id="fullname" placeholder="Ad Soyad">
+                        <input type="text" id="fullname" data-i18n="register.fullnamePlaceholder" data-i18n-attr="placeholder" placeholder="Ad Soyad">
                     </div>
-                    <div class="error-message">Lütfen ad soyad girin.</div>
+                    <div class="error-message" data-i18n="register.errorFullname">Lutfen ad soyad girin.</div>
                 </div>
 
                 <div class="form-group" id="group-email">
                     <div class="input-wrapper">
-                        <input type="email" id="email" placeholder="E-posta">
+                        <input type="email" id="email" data-i18n="register.emailPlaceholder" data-i18n-attr="placeholder" placeholder="E-posta">
                     </div>
-                    <div class="error-message">Lütfen geçerli bir e-posta adresi girin.</div>
+                    <div class="error-message" data-i18n="register.errorEmail">Lutfen gecerli bir e-posta adresi girin.</div>
                 </div>
 
                 <div class="form-group" id="group-password">
                     <div class="input-wrapper">
-                        <input type="password" id="password" class="password-input" placeholder="Şifre">
+                        <input type="password" id="password" class="password-input" data-i18n="register.passwordPlaceholder" data-i18n-attr="placeholder" placeholder="Sifre">
                         <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         </button>
                     </div>
-                    <div class="error-message">Şifre en az 6 karakter olmalıdır.</div>
+                    <div class="error-message" data-i18n="register.errorPassword">Sifre en az 6 karakter olmalidir.</div>
                 </div>
 
                 <div class="form-group" id="group-confirm-password">
                     <div class="input-wrapper">
-                        <input type="password" id="confirmPassword" class="password-input" placeholder="Şifre Tekrar">
+                        <input type="password" id="confirmPassword" class="password-input" data-i18n="register.confirmPasswordPlaceholder" data-i18n-attr="placeholder" placeholder="Sifre Tekrar">
                         <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPassword', this)">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="eye-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                         </button>
                     </div>
-                    <div class="error-message">Şifreler eşleşmiyor.</div>
+                    <div class="error-message" data-i18n="register.errorConfirm">Sifreler eslesmiyor.</div>
                 </div>
 
-                <button type="button" class="btn-submit" id="registerBtn">Kayıt Ol</button>
+                <button type="button" class="btn-submit" id="registerBtn" data-i18n="register.btnRegister">Kayit Ol</button>
             </form>
 
             <footer class="register-footer">
-                <p>Zaten üye misin? <a onclick="goToLogin()" style="cursor:pointer;">Giriş yap</a></p>
+                <p><span data-i18n="register.hasAccount">Zaten uye misin?</span> <a onclick="goToLogin()" style="cursor:pointer;" data-i18n="register.loginLink">Giris yap</a></p>
             </footer>
         </main>
     </div>
@@ -106,11 +107,11 @@
 
         document.getElementById('registerBtn').addEventListener('click', function() {
             handleRegister().catch(function(err) {
-                console.error('Kayıt hatası:', err);
+                console.error('Kayit hatasi:', err);
                 const btn = document.getElementById('registerBtn');
                 btn.disabled = false;
-                btn.textContent = "Kayıt Ol";
-                showFirebaseError('Beklenmeyen bir hata oluştu: ' + err.message);
+                btn.textContent = i18n.t('register.btnRegister');
+                showFirebaseError(i18n.t('error.generic') + ': ' + err.message);
             });
         });
 
@@ -171,7 +172,7 @@
 
             const btn = document.getElementById('registerBtn');
             btn.disabled = true;
-            btn.textContent = "Kayıt oluşturuluyor...";
+            btn.textContent = i18n.t('register.creating');
 
             try {
                 const user = await AstroService.registerWithEmail(email, password);
@@ -189,7 +190,7 @@
                 window.location.href = "terms.html";
             } catch (err) {
                 btn.disabled = false;
-                btn.textContent = "Kayıt Ol";
+                btn.textContent = i18n.t('register.btnRegister');
                 const errorInfo = AstroService.translateAuthError(err.code);
                 if (errorInfo.redirect) {
                     showFirebaseError(
