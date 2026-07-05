@@ -315,13 +315,13 @@
             // Ozet badge'ler
             html += '<div class="sign-summary">';
             if (sunPlanet?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.sun')) + '</span><span class="sign-badge-value">' + esc(sunPlanet.sign) + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.sun')) + '</span><span class="sign-badge-value">' + esc(i18n.translateSign(sunPlanet.sign)) + '</span></div>';
             }
             if (moonPlanet?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.moon')) + '</span><span class="sign-badge-value">' + esc(moonPlanet.sign) + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.moon')) + '</span><span class="sign-badge-value">' + esc(i18n.translateSign(moonPlanet.sign)) + '</span></div>';
             }
             if (ascAngle?.sign) {
-                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.rising')) + '</span><span class="sign-badge-value">' + esc(ascAngle.sign) + '</span></div>';
+                html += '<div class="sign-badge"><span class="sign-badge-label">' + esc(i18n.t('dashboard.rising')) + '</span><span class="sign-badge-value">' + esc(i18n.translateSign(ascAngle.sign)) + '</span></div>';
             }
             html += '</div>';
 
@@ -348,8 +348,8 @@
                     const houseText = p.house ? esc(p.house) + esc(i18n.t('natal.houseSuffix')) : '';
                     const degreeText = typeof p.degree === 'number' ? p.degree.toFixed(1) + '\u00B0' : '';
                     html += '<div class="planet-row">';
-                    html += '<div><span class="planet-name">' + esc(p.name || p.id) + '</span>' + retro + '</div>';
-                    html += '<div class="planet-detail"><span class="planet-sign">' + esc(p.sign || '-') + '</span> ' + degreeText + ' ' + houseText + '</div>';
+                    html += '<div><span class="planet-name">' + esc(i18n.translatePlanet(p.id || p.name)) + '</span>' + retro + '</div>';
+                    html += '<div class="planet-detail"><span class="planet-sign">' + esc(i18n.translateSign(p.sign) || '-') + '</span> ' + degreeText + ' ' + houseText + '</div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -363,7 +363,7 @@
                 chart.houses.forEach((h, i) => {
                     html += '<div class="house-row">';
                     html += '<div class="house-number">' + (i + 1) + '</div>';
-                    html += '<div class="house-detail"><div class="house-sign">' + esc(h.sign || '-') + '</div><div class="house-pos">' + (typeof h.degree === 'number' ? h.degree.toFixed(1) + '\u00B0' : '') + '</div></div>';
+                    html += '<div class="house-detail"><div class="house-sign">' + esc(i18n.translateSign(h.sign) || '-') + '</div><div class="house-pos">' + (typeof h.degree === 'number' ? h.degree.toFixed(1) + '\u00B0' : '') + '</div></div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -382,8 +382,8 @@
                     else if (a.type === 'opposition') typeClass = 'aspect-opposition';
 
                     html += '<div class="aspect-row">';
-                    html += '<div class="aspect-planets">' + esc(a.planet1 || a.p1 || '?') + ' - ' + esc(a.planet2 || a.p2 || '?') + '</div>';
-                    html += '<div><span class="aspect-type ' + typeClass + '">' + esc(a.type || '-') + '</span><span class="aspect-angle">' + (typeof a.angle === 'number' ? a.angle.toFixed(1) + '\u00B0' : '') + '</span></div>';
+                    html += '<div class="aspect-planets">' + esc(i18n.translatePlanet(a.planet1 || a.p1) || '?') + ' - ' + esc(i18n.translatePlanet(a.planet2 || a.p2) || '?') + '</div>';
+                    html += '<div><span class="aspect-type ' + typeClass + '">' + esc(i18n.translateAspect(a.type) || '-') + '</span><span class="aspect-angle">' + (typeof a.angle === 'number' ? a.angle.toFixed(1) + '\u00B0' : '') + '</span></div>';
                     html += '</div>';
                 });
                 html += '</div>';
@@ -398,13 +398,14 @@
                     asc: i18n.t('natal.angleAsc'),
                     mc: i18n.t('natal.angleMc'),
                     ic: i18n.t('natal.angleIc'),
-                    dc: i18n.t('natal.angleDc')
+                    dc: i18n.t('natal.angleDc'),
+                    vertex: i18n.t('natal.angleVertex')
                 };
                 for (const [key, angle] of Object.entries(chart.angles_details)) {
                     if (angle) {
                         html += '<div class="planet-row">';
                         html += '<div class="planet-name">' + esc(angleNames[key] || key) + '</div>';
-                        html += '<div class="planet-detail"><span class="planet-sign">' + esc(angle.sign || '-') + '</span> ' + (typeof angle.degree === 'number' ? angle.degree.toFixed(1) + '\u00B0' : '') + '</div>';
+                        html += '<div class="planet-detail"><span class="planet-sign">' + esc(i18n.translateSign(angle.sign) || '-') + '</span> ' + (typeof angle.degree === 'number' ? angle.degree.toFixed(1) + '\u00B0' : '') + '</div>';
                         html += '</div>';
                     }
                 }
