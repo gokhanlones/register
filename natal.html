@@ -15,18 +15,220 @@
 
     <style>
         * { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
-        .natal-content { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
+        
+        .natal-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 20px; 
+            -webkit-overflow-scrolling: touch; 
+        }
         .natal-content::-webkit-scrollbar { width: 4px; }
         .natal-content::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-        .section-card { background-color: #ffffff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #f3f4f6; }
-        .section-title { font-size: 1.1rem; font-weight: 700; color: #d4af37; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .chart-image-wrapper { width: 100%; display: flex; justify-content: center; margin-bottom: 16px; background-color: #f9fafb; border-radius: 16px; padding: 16px; border: 1px solid #f3f4f6; }
-        .chart-image-wrapper img { max-width: 100%; height: auto; border-radius: 12px; }
-        .planet-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+
+        .section-card { 
+            background-color: #ffffff; 
+            border-radius: 16px; 
+            padding: 20px; 
+            margin-bottom: 16px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+            border: 1px solid #f3f4f6; 
+        }
+        .section-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            color: #d4af37; 
+            margin-bottom: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px; 
+        }
+
+        .chart-image-wrapper { 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            margin-bottom: 16px; 
+            background-color: #f9fafb; 
+            border-radius: 16px; 
+            padding: 16px; 
+            border: 1px solid #f3f4f6; 
+        }
+        .chart-image-wrapper img { 
+            max-width: 100%; 
+            height: auto; 
+            border-radius: 12px; 
+        }
+
+        /* ─── TIKLANABİLİR GEZEGEN SATIRLARI ─── */
+        .planet-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 0; 
+            border-bottom: 1px solid #f3f4f6; 
+            cursor: pointer; 
+            transition: background-color 0.15s;
+            margin: 0 -8px;
+            padding-left: 8px;
+            padding-right: 8px;
+            border-radius: 8px;
+        }
         .planet-row:last-child { border-bottom: none; }
-        .house-row { padding: 8px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.95rem; color: #374151; }
-        .sign-header { font-weight: 700; color: #d4af37; margin: 16px 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #d4af37; font-size: 1rem; }
-        .empty-state { text-align: center; padding: 40px 20px; color: #9ca3af; }
+        .planet-row:active { background-color: #f3f4f6; }
+        .planet-row:hover { background-color: #f9fafb; }
+
+        .planet-name-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .planet-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #d4af37;
+            flex-shrink: 0;
+        }
+        .planet-name {
+            font-weight: 600;
+            color: #111827;
+            font-size: 0.95rem;
+        }
+        .planet-details {
+            color: #6b7280;
+            font-size: 0.85rem;
+            text-align: right;
+        }
+        .planet-chevron {
+            width: 16px;
+            height: 16px;
+            color: #d1d5db;
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+
+        .house-row { 
+            padding: 10px 0; 
+            border-bottom: 1px solid #f3f4f6; 
+            font-size: 0.95rem; 
+            color: #374151; 
+        }
+        .house-row:last-child { border-bottom: none; }
+
+        .sign-header { 
+            font-weight: 700; 
+            color: #d4af37; 
+            margin: 16px 0 8px 0; 
+            padding-bottom: 4px; 
+            border-bottom: 1px solid #d4af37; 
+            font-size: 1rem; 
+        }
+
+        .empty-state { 
+            text-align: center; 
+            padding: 40px 20px; 
+            color: #9ca3af; 
+        }
+
+        /* ─── BOTTOM SHEET ─── */
+        .bottom-sheet-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .bottom-sheet-overlay.show {
+            display: flex;
+        }
+        .bottom-sheet {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px 20px 0 0;
+            max-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .bottom-sheet-overlay.show .bottom-sheet {
+            transform: translateY(0);
+        }
+
+        .bottom-sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 20px 12px;
+            border-bottom: 1px solid #f3f4f6;
+            flex-shrink: 0;
+        }
+        .bottom-sheet-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .bottom-sheet-close {
+            background: none;
+            border: none;
+            font-size: 1.6rem;
+            color: #9ca3af;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+
+        .bottom-sheet-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px 24px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ─── KATEGORİ YORUM KARTLARI ─── */
+        .category-section {
+            margin-bottom: 20px;
+        }
+        .category-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #d4af37;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .interp-card {
+            background-color: #f9fafb;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            border: 1px solid #f3f4f6;
+        }
+        .interp-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 6px;
+        }
+        .interp-card-body {
+            font-size: 0.9rem;
+            color: #4b5563;
+            line-height: 1.6;
+        }
+        .no-interpretation {
+            text-align: center;
+            padding: 30px 20px;
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
     </style>
 </head>
 <body>
@@ -60,7 +262,20 @@
         </footer>
     </div>
 
-    <!-- Side Menu (eksikti - toggleMenu() null hatasi veriyordu) -->
+    <!-- ─── BOTTOM SHEET ─── -->
+    <div id="bottomSheetOverlay" class="bottom-sheet-overlay" onclick="closeBottomSheet(event)">
+        <div class="bottom-sheet" onclick="event.stopPropagation()">
+            <div class="bottom-sheet-header">
+                <div class="bottom-sheet-title" id="bottomSheetTitle">Yorumlar</div>
+                <button class="bottom-sheet-close" onclick="closeBottomSheet()">&times;</button>
+            </div>
+            <div class="bottom-sheet-body" id="bottomSheetBody">
+                <!-- İçerik dinamik -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Menu -->
     <div id="sideMenu" class="side-menu" onclick="toggleMenu()">
         <div class="side-menu-panel" onclick="event.stopPropagation()">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
@@ -93,6 +308,20 @@
     </div>
 
     <script>
+        // ─── GLOBALS ───
+        let currentChart = null; // Yüklenen natal chart verisi
+
+        // Her gezegen ID'sinin hangi 6 kategoriye ait yorumları içerebileceği
+        // (Bir gezegen birden fazla kategoride yorumlanabilir)
+        const CATEGORY_LABELS = {
+            coreSelf:        'dashboard.coreSelf',
+            mind:            'dashboard.mind',
+            loveRelating:    'dashboard.loveRelating',
+            workPath:        'dashboard.workPath',
+            socialCollective:'dashboard.socialCollective',
+            karmicHealing:   'dashboard.karmicHealing'
+        };
+
         function goToPage(page) { window.location.href = page; }
         function toggleMenu() { document.getElementById('sideMenu').classList.toggle('show'); }
 
@@ -107,10 +336,100 @@
                     document.getElementById('natalContent').innerHTML = '<div class="empty-state"><p>' + i18n.t('natal.notFound') + '</p></div>';
                     return;
                 }
+                currentChart = chart;
                 renderNatalChart(chart);
             } catch (err) {
                 document.getElementById('natalContent').innerHTML = '<div class="empty-state" style="color:#ef4444;"><p>' + i18n.t('natal.loadingError') + '</p></div>';
             }
+        }
+
+        // ─── BOTTOM SHEET ───
+        function openBottomSheet(title) {
+            document.getElementById('bottomSheetTitle').textContent = title;
+            document.getElementById('bottomSheetOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeBottomSheet(event) {
+            if (!event || event.target.id === 'bottomSheetOverlay') {
+                document.getElementById('bottomSheetOverlay').classList.remove('show');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // ─── YORUM FİLTRELEME ───
+        /**
+         * Bir gezegen ID'sine (sun, moon, mercury...) göre tüm 6 kategorideki
+         * ilgili yorumları bulur ve kategori başlıklarıyla gruplar.
+         */
+        function getPlanetInterpretations(planetId) {
+            const result = {};
+            const sections = currentChart?.interpretation?.sections;
+            if (!sections) return result;
+
+            const planetKey = planetId.toLowerCase().trim();
+
+            for (const [catKey, catLabelKey] of Object.entries(CATEGORY_LABELS)) {
+                const jsonKey = catKey === 'coreSelf' ? 'core_self'
+                             : catKey === 'loveRelating' ? 'love_relating'
+                             : catKey === 'workPath' ? 'work_path'
+                             : catKey === 'socialCollective' ? 'social_collective'
+                             : catKey === 'karmicHealing' ? 'karmic_healing'
+                             : catKey;
+
+                const items = sections[jsonKey];
+                if (!Array.isArray(items)) continue;
+
+                // Bu kategoride bu gezegenle ilgili yorumları filtrele
+                const matched = items.filter(item => {
+                    const itemKey = (item.key || '').toLowerCase();
+                    const tags = (item.tags || []).map(t => t.toLowerCase());
+                    // key: "planet.sun.sign.pisces" veya tags: ["sun", "pisces"]
+                    return itemKey.includes('planet.' + planetKey + '.') || tags.includes(planetKey);
+                });
+
+                if (matched.length > 0) {
+                    result[catKey] = matched;
+                }
+            }
+
+            return result;
+        }
+
+        function showPlanetBottomSheet(planetId, planetDisplayName) {
+            const interpretations = getPlanetInterpretations(planetId);
+            const body = document.getElementById('bottomSheetBody');
+
+            let html = '';
+            let hasAny = false;
+
+            for (const [catKey, items] of Object.entries(interpretations)) {
+                hasAny = true;
+                const catTitle = i18n.t(CATEGORY_LABELS[catKey]);
+
+                html += `<div class="category-section">`;
+                html += `<div class="category-section-title">${AstroService.escapeHtml(catTitle)}</div>`;
+
+                items.forEach(item => {
+                    html += `<div class="interp-card">`;
+                    if (item.title) {
+                        html += `<div class="interp-card-title">${AstroService.escapeHtml(item.title)}</div>`;
+                    }
+                    html += `<div class="interp-card-body">${AstroService.escapeHtml(item.body)}</div>`;
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            }
+
+            if (!hasAny) {
+                html = `<div class="no-interpretation">
+                    <p>${AstroService.escapeHtml(planetDisplayName)} için yorum bulunamadı.</p>
+                </div>`;
+            }
+
+            body.innerHTML = html;
+            openBottomSheet(planetDisplayName);
         }
 
         function renderNatalChart(chart) {
@@ -124,7 +443,7 @@
                 html += '<div class="chart-image-wrapper"><img src="' + esc(imageUrl) + '" alt="Harita"></div>';
             }
 
-            // 2. EVLER (Format: 1. Ev Terazi 7°)
+            // 2. EVLER
             if (chart.houses && chart.houses.length > 0) {
                 html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.houses'))}</div>`;
                 const houseSuffix = i18n.t('natal.houseSuffix');
@@ -136,13 +455,14 @@
                 html += '</div>';
             }
 
-            // 2b. ACI NOKTALARI (ASC / MC / IC / DC) - varsa goster
+            // 3. AÇI NOKTALARI (ASC / MC / IC / DC / Vertex)
             if (chart.angles_details) {
                 const angleDefs = [
                     { key: 'asc', label: i18n.t('natal.angleAsc') },
                     { key: 'mc', label: i18n.t('natal.angleMc') },
                     { key: 'ic', label: i18n.t('natal.angleIc') },
-                    { key: 'dc', label: i18n.t('natal.angleDc') }
+                    { key: 'dc', label: i18n.t('natal.angleDc') },
+                    { key: 'vertex', label: i18n.t('natal.angleVertex') }
                 ];
                 const rows = angleDefs
                     .map(a => ({ ...a, data: chart.angles_details[a.key] }))
@@ -153,8 +473,8 @@
                     rows.forEach(a => {
                         const signName = i18n.translateSign(a.data.sign) || '-';
                         const deg = typeof a.data.degree === 'number' ? a.data.degree.toFixed(1) + '°' : '';
-                        html += `<div class="planet-row" style="font-size:0.9rem;">
-                                    <span>${esc(a.label)}</span>
+                        html += `<div class="planet-row" style="cursor:default;">
+                                    <span style="font-weight:600;">${esc(a.label)}</span>
                                     <span style="color:#6b7280;">${esc(signName)} ${deg}</span>
                                  </div>`;
                     });
@@ -162,7 +482,11 @@
                 }
             }
 
-            // Veriyi Burçlara Göre Grupla (Gezegenler için)
+            // 4. GEZEGENLER (TIKLANABİLİR)
+            const houseSuffixShort = i18n.t('natal.houseSuffix');
+            const retroMark = i18n.t('natal.retrograde');
+
+            // Burçlara göre grupla
             const planetsBySign = {};
             if (chart.planets) {
                 chart.planets.forEach(p => {
@@ -172,55 +496,44 @@
                 });
             }
 
-            // 3. GEZEGENLER (Format: Burç -> Gezegen Derece-Ev)
-            const houseSuffixShort = i18n.t('natal.houseSuffix');
-            const retroMark = i18n.t('natal.retrograde');
             html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.planets'))}</div>`;
+
             Object.keys(planetsBySign).forEach(signKey => {
                 html += `<div class="sign-header">${esc(i18n.translateSign(signKey))}</div>`;
+
                 planetsBySign[signKey].forEach(p => {
-                    const name = esc(i18n.translatePlanet(p.id || p.name));
-                    const retro = p.retrograde ? ` (${esc(retroMark)})` : '';
+                    const planetId = p.id || p.name;
+                    const planetName = esc(i18n.translatePlanet(planetId));
+                    const retro = p.retrograde ? ` ${esc(retroMark)}` : '';
                     const deg = typeof p.degree === 'number' ? p.degree.toFixed(0) + '°' : '';
                     const house = p.house ? ` - ${esc(p.house + houseSuffixShort)}` : '';
-                    const extra = p.extra ? ` (${esc(p.extra)})` : ''; // DC, ASC vb bilgisi varsa
 
-                    html += `<div class="planet-row" style="font-size:0.9rem;">
-                                <span>${name}${retro}</span>
-                                <span style="color:#6b7280;">${deg}${house}${extra}</span>
+                    // TIKLANABİLİR SATIR
+                    html += `<div class="planet-row" onclick="showPlanetBottomSheet('${esc(planetId)}', '${planetName}')">
+                                <div class="planet-name-group">
+                                    <div class="planet-icon"></div>
+                                    <span class="planet-name">${planetName}${retro}</span>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:4px;">
+                                    <span class="planet-details">${deg}${house}</span>
+                                    <svg class="planet-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </div>
                              </div>`;
                 });
             });
+
             html += '</div>';
 
-            // 4. AÇILAR
+            // 5. AÇILAR
             if (chart.aspects && chart.aspects.length > 0) {
                 html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.aspects'))}</div>`;
                 chart.aspects.forEach(a => {
-                    html += `<div class="planet-row" style="font-size:0.9rem;">
+                    html += `<div class="planet-row" style="cursor:default;">
                                 <span>${esc(i18n.translatePlanet(a.planet1 || a.p1))} - ${esc(i18n.translatePlanet(a.planet2 || a.p2))}</span>
                                 <span style="color:#d4af37; font-weight:600;">${esc(i18n.translateAspect(a.type))}</span>
                              </div>`;
                 });
                 html += '</div>';
-            }
-
-            // 5. YORUMLAR (API'den interpretation.enable=true ile geliyorsa)
-            const interpretations = chart.interpretations || chart.interpretation;
-            if (Array.isArray(interpretations) && interpretations.length > 0) {
-                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.interpretations'))}</div>`;
-                interpretations.forEach((text, idx) => {
-                    const title = i18n.t('natal.commentTitle', { number: idx + 1 });
-                    html += `<div style="margin-bottom:12px;">
-                                <div style="font-weight:600;color:#374151;margin-bottom:4px;font-size:0.9rem;">${esc(title)}</div>
-                                <div style="font-size:0.9rem;color:#4b5563;line-height:1.5;">${esc(text)}</div>
-                             </div>`;
-                });
-                html += '</div>';
-            } else if (typeof interpretations === 'string' && interpretations.trim() !== '') {
-                html += `<div class="section-card"><div class="section-title">${esc(i18n.t('natal.interpretations'))}</div>
-                            <div style="font-size:0.9rem;color:#4b5563;line-height:1.6;">${esc(interpretations)}</div>
-                          </div>`;
             }
 
             content.innerHTML = html;
