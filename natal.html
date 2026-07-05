@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n-page-title="natal.title">Dogum Haritasi | Astro Notlarim</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
+    <script src="firebase-service.js"></script>
+    <script src="i18n.js"></script>
+
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        .natal-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .natal-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        .natal-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .natal-content::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 4px;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d4af37;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .chart-image-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 16px;
+            background-color: #f9fafb;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #f3f4f6;
+        }
+        .chart-image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+        .chart-image-wrapper .chart-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+
+        .planet-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .planet-row:last-child {
+            border-bottom: none;
+        }
+        .planet-name {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.95rem;
+        }
+        .planet-detail {
+            font-size: 0.85rem;
+            color: #6b7280;
+            text-align: right;
+        }
+        .planet-sign {
+            color: #d4af37;
+            font-weight: 600;
+        }
+        .retrograde-badge {
+            display: inline-block;
+            background-color: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            font-weight: 600;
+        }
+
+        .house-row {
+            display: flex;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .house-row:last-child {
+            border-bottom: none;
+        }
+        .house-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #f9fafb;
+            border: 2px solid #d4af37;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #d4af37;
+            flex-shrink: 0;
+        }
+        .house-detail {
+            flex: 1;
+        }
+        .house-sign {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .house-pos {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .aspect-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .aspect-row:last-child {
+            border-bottom: none;
+        }
+        .aspect-planets {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+        .aspect-type {
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        .aspect-conjunction { background-color: #fef2f2; color: #991b1b; }
+        .aspect-sextile { background-color: #f0fdf4; color: #166534; }
+        .aspect-square { background-color: #fef3c7; color: #92400e; }
+        .aspect-trine { background-color: #eff6ff; color: #1e40af; }
+        .aspect-opposition { background-color: #f3f4f6; color: #374151; }
+        .aspect-angle {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            margin-left: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            color: #d4af37;
+        }
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        .sign-summary {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .sign-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            min-width: 80px;
+        }
+        .sign-badge-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .sign-badge-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #d4af37;
+        }
+
+        .interpretation-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #4b5563;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="brand-section app-header">
+            <button class="btn-menu" onclick="toggleMenu()">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h1>Astro Notlarim</h1>
+        </header>
+
+        <main class="natal-content" id="natalContent">
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                <p data-i18n="natal.loading">Dogum haritasi yukleniyor...</p>
+            </div>
+        </main>
+
+        <footer class="bottom-navbar">
+            <a href="dashboard.html" class="nav-item" onclick="event.preventDefault(); goToPage('dashboard.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                <span class="nav-label" data-i18n="nav.home">Anasayfa</span>
+            </a>
+            <a href="ask.html" class="nav-item" onclick="event.preventDefault(); goToPage('ask.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span class="nav-label" data-i18n="nav.ask">Sor</span>
+            </a>
+            <a href="natal.html" class="nav-item active" onclick="event.preventDefault(); goToPage('natal.html');">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                <span class="nav-label" data-i18n="nav.chart">Harita</span>
+            </a>
+        </footer>
+    </div>
+
+    <script>
+        function goToPage(page) {
+            window.location.href = page;
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('sideMenu');
+            menu.classList.toggle('show');
+        }
+
+        let currentUser = null;
+
+        AstroService.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                loadNatalChart(user);
+            } else {
+                window.location.replace('login.html');
+            }
+        });
+
+        async function loadNatalChart(user) {
+            try {
+                const chart = await AstroService.getNatalChart(user.uid);
+                if (!chart) {
+                    document.getElementById('natalContent').innerHTML =
+                        '<div class="empty-state"><p>' + i18n.t('natal.notFound') + '</p></div>';
+                    return;
+                }
+                renderNatalChart(chart);
+            } catch (err) {
+                console.error("Harita cekme hatasi:", err);
+                document.getElementById('natalContent').innerHTML =
+                    '<div class="empty-state" style="color:#ef4444;"><p>' + i18n.t('natal.loadingError') + '</p></div>';
+            }
+        }
+
+        function renderNatalChart(chart) {
+            const content = document.getElementById('natalContent');
+            const esc = AstroService.escapeHtml;
+
+            let html = '';
+
+            // Harita Gorseli
+            const imageUrl = chart.chart_image || chart.image_url;
+            if (imageUrl && /^https?:\/\//i.test(imageUrl)) {
+                html += '<div class="chart-image-wrapper">';
+                html += '<img src="' + esc(imageUrl) + '" alt="' + esc(i18n.t('natal.pageTitle')) + '">';
+                html += '</div>';
+            } else {
+                html += '<div class="chart-image-wrapper chart-placeholder">';
+                html += '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:8px;color:#d4af37;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line></svg>';
+                html += '<p>' + esc(i18n.t('natal.chartPlaceholder')) + '</p>';
+                html += '</div>';
+            }
+
+            // Evler
+            if (chart.houses && chart.houses.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> ' + esc(i18n.t('natal.houses')) + '</div>';
+
+                chart.houses.forEach((h, i) => {
+                    html += '<div class="house-row">';
+                    html += '<div class="house-number">' + (i + 1) + '</div>';
+                    html += '<div class="house-detail"><div class="house-sign">' + esc(i18n.translateSign(h.sign) || '-') + '</div><div class="house-pos">' + (typeof h.degree === 'number' ? h.degree.toFixed(1) + '\u00B0' : '') + '</div></div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Gezegenler
+            if (chart.planets && chart.planets.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"></line><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"></line><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"></line><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"></line><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"></line></svg> ' + esc(i18n.t('natal.planets')) + '</div>';
+
+                chart.planets.forEach(p => {
+                    const retro = p.retrograde ? '<span class="retrograde-badge">' + esc(i18n.t('natal.retrograde')) + '</span>' : '';
+                    const houseText = p.house ? esc(p.house) + esc(i18n.t('natal.houseSuffix')) : '';
+                    const degreeText = typeof p.degree === 'number' ? p.degree.toFixed(1) + '\u00B0' : '';
+                    html += '<div class="planet-row">';
+                    html += '<div><span class="planet-name">' + esc(i18n.translatePlanet(p.id || p.name)) + '</span>' + retro + '</div>';
+                    html += '<div class="planet-detail"><span class="planet-sign">' + esc(i18n.translateSign(p.sign) || '-') + '</span> ' + degreeText + ' ' + houseText + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Acilar
+            if (chart.aspects && chart.aspects.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m4.22-10.22l4.24-4.24M7.78 7.78L3.54 3.54M23 12h-6m-6 0H1m20.24 4.24l-4.24-4.24M7.78 16.22l-4.24 4.24"></path></svg> ' + esc(i18n.t('natal.aspects')) + '</div>';
+
+                chart.aspects.forEach(a => {
+                    let typeClass = 'aspect-conjunction';
+                    if (a.type === 'sextile') typeClass = 'aspect-sextile';
+                    else if (a.type === 'square') typeClass = 'aspect-square';
+                    else if (a.type === 'trine') typeClass = 'aspect-trine';
+                    else if (a.type === 'opposition') typeClass = 'aspect-opposition';
+
+                    html += '<div class="aspect-row">';
+                    html += '<div class="aspect-planets">' + esc(i18n.translatePlanet(a.planet1 || a.p1) || '?') + ' - ' + esc(i18n.translatePlanet(a.planet2 || a.p2) || '?') + '</div>';
+                    html += '<div><span class="aspect-type ' + typeClass + '">' + esc(i18n.translateAspect(a.type) || '-') + '</span><span class="aspect-angle">' + (typeof a.angle === 'number' ? a.angle.toFixed(1) + '\u00B0' : '') + '</span></div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            // Aci detaylari (angles_details)
+            if (chart.angles_details) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> ' + esc(i18n.t('natal.angleDetails')) + '</div>';
+
+                const angleNames = {
+                    asc: i18n.t('natal.angleAsc'),
+                    mc: i18n.t('natal.angleMc'),
+                    ic: i18n.t('natal.angleIc'),
+                    dc: i18n.t('natal.angleDc'),
+                    vertex: i18n.t('natal.angleVertex')
+                };
+                for (const [key, angle] of Object.entries(chart.angles_details)) {
+                    if (angle) {
+                        html += '<div class="planet-row">';
+                        html += '<div class="planet-name">' + esc(angleNames[key] || key) + '</div>';
+                        html += '<div class="planet-detail"><span class="planet-sign">' + esc(i18n.translateSign(angle.sign) || '-') + '</span> ' + (typeof angle.degree === 'number' ? angle.degree.toFixed(1) + '\u00B0' : '') + '</div>';
+                        html += '</div>';
+                    }
+                }
+                html += '</div>';
+            }
+
+            // Yorumlar / Interpretations (varsa)
+            if (chart.interpretations && chart.interpretations.length > 0) {
+                html += '<div class="section-card">';
+                html += '<div class="section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> ' + esc(i18n.t('natal.interpretations')) + '</div>';
+
+                chart.interpretations.forEach((interp, idx) => {
+                    const title = interp.title || i18n.t('natal.commentTitle', { number: idx + 1 });
+                    html += '<div class="interpretation-text" style="' + (idx > 0 ? 'margin-top:12px;padding-top:12px;border-top:1px solid #f3f4f6;' : '') + '">';
+                    html += '<strong style="color:#d4af37;">' + esc(title) + '</strong><br>';
+                    html += esc(interp.text || interp);
+                    html += '</div>';
+                });
+                html += '</div>';
+            }
+
+            content.innerHTML = html;
+        }
+    </script>
+
+    <!-- Side Menu Overlay -->
+    <div id="sideMenu" class="side-menu" onclick="toggleMenu()">
+        <div class="side-menu-panel" onclick="event.stopPropagation()">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:30px;">
+                <h2 style="color:#d4af37;font-size:1.2rem;margin:0;" data-i18n="nav.menu">Menu</h2>
+                <button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer;">&times;</button>
+            </div>
+            <nav style="display:flex;flex-direction:column;gap:16px;">
+                <a onclick="goToPage('dashboard.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span data-i18n="menu.home">Anasayfa</span>
+                </a>
+                <a onclick="goToPage('natal.html')" style="color:#d4af37;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;background:#2d2d44;cursor:pointer;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M4.5 8h15"></path><path d="M4.5 16h15"></path></svg>
+                    <span data-i18n="menu.natalChart">Dogum Haritasi</span>
+                </a>
+                <a onclick="goToPage('ask.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span data-i18n="menu.ask">Sor</span>
+                </a>
+                <a onclick="goToPage('profile.html')" style="color:#e5e7eb;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <span data-i18n="menu.profile">Profil</span>
+                </a>
+                <a href="#" onclick="AstroService.logout(); window.location.href='login.html'; return false;" style="color:#ef4444;text-decoration:none;font-size:1rem;display:flex;align-items:center;gap:12px;padding:10px;border-radius:8px;transition:background 0.2s;cursor:pointer;" onmouseover="this.style.background='#2d2d44'" onmouseout="this.style.background='transparent'">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    <span data-i18n="nav.logout">Cikis Yap</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+</body>
+</html>
