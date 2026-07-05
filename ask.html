@@ -5,6 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n-page-title="ask.title">Sor | Astro Notlarim</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .ask-page-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 0;
+        }
+        .ask-messages-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 20px 20px 10px 20px;
+            text-align: center;
+        }
+        .ask-input-bar {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid #f3f4f6;
+            background-color: #ffffff;
+        }
+        .ask-input-bar input {
+            flex-grow: 1;
+            padding: 12px 16px;
+            background-color: #ffffff;
+            border: 1px solid #d4af37;
+            border-radius: 24px;
+            color: #000000;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .ask-input-bar input:focus {
+            border-color: #aa8416;
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.15);
+        }
+        .ask-input-bar input::placeholder {
+            color: #9ca3af;
+        }
+        .ask-send-btn {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background-color: #d4af37;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .ask-send-btn:hover {
+            background-color: #aa8416;
+        }
+        .ask-send-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -26,10 +87,20 @@
             <h1>Astro Notlarim</h1>
         </header>
 
-        <main class="scrollable-form-section">
-            <div style="padding: 20px; text-align: center;">
+        <main class="ask-page-content">
+            <div class="ask-messages-area">
                 <h2 style="color: #d4af37;" data-i18n="ask.title">Sor</h2>
                 <p data-i18n="ask.comingSoon">Chat ekrani buraya gelecek.</p>
+            </div>
+
+            <div class="ask-input-bar">
+                <input type="text" id="askInput" data-i18n-placeholder="ask.inputPlaceholder" placeholder="Sorunuzu yazin..." onkeydown="if(event.key==='Enter'){sendAskMessage();}">
+                <button class="ask-send-btn" onclick="sendAskMessage()" aria-label="Gonder">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
             </div>
         </main>
 
@@ -90,6 +161,49 @@
             const menu = document.getElementById('sideMenu');
             menu.classList.toggle('show');
         }
+
+        function sendAskMessage() {
+            const input = document.getElementById('askInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // TODO: Mesaji backend'e/AI servisine gonder ve sohbet alanina ekle
+            console.log('Gonderilen mesaj:', message);
+
+            input.value = '';
+        }
+
+        // Klavye acildiginda (ozellikle iOS Safari'de) input kutusunun
+        // klavyenin arkasinda kalmamasi icin visualViewport'u dinliyoruz.
+        (function setupKeyboardHandling() {
+            const appContainer = document.querySelector('.app-container');
+
+            function adjustLayout() {
+                if (window.visualViewport) {
+                    // Klavye acildiginda gorunur viewport kuculur; container'i
+                    // buna gore yeniden boyutlandiriyoruz ki input+footer gorunur kalsin.
+                    appContainer.style.height = window.visualViewport.height + 'px';
+                } else {
+                    appContainer.style.height = window.innerHeight + 'px';
+                }
+            }
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener('resize', adjustLayout);
+                window.visualViewport.addEventListener('scroll', adjustLayout);
+            } else {
+                window.addEventListener('resize', adjustLayout);
+            }
+            adjustLayout();
+
+            // Ek guvence: input'a odaklaninca gorunume kaydir (Android/eski tarayicilar icin)
+            const askInput = document.getElementById('askInput');
+            askInput.addEventListener('focus', () => {
+                setTimeout(() => {
+                    askInput.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }, 300);
+            });
+        })();
 
         AstroService.onAuthStateChanged(() => {}, () => {
             window.location.href = 'login.html';
