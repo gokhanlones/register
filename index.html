@@ -1,53 +1,434 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Astro Notlarim</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: '-apple-system', sans-serif; }
-        html, body { width: 100%; height: 100%; background-color: #ffffff; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-        .splash-container { text-align: center; display: flex; flex-direction: column; align-items: center; animation: fadeIn 0.6s ease-out; }
-        .splash-logo { width: 90px; height: 90px; object-fit: contain; margin-bottom: 16px; }
-        .splash-title { font-size: 1.6rem; font-weight: 700; color: #000000; letter-spacing: -0.5px; }
-        .connection-status { margin-top: 20px; font-size: 0.85rem; color: #ef4444; font-weight: 500; display: none; }
-        .loading-text { margin-top: 12px; font-size: 0.9rem; color: #9ca3af; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<title>Fuel Tank No 300</title>
+<style>
+*   { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 8px env(safe-area-inset-bottom);
+  min-height: 100dvh;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.09);
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── MAIN PANEL ── */
+.panel {
+  flex: 1;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.clock {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+  margin-bottom: 14px;
+}
+
+/* Info cards */
+.info-row { display: flex; gap: 6px; margin-bottom: 14px; }
+.info-card {
+  flex: 1;
+  background: #f5f5f5;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  padding: 10px 4px;
+  text-align: center;
+}
+.info-label { font-size: 9px; color: #999; letter-spacing: .4px; margin-bottom: 4px; }
+.info-val { font-size: 15px; font-weight: 700; color: #111; font-variant-numeric: tabular-nums; }
+.info-unit { font-size: 10px; font-weight: 400; }
+
+/* Progress bar */
+.prog { margin-bottom: 12px; }
+.prog-head { display: flex; justify-content: space-between; font-size: 9px; color: #999; margin-bottom: 3px; }
+.prog-track { height: 6px; background: #eee; border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; background: #111; border-radius: 99px; width: 0; transition: width .08s linear; }
+
+/* Buttons */
+.btn-save {
+  width: 100%; padding: 12px; margin-top: 4px;
+  background: #111; color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 700; letter-spacing: .5px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-save:active { opacity: .85; }
+.btn-save.saved { background: #1a7f37; }
+
+.btn-clear {
+  width: 100%; padding: 10px; margin-top: 8px;
+  background: #f0f0f0; color: #555;
+  border: none; border-radius: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: .5px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.btn-clear:active { opacity: .8; }
+.btn-clear.arm { background: #c0392b; color: #fff; }
+
+/* Records */
+.rec-section { margin-top: 14px; border-top: 1px solid #f0f0f0; padding-top: 10px; display: flex; flex-direction: column; min-height: 0; }
+.rec-title { font-size: 11px; font-weight: 700; color: #111; margin-bottom: 8px; }
+.rec-list { overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
+.rec-empty { font-size: 10px; color: #ccc; padding: 6px 0; }
+.rec-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 9px;
+}
+.rec-date { font-weight: 700; color: #333; margin-bottom: 2px; }
+.rec-vals { color: #999; }
+.rec-right { display: flex; align-items: center; gap: 10px; }
+.rec-pct { font-size: 9px; color: #999; text-align: right; }
+.rec-mini-track { width: 54px; height: 4px; background: #eee; border-radius: 99px; overflow: hidden; }
+.rec-mini-fill { height: 100%; background: #111; }
+.rec-del {
+  background: none; border: none; color: #ddd; font-size: 14px;
+  cursor: pointer; padding: 6px; line-height: 1; touch-action: manipulation;
+}
+.rec-del:active { color: #c0392b; }
+
+/* ── SLIDER COLUMN ── */
+.slider-col {
+  width: 64px;
+  background: #f9f9f9;
+  border-left: 1px solid #e4e4e4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sl-title { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: #111; margin-bottom: 4px; }
+.sl-max { font-size: 10px; color: #888; margin-bottom: 10px; }
+.sl-min { font-size: 10px; color: #888; margin-top: 10px; }
+
+.sl-track {
+  flex: 1;
+  width: 20px;
+  position: relative;
+  background: #e2e2e2;
+  border-radius: 10px;
+  cursor: pointer;
+  touch-action: none;
+  overflow: visible;
+}
+
+.sl-fill {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: #111;
+  border-radius: 10px;
+  height: 0%;
+  pointer-events: none;
+}
+
+.sl-thumb {
+  position: absolute;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  background: #111;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 6px rgba(0,0,0,.22);
+  transform: translateX(-50%) translateY(50%);
+  bottom: 0%;
+  pointer-events: none;
+  transition: box-shadow .1s;
+}
+.sl-track.active .sl-thumb {
+  box-shadow: 0 0 0 4px rgba(0,0,0,.12);
+}
+</style>
 </head>
 <body>
 
-    <div class="splash-container">
-        <img src="logo.png" alt="Astro Notlarim Logo" class="splash-logo">
-        <h1 class="splash-title">Astro Notlarim</h1>
-        <div class="loading-text" id="loadingText" data-i18n="splash.loading">Baslatiliyor...</div>
-        <div class="connection-status" id="statusText" data-i18n="splash.offline">Internet baglantisi bekleniyor...</div>
+<div class="card">
+
+<!-- MAIN PANEL -->
+<div class="panel">
+  <div class="clock" id="clock">—</div>
+  <div class="title">⛽ Fuel Tank No 300</div>
+
+  <div class="info-row">
+    <div class="info-card">
+      <div class="info-label">SOUNDING</div>
+      <div class="info-val"><span id="vCm">0</span><span class="info-unit"> cm</span></div>
     </div>
+    <div class="info-card">
+      <div class="info-label">VOLUME</div>
+      <div class="info-val"><span id="vM3">0.0</span><span class="info-unit"> m³</span></div>
+    </div>
+    <div class="info-card">
+      <div class="info-label">TONNAGE</div>
+      <div class="info-val"><span id="vTon">0.0</span><span class="info-unit"> t</span></div>
+    </div>
+  </div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-remote-config-compat.js"></script>
-    <script src="firebase-service.js"></script>
-    <script src="i18n.js"></script>
+  <div class="prog">
+    <div class="prog-head"><span>LEVEL</span><span id="pLevel">0%</span></div>
+    <div class="prog-track"><div class="prog-fill" id="bLevel"></div></div>
+  </div>
 
-    <script>
-        function checkAppConnection() {
-            if (!navigator.onLine) {
-                document.getElementById('statusText').style.display = 'block';
-                document.getElementById('loadingText').style.display = 'none';
-                window.addEventListener('online', function() {
-                    AstroService.checkSessionAndRedirect();
-                });
-                return;
-            }
-            document.getElementById('loadingText').textContent = i18n.t('splash.checking');
-            AstroService.checkSessionAndRedirect();
-        }
+  <button class="btn-save" id="btnSave">SAVE RECORD</button>
 
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(checkAppConnection, 800);
-        });
-    </script>
+  <div class="rec-section">
+    <div class="rec-title">RECORDS</div>
+    <div class="rec-list" id="recList"></div>
+  </div>
+
+  <button class="btn-clear" id="btnClear">CLEAR RECORDS</button>
+</div>
+
+<!-- SLIDER -->
+<div class="slider-col">
+  <div class="sl-title">CM</div>
+  <div class="sl-max">247</div>
+  <div class="sl-track" id="slTrack" role="slider" aria-label="Tank seviyesi" aria-valuemin="0" aria-valuemax="247" aria-valuenow="0" tabindex="0">
+    <div class="sl-fill" id="slFill"></div>
+    <div class="sl-thumb" id="slThumb"></div>
+  </div>
+  <div class="sl-min">0</div>
+</div>
+
+</div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────
+const MAX_CM    = 247;
+const M3_PER_CM = 1.1;
+const DENSITY   = 0.845;
+const KEY       = 'fuelTank300_v1';
+
+// ── DOM refs ──────────────────────────────────────────────
+const slTrack = document.getElementById('slTrack');
+const slFill  = document.getElementById('slFill');
+const slThumb = document.getElementById('slThumb');
+
+const vCm  = document.getElementById('vCm');
+const vM3  = document.getElementById('vM3');
+const vTon = document.getElementById('vTon');
+const pLevel = document.getElementById('pLevel');
+const bLevel = document.getElementById('bLevel');
+
+const clockEl  = document.getElementById('clock');
+const recList  = document.getElementById('recList');
+const btnSave  = document.getElementById('btnSave');
+const btnClear = document.getElementById('btnClear');
+
+// ── State ─────────────────────────────────────────────────
+let ratio = 0; // 0 (bottom) … 1 (top)
+
+// ── Single calculation source ─────────────────────────────
+function calc(r) {
+  const cm  = Math.round(r * MAX_CM);
+  const m3  = cm * M3_PER_CM;
+  const ton = m3 * DENSITY;
+  return { cm, m3, ton, pct: Math.round(r * 100) };
+}
+
+// ── Slider: Pointer Events + setPointerCapture ────────────
+function ratioFromPointer(e) {
+  const r = slTrack.getBoundingClientRect();
+  return Math.max(0, Math.min(1, (r.bottom - e.clientY) / r.height));
+}
+
+slTrack.addEventListener('pointerdown', function(e) {
+  this.setPointerCapture(e.pointerId);
+  this.classList.add('active');
+  setRatio(ratioFromPointer(e));
+  e.preventDefault();
+});
+
+slTrack.addEventListener('pointermove', function(e) {
+  if (!this.hasPointerCapture(e.pointerId)) return;
+  setRatio(ratioFromPointer(e));
+  e.preventDefault();
+});
+
+function endDrag(e) {
+  this.classList.remove('active');
+  if (this.hasPointerCapture(e.pointerId)) this.releasePointerCapture(e.pointerId);
+}
+slTrack.addEventListener('pointerup', endDrag);
+slTrack.addEventListener('pointercancel', endDrag);
+
+// Keyboard support
+slTrack.addEventListener('keydown', function(e) {
+  const step = 1 / MAX_CM;
+  let r = ratio;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowRight')       r += step;
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') r -= step;
+  else if (e.key === 'Home')  r = 0;
+  else if (e.key === 'End')   r = 1;
+  else return;
+  e.preventDefault();
+  setRatio(r);
+});
+
+// ── Core update ───────────────────────────────────────────
+function setRatio(r) {
+  ratio = Math.max(0, Math.min(1, r));
+  const v = calc(ratio);
+
+  vCm.textContent  = v.cm;
+  vM3.textContent  = v.m3.toFixed(1);
+  vTon.textContent = v.ton.toFixed(1);
+
+  pLevel.textContent = v.pct + '%';
+  bLevel.style.width = v.pct + '%';
+
+  slFill.style.height = (ratio * 100) + '%';
+  slThumb.style.bottom = (ratio * 100) + '%';
+  slTrack.setAttribute('aria-valuenow', v.cm);
+}
+
+// ── Save ──────────────────────────────────────────────────
+btnSave.addEventListener('click', () => {
+  const v = calc(ratio);
+  const now = new Date();
+
+  const rec = {
+    id:   now.getTime(),
+    date: now.toLocaleDateString('tr-TR'),
+    time: now.toLocaleTimeString('tr-TR'),
+    cm:   v.cm,
+    m3:   v.m3.toFixed(1),
+    ton:  v.ton.toFixed(1),
+    pct:  v.pct
+  };
+
+  const list = load();
+  list.unshift(rec);
+  if (!save(list)) {
+    alert('Kayıt yapılamadı: depolama alanı kullanılamıyor.');
+    return;
+  }
+  render();
+
+  btnSave.classList.add('saved');
+  btnSave.textContent = '✓ SAVED';
+  setTimeout(() => {
+    btnSave.classList.remove('saved');
+    btnSave.textContent = 'SAVE RECORD';
+  }, 900);
+});
+
+// ── Clear (two-step, no confirm()) ────────────────────────
+let clearArmed = false;
+let clearTimer = null;
+
+btnClear.addEventListener('click', () => {
+  if (!clearArmed) {
+    clearArmed = true;
+    btnClear.classList.add('arm');
+    btnClear.textContent = 'EMİN MİSİNİZ? TEKRAR BASIN';
+    clearTimer = setTimeout(disarmClear, 3000);
+    return;
+  }
+  clearTimeout(clearTimer);
+  save([]);
+  render();
+  disarmClear();
+});
+
+function disarmClear() {
+  clearArmed = false;
+  btnClear.classList.remove('arm');
+  btnClear.textContent = 'CLEAR RECORDS';
+}
+
+// ── Storage ───────────────────────────────────────────────
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
+}
+function save(list) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(list));
+    return true;
+  } catch { return false; }
+}
+
+function deleteRecord(id) {
+  save(load().filter(r => r.id !== id));
+  render();
+}
+
+// ── Render records ────────────────────────────────────────
+function render() {
+  const list = load();
+  if (!list.length) {
+    recList.innerHTML = '<div class="rec-empty">Henüz kayıt yok</div>';
+    return;
+  }
+  recList.innerHTML = list.map(r => `
+    <div class="rec-row">
+      <div>
+        <div class="rec-date">${r.date} ${r.time}</div>
+        <div class="rec-vals">${r.cm} cm · ${r.m3} m³ · ${r.ton} t</div>
+      </div>
+      <div class="rec-right">
+        <div class="rec-mini-track"><div class="rec-mini-fill" style="width:${r.pct}%"></div></div>
+        <div class="rec-pct">${r.pct}%</div>
+        <button class="rec-del" data-id="${r.id}" aria-label="Kaydı sil">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  recList.querySelectorAll('.rec-del').forEach(btn => {
+    btn.addEventListener('click', () => deleteRecord(Number(btn.dataset.id)));
+  });
+}
+
+// ── Clock ─────────────────────────────────────────────────
+function tick() {
+  const n = new Date();
+  clockEl.textContent = n.toLocaleDateString('tr-TR') + ' ' + n.toLocaleTimeString('tr-TR');
+}
+setInterval(tick, 1000);
+tick();
+
+// ── Init ──────────────────────────────────────────────────
+setRatio(0);
+render();
+</script>
 </body>
 </html>
